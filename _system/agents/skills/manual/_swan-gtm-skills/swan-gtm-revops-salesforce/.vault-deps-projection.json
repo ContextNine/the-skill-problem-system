@@ -1,0 +1,8 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "swan-gtm-skills",
+  "source": "skills/rutger-katz/revops-salesforce",
+  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-revops-salesforce",
+  "type": "manual-skill",
+  "title_override": "Swan GTM Skills \u00b7 Salesforce implementation for RevOps"
+}

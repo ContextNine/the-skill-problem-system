@@ -1,0 +1,8 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "witan-cli",
+  "source": "skills/witan-xlsx",
+  "target": "_system/agents/skills/auto/_spreadsheets/spreadsheets-witan-xlsx",
+  "type": "auto-skill",
+  "title_override": "Spreadsheets \u00b7 Witan XLSX"
+}

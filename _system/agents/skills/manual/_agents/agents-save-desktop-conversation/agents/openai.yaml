@@ -1,0 +1,5 @@
+interface:
+  short_description: "Save a complete desktop chat locally"
+  default_prompt: "Use $agents-save-desktop-conversation to save this entire conversation to the directory I specify."
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,5 @@
+interface:
+  short_description: "Drive Chrome with full CDP access"
+  default_prompt: "Use $code-chrome-agent to drive Chrome through raw CDP."
+policy:
+  allow_implicit_invocation: false

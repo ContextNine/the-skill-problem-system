@@ -1,0 +1,8 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "googleworkspace-cli",
+  "source": "skills/gws-gmail-send",
+  "target": "_system/agents/skills/manual/_gws/gws-gmail-send",
+  "type": "manual-skill",
+  "title_override": "GWS \u00b7 Gmail Send"
+}

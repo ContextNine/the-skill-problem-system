@@ -1,0 +1,8 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "swan-gtm-skills",
+  "source": "skills/tim-yakubson/b2b-cold-email-copywriting",
+  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-b2b-cold-email-copywriting",
+  "type": "manual-skill",
+  "title_override": "Swan GTM Skills \u00b7 B2B cold email copywriting"
+}

@@ -1,0 +1,8 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "swan-gtm-skills",
+  "source": "skills/john-williams/google-ads-budget-portfolio-reallocation",
+  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-google-ads-budget-portfolio-reallocation",
+  "type": "manual-skill",
+  "title_override": "Swan GTM Skills \u00b7 Portfolio-style budget reallocation across campaigns"
+}

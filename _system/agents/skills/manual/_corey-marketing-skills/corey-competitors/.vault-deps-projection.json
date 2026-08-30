@@ -1,0 +1,7 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "marketingskills",
+  "source": "skills/competitors",
+  "target": "_system/agents/skills/manual/_corey-marketing-skills/corey-competitors",
+  "type": "manual-skill"
+}

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Document title</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #181818;
+      --surface: #202020;
+      --surface-raised: #292929;
+      --text: #f1f1f1;
+      --muted: #b8b8b8;
+      --line: #3a3a3a;
+      --link: #dedede;
+      --positive: #7fd1ad;
+      --warning: #e7bd76;
+      --negative: #f08c85;
+      --info: #8ab4f8;
+    }
+    * { box-sizing: border-box; }
+    html { background: var(--bg); }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 16px/1.65 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main { width: min(980px, calc(100% - 32px)); margin: 32px auto; }
+    .surface { padding: clamp(24px, 5vw, 56px); border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: 0 16px 48px #0006; }
+    h1, h2, h3 { line-height: 1.2; }
+    h1 { margin-top: 0; font-size: clamp(2rem, 6vw, 3.5rem); letter-spacing: -.035em; }
+    h2 { margin-top: 1.7em; padding-bottom: .35em; border-bottom: 1px solid var(--line); }
+    a { color: var(--link); text-decoration-color: #777; text-underline-offset: .16em; }
+    a:hover { color: #fff; text-decoration-color: currentColor; }
+    code { padding: .14em .35em; border-radius: 5px; background: var(--surface-raised); color: #ededed; font: 85%/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    pre { overflow: auto; padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: #151515; }
+    pre code { padding: 0; background: none; }
+    table { display: block; overflow-x: auto; width: 100%; border-collapse: collapse; }
+    th, td { padding: .65em .8em; border: 1px solid var(--line); text-align: left; }
+    th { background: var(--surface-raised); }
+    .muted { color: var(--muted); }
+    .diagram { overflow-x: auto; padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: #161616; }
+    .status { padding: .8rem 1rem; border-left: 4px solid var(--line); border-radius: 0 10px 10px 0; background: var(--surface-raised); }
+    .status.positive { border-color: var(--positive); }
+    .status.warning { border-color: var(--warning); }
+    .status.negative { border-color: var(--negative); }
+    @media (max-width: 600px) {
+      main { width: 100%; margin: 0; }
+      .surface { min-height: 100vh; border: 0; border-radius: 0; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article class="surface">
+      <h1>Document title</h1>
+      <p class="muted">Short context or summary.</p>
+    </article>
+  </main>
+</body>
+</html>

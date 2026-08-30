@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "install": {"codex": false, "claude_alias": false},
+  "fragments": []
+}

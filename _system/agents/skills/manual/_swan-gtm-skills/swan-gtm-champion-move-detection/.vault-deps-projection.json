@@ -1,0 +1,8 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "swan-gtm-skills",
+  "source": "skills/ariel-cohen/champion-move-detection",
+  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-champion-move-detection",
+  "type": "manual-skill",
+  "title_override": "Swan GTM Skills \u00b7 Champion move detection"
+}

@@ -1,0 +1,5 @@
+interface:
+  short_description: "Scrape public Notion pages into organized notes"
+  default_prompt: "Use $vault-scrape-and-organize-notion-in-temp-folder to scrape a public Notion page into a temp folder, download assets, OCR useful images, and organize the export into final Markdown volumes."
+policy:
+  allow_implicit_invocation: false

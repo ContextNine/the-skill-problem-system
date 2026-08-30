@@ -1,0 +1,5 @@
+interface:
+  short_description: "Publish, list, and read Markdown or HTML"
+  default_prompt: "Use $infra-md-html-publisher to find, read, or publish a Markdown or HTML artifact."
+policy:
+  allow_implicit_invocation: true

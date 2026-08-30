@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Code workspaces",
+  "type": "object",
+  "required": ["schema_version", "default_profile", "defaults", "entries"],
+  "properties": {
+    "schema_version": {"const": 2},
+    "default_profile": {"type": "string", "minLength": 1},
+    "defaults": {"type": "object"},
+    "entries": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["path"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1, "not": {"pattern": "^(?:/|~|.*(?:^|/)\\.\\.(?:/|$))"}},
+          "remote": {"type": "string"}
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

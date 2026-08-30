@@ -1,0 +1,8 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "swan-gtm-skills",
+  "source": "skills/daniel-bustamante/linkedin-post-to-newsletter",
+  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-linkedin-post-to-newsletter",
+  "type": "manual-skill",
+  "title_override": "Swan GTM Skills \u00b7 Repurpose a LinkedIn post into a newsletter issue"
+}

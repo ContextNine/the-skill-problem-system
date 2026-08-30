@@ -1,0 +1,8 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "swan-gtm-skills",
+  "source": "skills/tanyo-gochev/outbound-performance-diagnosis",
+  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-outbound-performance-diagnosis",
+  "type": "manual-skill",
+  "title_override": "Swan GTM Skills \u00b7 Outbound performance diagnosis"
+}

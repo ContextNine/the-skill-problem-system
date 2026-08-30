@@ -1,0 +1,24 @@
+{
+  "schema_version": 7,
+  "primary_machine_id": "primary",
+  "vault_git": {
+    "owner_machine_id": null,
+    "refresh_owner_machine_id": null,
+    "remote": "origin",
+    "branch": "master"
+  },
+  "machines": [
+    {
+      "id": "primary",
+      "display_name": "Primary machine",
+      "enabled": true,
+      "role": "primary",
+      "platform": "macos",
+      "transport": "local",
+      "home": "__HOME__",
+      "roots": {"code": "__CODE_ROOT__", "vault": null},
+      "vault": {"enabled": false, "checkout_mode": "none", "required": false},
+      "global_agents_eligible": true
+    }
+  ]
+}

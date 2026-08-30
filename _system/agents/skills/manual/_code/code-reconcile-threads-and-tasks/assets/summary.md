@@ -1,0 +1,39 @@
+---
+title: "{{THREAD_TITLE}}"
+thread_id: "{{THREAD_ID}}"
+host_id: "{{HOST_ID}}"
+deep_link: "{{DEEP_LINK}}"
+created_at: "{{CREATED_AT}}"
+updated_at: "{{UPDATED_AT}}"
+reconciled_at: "{{RECONCILED_AT}}"
+verification: "{{VERIFICATION_LEVEL}}"
+disposition: "{{DISPOSITION}}"
+---
+
+## At a glance
+
+{{ORIGINAL_PROBLEM_OUTCOME_AND_CURRENT_RELEVANCE}}
+
+## Outcome
+
+{{COMPLETED_PARTIAL_RESEARCH_DECISION_BLOCKED_SUPERSEDED_OR_UNCLEAR}}
+
+## Decisions
+
+{{CONFIRMED_DECISIONS_SEPARATE_FROM_RECOMMENDATIONS}}
+
+## Current verified state
+
+{{CURRENT_CODE_DOCS_AND_CONFIDENCE_LABELS}}
+
+## Remaining work
+
+{{EXECUTABLE_OUTCOMES}}
+
+## Relationships
+
+{{OVERLAPS_CONFLICTS_DEPENDENCIES_AND_RELATED_THREADS}}
+
+## Sources
+
+{{FILES_DOCS_COMMITS_TASKS_THREAD_ID_AND_DEEP_LINK}}

@@ -1,0 +1,8 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "swan-gtm-skills",
+  "source": "skills/thebigasif/patent-backed-seo-quick-wins",
+  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-patent-backed-seo-quick-wins",
+  "type": "manual-skill",
+  "title_override": "Swan GTM Skills \u00b7 Patent-backed SEO quick wins"
+}

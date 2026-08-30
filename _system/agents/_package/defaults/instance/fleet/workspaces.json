@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "default_profile": "core",
+  "defaults": {
+    "clone_mode": "partial",
+    "profiles": ["core"],
+    "machines": ["*"],
+    "codex_project_root": ".",
+    "required": true
+  },
+  "entries": {}
+}

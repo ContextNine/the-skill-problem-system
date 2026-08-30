@@ -1,0 +1,1805 @@
+{
+  "schema_version": 2,
+  "dependencies": [
+    {
+      "id": "git",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew",
+            "package": "git"
+          },
+          "linux": {
+            "manager": "apt",
+            "package": "git"
+          }
+        },
+        "verify": {
+          "command": "git",
+          "args": [
+            "--version"
+          ]
+        }
+      }
+    },
+    {
+      "id": "github-cli",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew",
+            "package": "gh"
+          },
+          "linux": {
+            "manager": "apt",
+            "package": "gh"
+          }
+        },
+        "verify": {
+          "command": "gh",
+          "args": [
+            "skill",
+            "--help"
+          ]
+        }
+      }
+    },
+    {
+      "id": "jq",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew",
+            "package": "jq"
+          },
+          "linux": {
+            "manager": "apt",
+            "package": "jq"
+          }
+        },
+        "verify": {
+          "command": "jq",
+          "args": [
+            "--version"
+          ]
+        }
+      }
+    },
+    {
+      "id": "python",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew",
+            "package": "python@3.12"
+          },
+          "linux": {
+            "manager": "apt",
+            "package": "python3"
+          }
+        },
+        "verify": {
+          "command": "python3",
+          "args": [
+            "--version"
+          ],
+          "minimum": "3.11"
+        }
+      }
+    },
+    {
+      "id": "ripgrep",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew",
+            "package": "ripgrep"
+          },
+          "linux": {
+            "manager": "apt",
+            "package": "ripgrep"
+          }
+        },
+        "verify": {
+          "command": "rg",
+          "args": [
+            "--version"
+          ]
+        }
+      }
+    },
+    {
+      "id": "curl",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew",
+            "package": "curl"
+          },
+          "linux": {
+            "manager": "apt",
+            "package": "curl"
+          }
+        },
+        "verify": {
+          "command": "curl",
+          "args": [
+            "--version"
+          ]
+        }
+      }
+    },
+    {
+      "id": "compiler",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew",
+            "package": "llvm"
+          },
+          "linux": {
+            "manager": "apt",
+            "package": "build-essential"
+          }
+        },
+        "verify": {
+          "command": "cc",
+          "args": [
+            "--version"
+          ]
+        }
+      }
+    },
+    {
+      "id": "node24",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew",
+            "package": "node@24",
+            "link": true
+          },
+          "linux": {
+            "manager": "node-archive",
+            "version": "24.19.0",
+            "archives": {
+              "x64": {
+                "url": "https://nodejs.org/dist/v24.19.0/node-v24.19.0-linux-x64.tar.xz",
+                "sha256": "14b342e71204f811bde6153be8e04b62aef63c236fef92b55f9c83154b409647"
+              },
+              "arm64": {
+                "url": "https://nodejs.org/dist/v24.19.0/node-v24.19.0-linux-arm64.tar.xz",
+                "sha256": "01443c1e1a29e531ccad5a46fefa6df490d2189c49f7955904aecdbb0fe86fdc"
+              }
+            }
+          }
+        },
+        "verify": {
+          "command": "node",
+          "args": [
+            "--version"
+          ],
+          "minimum": "24.19.0",
+          "maximum_exclusive": "25"
+        }
+      }
+    },
+    {
+      "id": "pnpm",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [
+        "node24"
+      ],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew",
+            "package": "pnpm"
+          },
+          "linux": {
+            "manager": "npm",
+            "package": "pnpm@11.21.0"
+          }
+        },
+        "verify": {
+          "command": "pnpm",
+          "args": [
+            "--version"
+          ],
+          "minimum": "11.21.0",
+          "maximum_exclusive": "12"
+        }
+      }
+    },
+    {
+      "id": "age",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew",
+            "package": "age"
+          },
+          "linux": {
+            "manager": "apt",
+            "package": "age"
+          }
+        },
+        "verify": {
+          "command": "age-keygen",
+          "args": [
+            "--version"
+          ]
+        }
+      }
+    },
+    {
+      "id": "openssl",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew",
+            "package": "openssl@3"
+          },
+          "linux": {
+            "manager": "apt",
+            "package": "openssl"
+          }
+        },
+        "verify": {
+          "command": "openssl",
+          "args": [
+            "version"
+          ]
+        }
+      }
+    },
+    {
+      "id": "secret-service",
+      "kind": "package",
+      "platforms": [
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "linux": {
+            "manager": "apt",
+            "package": "libsecret-tools"
+          }
+        },
+        "verify": {
+          "command": "secret-tool",
+          "exists_only": true
+        }
+      }
+    },
+    {
+      "id": "uv",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew",
+            "package": "uv"
+          },
+          "linux": {
+            "manager": "github-archive",
+            "version": "0.11.28",
+            "archives": {
+              "x64": {
+                "url": "https://github.com/astral-sh/uv/releases/download/0.11.28/uv-x86_64-unknown-linux-gnu.tar.gz",
+                "sha256": "e490a6464492183c5d4534a5527fb4440f7f2bb2f228162ad7e4afe076dc0224"
+              },
+              "arm64": {
+                "url": "https://github.com/astral-sh/uv/releases/download/0.11.28/uv-aarch64-unknown-linux-gnu.tar.gz",
+                "sha256": "03e9fe0a81b0718d0bc84625de3885df6cc3f89a8b6af6121d6b9f6113fb6533"
+              }
+            },
+            "binaries_by_arch": {
+              "x64": {
+                "uv": "uv-x86_64-unknown-linux-gnu/uv",
+                "uvx": "uv-x86_64-unknown-linux-gnu/uvx"
+              },
+              "arm64": {
+                "uv": "uv-aarch64-unknown-linux-gnu/uv",
+                "uvx": "uv-aarch64-unknown-linux-gnu/uvx"
+              }
+            }
+          }
+        },
+        "verify": {
+          "command": "uv",
+          "args": [
+            "--version"
+          ]
+        }
+      }
+    },
+    {
+      "id": "witan",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [
+        "uv"
+      ],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "uv-tool",
+            "package": "witan==0.14.0"
+          },
+          "linux": {
+            "manager": "uv-tool",
+            "package": "witan==0.14.0"
+          }
+        },
+        "verify": {
+          "command": "witan",
+          "args": [
+            "--version"
+          ],
+          "minimum": "0.14.0"
+        }
+      }
+    },
+    {
+      "id": "ctx9-launcher",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline",
+        "ctx9-tools"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "infra-onboard-machine",
+        "infra-update-fleet-dependencies",
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/ctx9.md",
+      "requires": [
+        "python"
+      ],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "github-python-installer",
+        "version": "0.2.2",
+            "archive": {
+          "url": "https://github.com/MDerman/ctx9/releases/download/v0.2.2/ctx9-0.2.2.tar.gz",
+          "sha256": "13f5799dfb65544338b1116d0b9cf19ce0550e01fa3eab36242723c3d9bb792a"
+            },
+        "archive_root": "ctx9-0.2.2",
+            "installer": "scripts/install.py",
+            "arguments": []
+          },
+          "linux": {
+            "manager": "github-python-installer",
+        "version": "0.2.2",
+            "archive": {
+          "url": "https://github.com/MDerman/ctx9/releases/download/v0.2.2/ctx9-0.2.2.tar.gz",
+          "sha256": "13f5799dfb65544338b1116d0b9cf19ce0550e01fa3eab36242723c3d9bb792a"
+            },
+        "archive_root": "ctx9-0.2.2",
+            "installer": "scripts/install.py",
+            "arguments": []
+          }
+        },
+        "verify": {
+          "command": "ctx9",
+          "args": [
+            "--version"
+          ],
+      "exact": "0.2.2"
+        }
+      }
+    },
+    {
+      "id": "codex-repo-sync",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline",
+        "ctx9-tools"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "infra-onboard-machine",
+        "infra-sync-code-workspaces",
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/ctx9.md",
+      "requires": [
+        "ctx9-launcher"
+      ],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "ctx9-component",
+            "package": "codex-repo-sync"
+          },
+          "linux": {
+            "manager": "ctx9-component",
+            "package": "codex-repo-sync"
+          }
+        },
+        "verify": {
+          "command": "ctx9",
+          "args": [
+            "doctor",
+            "codex-repo-sync",
+            "--json"
+          ],
+          "exact": "0.1.1"
+        }
+      }
+    },
+    {
+      "id": "codefoldersync",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "ctx9-tools"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "infra-onboard-machine",
+        "infra-sync-code-workspaces",
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/ctx9.md",
+      "requires": [
+        "ctx9-launcher"
+      ],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "ctx9-component",
+            "package": "codefoldersync"
+          },
+          "linux": {
+            "manager": "ctx9-component",
+            "package": "codefoldersync"
+          }
+        },
+        "verify": {
+          "command": "ctx9",
+          "args": [
+            "doctor",
+            "codefoldersync",
+            "--json"
+          ],
+          "exact": "0.2.1"
+        }
+      }
+    },
+    {
+      "id": "publisher-cli",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "ctx9-tools"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "incident-controller-manage-incidents",
+        "incident-controller-remediate-production-incidents",
+        "infra-file-upload",
+        "infra-md-html-publisher",
+        "infra-onboard-machine",
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/publisher.md",
+      "requires": [
+        "ctx9-launcher",
+        "node24"
+      ],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "ctx9-component",
+            "package": "publisher"
+          },
+          "linux": {
+            "manager": "ctx9-component",
+            "package": "publisher"
+          }
+        },
+        "verify": {
+          "command": "ctx9",
+          "args": [
+            "doctor",
+            "publisher",
+            "--json"
+          ],
+          "exact": "2.0.0"
+        }
+      }
+    },
+    {
+      "id": "google-workspace-cli",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [
+        "node24"
+      ],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew",
+            "package": "googleworkspace-cli"
+          },
+          "linux": {
+            "manager": "npm",
+            "package": "@googleworkspace/cli@0.22.5"
+          }
+        },
+        "verify": {
+          "command": "gws",
+          "args": [
+            "--version"
+          ],
+          "minimum": "0.22.5"
+        }
+      }
+    },
+    {
+      "id": "agent-canvas",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [
+        "node24"
+      ],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "npm",
+            "package": "@agent-canvas/cli@0.13.0"
+          },
+          "linux": {
+            "manager": "npm",
+            "package": "@agent-canvas/cli@0.13.0"
+          }
+        },
+        "verify": {
+          "command": "agent-canvas",
+          "args": [
+            "--version"
+          ],
+          "minimum": "0.13.0"
+        }
+      }
+    },
+    {
+      "id": "tmux",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew",
+            "package": "tmux"
+          },
+          "linux": {
+            "manager": "apt",
+            "package": "tmux"
+          }
+        },
+        "verify": {
+          "command": "tmux",
+          "args": [
+            "-V"
+          ]
+        }
+      }
+    },
+    {
+      "id": "btop",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew",
+            "package": "btop"
+          },
+          "linux": {
+            "manager": "apt",
+            "package": "btop"
+          }
+        },
+        "verify": {
+          "command": "btop",
+          "args": [
+            "--version"
+          ]
+        }
+      }
+    },
+    {
+      "id": "starship",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew",
+            "package": "starship"
+          },
+          "linux": {
+            "manager": "apt",
+            "package": "starship"
+          }
+        },
+        "verify": {
+          "command": "starship",
+          "args": [
+            "--version"
+          ]
+        }
+      }
+    },
+    {
+      "id": "terminal-notifier",
+      "kind": "package",
+      "platforms": [
+        "macos"
+      ],
+      "groups": [
+        "agent-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew",
+            "package": "terminal-notifier"
+          }
+        },
+        "verify": {
+          "command": "terminal-notifier",
+          "args": [
+            "-help"
+          ]
+        }
+      }
+    },
+    {
+      "id": "gcloud-cli",
+      "kind": "package",
+      "platforms": [
+        "macos"
+      ],
+      "groups": [
+        "agent-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew-cask",
+            "package": "gcloud-cli"
+          }
+        },
+        "verify": {
+          "command": "gcloud",
+          "args": [
+            "--version"
+          ]
+        }
+      }
+    },
+    {
+      "id": "codex-cli",
+      "kind": "coding-tool",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "coding-tools",
+        "worker-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "infra-update-fleet-coding-tools",
+        "infra-onboard-machine"
+      ],
+      "lifecycle_doc": "dependency-references/codex-cli.md",
+      "requires": [],
+      "contract": {
+        "adapter": "codex",
+        "install_policy": "required",
+        "update_policy": "preserve-provenance",
+        "alignment": "channel-current",
+        "macos_cask": "codex"
+      }
+    },
+    {
+      "id": "t3-code",
+      "kind": "coding-tool",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "coding-tools"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "infra-update-fleet-coding-tools",
+        "infra-onboard-machine"
+      ],
+      "lifecycle_doc": "dependency-references/t3-code.md",
+      "requires": [],
+      "contract": {
+        "adapter": "t3-code",
+        "install_policy": "required",
+        "update_policy": "nightly",
+        "alignment": "exact-version-per-operation",
+        "release_repository": "pingdotgg/t3code",
+        "macos_bundle_id": "com.t3tools.t3code",
+        "macos_team_id": "ARK85ZXQ4Z",
+        "macos_application": "/Applications/T3 Code (Nightly).app"
+      }
+    },
+    {
+      "id": "claude-code",
+      "kind": "coding-tool",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "coding-tools"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "infra-update-fleet-coding-tools",
+        "infra-onboard-machine"
+      ],
+      "lifecycle_doc": "dependency-references/claude-code.md",
+      "requires": [],
+      "contract": {
+        "adapter": "claude-code",
+        "install_policy": "selected",
+        "update_policy": "preserve-provenance"
+      }
+    },
+    {
+      "id": "opencode",
+      "kind": "coding-tool",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "coding-tools"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "infra-update-fleet-coding-tools",
+        "infra-onboard-machine"
+      ],
+      "lifecycle_doc": "dependency-references/opencode.md",
+      "requires": [],
+      "contract": {
+        "adapter": "opencode",
+        "install_policy": "selected",
+        "update_policy": "preserve-provenance"
+      }
+    },
+    {
+      "id": "bitwarden",
+      "kind": "desktop-application",
+      "platforms": [
+        "macos"
+      ],
+      "groups": [
+        "macos-worker-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "infra-onboard-machine"
+      ],
+      "lifecycle_doc": "dependency-references/bitwarden.md",
+      "requires": [],
+      "contract": {
+        "adapter": "macos-application",
+        "install_policy": "required",
+        "bundle_id": "com.bitwarden.desktop",
+        "application": "/Applications/Bitwarden.app",
+        "display_name": "Bitwarden",
+        "cask": "bitwarden",
+        "team_id": "LTZ2PFU5D6"
+      }
+    },
+    {
+      "id": "google-chrome",
+      "kind": "desktop-application",
+      "platforms": [
+        "macos"
+      ],
+      "groups": [
+        "macos-worker-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "infra-onboard-machine"
+      ],
+      "lifecycle_doc": "dependency-references/google-chrome.md",
+      "requires": [],
+      "contract": {
+        "adapter": "macos-application",
+        "install_policy": "required",
+        "bundle_id": "com.google.Chrome",
+        "application": "/Applications/Google Chrome.app",
+        "display_name": "Google Chrome",
+        "cask": "google-chrome",
+        "team_id": "EQHXZ8M8AV"
+      }
+    },
+    {
+      "id": "chatgpt-desktop",
+      "kind": "desktop-application",
+      "platforms": [
+        "macos"
+      ],
+      "groups": [
+        "macos-worker-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "infra-onboard-machine"
+      ],
+      "lifecycle_doc": "dependency-references/chatgpt-desktop.md",
+      "requires": [],
+      "contract": {
+        "adapter": "macos-application",
+        "install_policy": "required",
+        "bundle_id": "com.openai.codex",
+        "application": "/Applications/ChatGPT.app",
+        "display_name": "ChatGPT",
+        "cask": "chatgpt",
+        "team_id": "2DC432GLL2"
+      }
+    },
+    {
+      "id": "wireguard",
+      "kind": "access-provider",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "machine-access"
+      ],
+      "eligibility": "provider-selected",
+      "required_by": [
+        "infra-onboard-machine"
+      ],
+      "lifecycle_doc": "dependency-references/wireguard.md",
+      "requires": [],
+      "contract": {
+        "adapter": "wireguard",
+        "install_policy": "selected-by-machine-registry",
+        "macos_application": {
+          "display_name": "WireGuard",
+          "application": "/Applications/WireGuard.app",
+          "bundle_id": "com.wireguard.macos",
+          "team_id": "L82V4Y2P3C"
+        }
+      }
+    },
+    {
+      "id": "tailscale",
+      "kind": "access-provider",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "machine-access"
+      ],
+      "eligibility": "provider-selected",
+      "required_by": [
+        "infra-onboard-machine"
+      ],
+      "lifecycle_doc": "dependency-references/tailscale.md",
+      "requires": [],
+      "contract": {
+        "adapter": "tailscale",
+        "install_policy": "selected-by-machine-registry"
+      }
+    },
+    {
+      "id": "playwright-cli",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "browser-automation"
+      ],
+      "eligibility": "capability-selected",
+      "required_by": [
+        "code-playwright-cli",
+        "infra-onboard-machine"
+      ],
+      "lifecycle_doc": "dependency-references/playwright-cli.md",
+      "requires": [
+        "node24"
+      ],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "selected",
+        "update_policy": "approved-channel",
+        "verify": {
+          "command": "playwright-cli",
+          "args": [
+            "--version"
+          ]
+        },
+        "recipes": {
+          "macos": {
+            "manager": "npm",
+            "package": "@playwright/cli"
+          },
+          "linux": {
+            "manager": "npm",
+            "package": "@playwright/cli"
+          }
+        }
+      }
+    },
+    {
+      "id": "playwright-cli-watchdog",
+      "kind": "optional-service",
+      "platforms": [
+        "linux"
+      ],
+      "groups": [
+        "browser-automation"
+      ],
+      "eligibility": "capability-selected",
+      "required_by": [
+        "infra-onboard-machine"
+      ],
+      "lifecycle_doc": "dependency-references/playwright-cli.md",
+      "requires": [
+        "playwright-cli"
+      ],
+      "contract": {
+        "adapter": "linux-user-service",
+        "install_policy": "selected"
+      }
+    },
+    {
+      "id": "homebrew",
+      "kind": "system-capability",
+      "platforms": [
+        "macos"
+      ],
+      "groups": [
+        "macos-prerequisites"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "infra-onboard-machine",
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/macos-prerequisites.md",
+      "requires": [],
+      "contract": {
+        "adapter": "homebrew",
+        "install_policy": "prerequisite"
+      }
+    },
+    {
+      "id": "xcode-command-line-tools",
+      "kind": "system-capability",
+      "platforms": [
+        "macos"
+      ],
+      "groups": [
+        "macos-prerequisites"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "infra-onboard-machine"
+      ],
+      "lifecycle_doc": "dependency-references/macos-prerequisites.md",
+      "requires": [],
+      "contract": {
+        "adapter": "xcode-command-line-tools",
+        "install_policy": "prerequisite"
+      }
+    },
+    {
+      "id": "sshfs",
+      "kind": "package",
+      "platforms": [
+        "linux"
+      ],
+      "groups": [
+        "remote-vault-access"
+      ],
+      "eligibility": "remote-vault-clients",
+      "required_by": [
+        "infra-onboard-machine",
+        "vault-access"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "linux": {
+            "manager": "apt",
+            "package": "sshfs"
+          }
+        },
+        "verify": {
+          "command": "sshfs",
+          "args": [
+            "--version"
+          ]
+        }
+      }
+    },
+    {
+      "id": "openssh",
+      "kind": "system-capability",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "machine-access"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "infra-onboard-machine"
+      ],
+      "lifecycle_doc": "dependency-references/machine-access-prerequisites.md",
+      "requires": [],
+      "contract": {
+        "adapter": "operating-system",
+        "install_policy": "required"
+      }
+    },
+    {
+      "id": "git-lfs",
+      "kind": "system-capability",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "workspace-prerequisites"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "infra-onboard-machine",
+        "infra-sync-code-workspaces"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "onboarding-package",
+        "install_policy": "required"
+      }
+    },
+    {
+      "id": "linux-worker-image",
+      "kind": "system-capability",
+      "platforms": [
+        "linux"
+      ],
+      "groups": [
+        "linux-worker-baseline"
+      ],
+      "eligibility": "linux-workers",
+      "required_by": [
+        "infra-onboard-machine"
+      ],
+      "lifecycle_doc": "dependency-references/linux-worker-image.md",
+      "requires": [],
+      "contract": {
+        "adapter": "machine-image",
+        "install_policy": "image-owned",
+        "commands": [
+          "ssh",
+          "curl",
+          "jq",
+          "python3",
+          "git",
+          "git-lfs",
+          "wg",
+          "resolvectl",
+          "gh",
+          "btop",
+          "rg",
+          "fd",
+          "fzf",
+          "secret-tool",
+          "rsync",
+          "starship",
+          "tmux",
+          "node",
+          "npm",
+          "pnpm",
+          "bun",
+          "uv",
+          "claude",
+          "claude-codex",
+          "claude-codex-high",
+          "claude-codex-xhigh",
+          "claude-kimi",
+          "kimi",
+          "opencode",
+          "gws",
+          "gcloud",
+          "rclone"
+        ],
+        "services": [
+          "ssh.service",
+          "wg-quick@wg0.service",
+          "avahi-daemon.service",
+          "dbus.service"
+        ],
+        "owner_workspace": "codex-machine-image",
+        "operating_system": "ubuntu",
+        "release": "26.04",
+        "architectures": [
+          "x64"
+        ],
+        "apt_packages": [
+          "build-essential",
+          "btop",
+          "ca-certificates",
+          "curl",
+          "fd-find",
+          "fzf",
+          "git",
+          "git-lfs",
+          "gnupg",
+          "gnome-keyring",
+          "jq",
+          "libsecret-tools",
+          "pinentry-gnome3",
+          "pkg-config",
+          "python3",
+          "python3-dbus",
+          "python3-venv",
+          "rclone",
+          "ripgrep",
+          "rsync",
+          "seahorse",
+          "starship",
+          "tmux",
+          "unzip",
+          "wget",
+          "xz-utils",
+          "zip",
+          "zstd"
+        ],
+        "official_repository_packages": [
+          "gh"
+        ]
+      }
+    },
+    {
+      "id": "secret-bindings",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "machine-security"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "infra-onboard-machine",
+        "ctx9-agents-sync"
+      ],
+      "lifecycle_doc": "dependency-references/secret-bindings.md",
+      "requires": [
+        "ctx9-launcher"
+      ],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "ctx9-component",
+            "package": "secret-bindings",
+            "private_catalog_url": "https://gitlab.com/api/v4/projects/85404252/packages/generic/secret-bindings-machine/1.1.31/components.json",
+            "credential_binding": "ctx9-gitlab-group-read"
+          },
+          "linux": {
+            "manager": "ctx9-component",
+            "package": "secret-bindings",
+            "private_catalog_url": "https://gitlab.com/api/v4/projects/85404252/packages/generic/secret-bindings-machine/1.1.31/components.json",
+            "credential_binding": "ctx9-gitlab-group-read"
+          }
+        },
+        "verify": {
+          "command": "secret-bindings",
+          "args": [
+            "--version",
+            "--json"
+          ],
+          "exact": "1.1.31"
+        }
+      }
+    },
+    {
+      "id": "langfuse-coding-agent-integration",
+      "kind": "optional-service",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "coding-observability"
+      ],
+      "eligibility": "capability-selected",
+      "required_by": [
+        "infra-configure-langfuse-coding-agents"
+      ],
+      "lifecycle_doc": "dependency-references/langfuse-coding-agents.md",
+      "requires": [
+        "node24",
+        "uv",
+        "codex-cli",
+        "claude-code"
+      ],
+      "contract": {
+        "adapter": "skill-managed",
+        "install_policy": "selected"
+      }
+    },
+    {
+      "id": "kimi-code",
+      "kind": "coding-tool",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "coding-tools"
+      ],
+      "eligibility": "capability-selected",
+      "required_by": [
+        "infra-onboard-machine"
+      ],
+      "lifecycle_doc": "dependency-references/kimi-code.md",
+      "requires": [],
+      "contract": {
+        "adapter": "official-installer",
+        "install_policy": "selected",
+        "update_policy": "official-checksummed-channel"
+      }
+    },
+    {
+      "id": "bun",
+      "kind": "system-capability",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "developer-tools"
+      ],
+      "eligibility": "capability-selected",
+      "required_by": [
+        "infra-onboard-machine"
+      ],
+      "lifecycle_doc": "dependency-references/optional-developer-tools.md",
+      "requires": [],
+      "contract": {
+        "adapter": "official-installer",
+        "install_policy": "selected"
+      }
+    },
+    {
+      "id": "docker",
+      "kind": "system-capability",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "container-tools"
+      ],
+      "eligibility": "capability-selected",
+      "required_by": [
+        "infra-onboard-machine"
+      ],
+      "lifecycle_doc": "dependency-references/optional-developer-tools.md",
+      "requires": [],
+      "contract": {
+        "adapter": "onboarding-package",
+        "install_policy": "selected"
+      }
+    },
+    {
+      "id": "kubectl",
+      "kind": "system-capability",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "kubernetes-tools"
+      ],
+      "eligibility": "capability-selected",
+      "required_by": [
+        "infra-kubernetes",
+        "infra-onboard-machine"
+      ],
+      "lifecycle_doc": "dependency-references/optional-developer-tools.md",
+      "requires": [],
+      "contract": {
+        "adapter": "onboarding-package",
+        "install_policy": "selected"
+      }
+    },
+    {
+      "id": "helm",
+      "kind": "system-capability",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "kubernetes-tools"
+      ],
+      "eligibility": "capability-selected",
+      "required_by": [
+        "infra-kubernetes",
+        "infra-onboard-machine"
+      ],
+      "lifecycle_doc": "dependency-references/optional-developer-tools.md",
+      "requires": [],
+      "contract": {
+        "adapter": "onboarding-package",
+        "install_policy": "selected"
+      }
+    },
+    {
+      "id": "sops",
+      "kind": "system-capability",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "repository-security"
+      ],
+      "eligibility": "capability-selected",
+      "required_by": [
+        "infra-onboard-machine"
+      ],
+      "lifecycle_doc": "dependency-references/optional-developer-tools.md",
+      "requires": [],
+      "contract": {
+        "adapter": "onboarding-package",
+        "install_policy": "selected"
+      }
+    },
+    {
+      "id": "rclone",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "storage-tools"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "infra-manage-rclone-google-drive",
+        "codefoldersync-backup",
+        "vault-sync"
+      ],
+      "lifecycle_doc": "dependency-references/rclone-google-drive.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew",
+            "package": "rclone"
+          },
+          "linux": {
+            "manager": "apt",
+            "package": "rclone"
+          }
+        },
+        "verify": {
+          "command": "rclone",
+          "args": [
+            "version"
+          ],
+          "minimum": "1.70.0"
+        }
+      }
+    },
+    {
+      "id": "coding-provider-launchers",
+      "kind": "system-capability",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "coding-tools"
+      ],
+      "eligibility": "capability-selected",
+      "required_by": [
+        "infra-onboard-machine"
+      ],
+      "lifecycle_doc": "dependency-references/optional-developer-tools.md",
+      "requires": [],
+      "contract": {
+        "adapter": "onboarding-package",
+        "install_policy": "selected",
+        "commands": [
+          "claude-codex",
+          "claude-codex-high",
+          "claude-codex-xhigh",
+          "claude-kimi"
+        ]
+      }
+    }
+  ]
+}

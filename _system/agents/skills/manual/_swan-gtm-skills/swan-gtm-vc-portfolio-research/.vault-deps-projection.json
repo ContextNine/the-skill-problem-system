@@ -1,0 +1,8 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "swan-gtm-skills",
+  "source": "skills/brad-smith/vc-portfolio-research",
+  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-vc-portfolio-research",
+  "type": "manual-skill",
+  "title_override": "Swan GTM Skills \u00b7 VC portfolio research"
+}

@@ -1,0 +1,5 @@
+interface:
+  short_description: "Audit package advisories and install risk"
+  default_prompt: "Use $code-audit-repo-security to audit this repository for known package vulnerabilities and risky dependency install behavior."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,8 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "swan-gtm-skills",
+  "source": "skills/peter-cools/signal-anchored-message",
+  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-signal-anchored-message",
+  "type": "manual-skill",
+  "title_override": "Swan GTM Skills \u00b7 Signal-anchored message"
+}

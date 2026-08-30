@@ -1,0 +1,5 @@
+interface:
+  short_description: "Rank and route one Brain Dump section"
+  default_prompt: "Use $vault-triage-brain-dump-section to recommend 3–5 destinations for one Brain Dump section, then apply my choice."
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,8 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "swan-gtm-skills",
+  "source": "skills/alex-vacca/bridgebound-symptoms-11",
+  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-bridgebound-symptoms-11",
+  "type": "manual-skill",
+  "title_override": "Swan GTM Skills \u00b7 Bridgebound symptoms and signs triggers"
+}

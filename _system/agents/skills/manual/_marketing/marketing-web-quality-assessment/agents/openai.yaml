@@ -1,0 +1,5 @@
+interface:
+  short_description: "Audit web quality with executable measurements"
+  default_prompt: "Use $marketing-web-quality-assessment to audit this site across performance, accessibility, best practices, Core Web Vitals, and SEO."
+policy:
+  allow_implicit_invocation: false

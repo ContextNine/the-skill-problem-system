@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agent profile",
+  "type": "object",
+  "required": ["schema_version", "id", "display_name", "github_transport"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "id": {"type": "string", "minLength": 1},
+    "display_name": {"type": "string", "minLength": 1},
+    "github_transport": {"enum": ["ssh", "https"]}
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,8 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "swan-gtm-skills",
+  "source": "skills/ariel-cohen/closed-won-replication-play",
+  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-closed-won-replication-play",
+  "type": "manual-skill",
+  "title_override": "Swan GTM Skills \u00b7 Closed-won replication play"
+}

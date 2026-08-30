@@ -1,0 +1,5 @@
+interface:
+  short_description: "Upload intentional public files to R2"
+  default_prompt: "Use $infra-file-upload to inspect and upload this requested public file safely."
+policy:
+  allow_implicit_invocation: true

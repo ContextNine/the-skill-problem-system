@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Fleet machines",
+  "type": "object",
+  "required": ["schema_version", "primary_machine_id", "vault_git", "machines"],
+  "properties": {
+    "schema_version": {"const": 7},
+    "primary_machine_id": {"type": "string", "minLength": 1},
+    "vault_git": {
+      "type": "object",
+      "required": ["owner_machine_id", "refresh_owner_machine_id", "remote", "branch"],
+      "properties": {
+        "owner_machine_id": {"type": ["string", "null"]},
+        "refresh_owner_machine_id": {"type": ["string", "null"]},
+        "remote": {"type": "string", "minLength": 1},
+        "branch": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "machines": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "display_name", "enabled", "role", "platform", "transport", "home", "roots", "vault"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "display_name": {"type": "string", "minLength": 1},
+          "enabled": {"type": "boolean"},
+          "role": {"enum": ["primary", "worker"]},
+          "platform": {"enum": ["macos", "linux"]},
+          "transport": {"enum": ["local", "ssh"]},
+          "home": {"type": "string", "pattern": "^/"},
+          "roots": {
+            "type": "object",
+            "required": ["code", "vault"],
+            "properties": {
+              "code": {"type": "string", "minLength": 1},
+              "vault": {"type": ["string", "null"]}
+            },
+            "additionalProperties": false
+          },
+          "vault": {
+            "type": "object",
+            "required": ["enabled", "checkout_mode", "required"],
+            "properties": {
+              "enabled": {"type": "boolean"},
+              "checkout_mode": {"enum": ["primary-external-git", "icloud-gitless", "remote-sshfs", "none"]},
+              "required": {"type": "boolean"},
+              "remote_access": {
+                "type": "object",
+                "properties": {
+                  "host_enabled": {"type": "boolean"},
+                  "source_machine_id": {"type": "string", "minLength": 1},
+                  "writable": {"type": "boolean"}
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

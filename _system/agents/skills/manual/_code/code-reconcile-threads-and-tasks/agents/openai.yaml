@@ -1,0 +1,5 @@
+interface:
+  short_description: "Reconcile coding threads into an actionable backlog"
+  default_prompt: "Use $code-reconcile-threads-and-tasks to consolidate these coding threads and task notes into verified summaries, aligned decisions, and a prioritized outcome backlog."
+policy:
+  allow_implicit_invocation: false

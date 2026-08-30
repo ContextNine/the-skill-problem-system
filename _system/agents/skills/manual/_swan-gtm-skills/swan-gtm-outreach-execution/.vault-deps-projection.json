@@ -1,0 +1,8 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "swan-gtm-skills",
+  "source": "skills/jeremy-hurst/outreach-execution",
+  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-outreach-execution",
+  "type": "manual-skill",
+  "title_override": "Swan GTM Skills \u00b7 Outreach execution"
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Installed agent package ownership manifest",
+  "type": "object",
+  "required": ["schema_version", "package_version", "owned_paths"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "package_version": {"type": "string", "minLength": 1},
+    "owned_paths": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+  },
+  "additionalProperties": false
+}

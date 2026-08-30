@@ -1,0 +1,8 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "swan-gtm-skills",
+  "source": "skills/ido-goldberg/brief",
+  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-brief",
+  "type": "manual-skill",
+  "title_override": "Swan GTM Skills \u00b7 Brief"
+}

@@ -1,0 +1,8 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "swan-gtm-skills",
+  "source": "skills/yahav-fuchs/subreddit-pre-post-check",
+  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-subreddit-pre-post-check",
+  "type": "manual-skill",
+  "title_override": "Swan GTM Skills \u00b7 Subreddit pre-post check"
+}

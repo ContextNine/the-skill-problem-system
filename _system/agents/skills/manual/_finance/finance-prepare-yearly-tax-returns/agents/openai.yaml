@@ -1,0 +1,5 @@
+interface:
+  short_description: "Prepare yearly personal and company tax records"
+  default_prompt: "Use $finance-prepare-yearly-tax-returns to create or refresh my personal and company tax-control notes for the requested South African tax year."
+policy:
+  allow_implicit_invocation: false

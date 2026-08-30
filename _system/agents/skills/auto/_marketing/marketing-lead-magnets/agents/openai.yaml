@@ -1,0 +1,5 @@
+interface:
+  short_description: "Build lead-magnet and post-opt-in journeys"
+  default_prompt: "Use $marketing-lead-magnets to audit and implement this lead-magnet journey in the owning repository."
+policy:
+  allow_implicit_invocation: true

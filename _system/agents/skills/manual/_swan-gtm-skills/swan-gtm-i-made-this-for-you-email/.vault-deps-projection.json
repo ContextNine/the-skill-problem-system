@@ -1,0 +1,8 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "swan-gtm-skills",
+  "source": "skills/daniel-bustamante/i-made-this-for-you-email",
+  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-i-made-this-for-you-email",
+  "type": "manual-skill",
+  "title_override": "Swan GTM Skills \u00b7 Write an \"I made this for you\" email"
+}

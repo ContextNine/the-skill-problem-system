@@ -1,0 +1,8 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "swan-gtm-skills",
+  "source": "skills/ivan-falco/meta-ads-operating-system",
+  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-meta-ads-operating-system",
+  "type": "manual-skill",
+  "title_override": "Swan GTM Skills \u00b7 Meta Ads operating system"
+}

@@ -1,0 +1,3555 @@
+{
+  "excluded": 91,
+  "included": 377,
+  "schema_version": 1,
+  "skills": [
+    {
+      "license": "MIT",
+      "name": "agents-continue",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/auto/_agents/agents-continue",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "agents-handoff",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/auto/_agents/agents-handoff",
+      "status": "included"
+    },
+    {
+      "name": "agents-write-a-skill",
+      "reason": "references an unresolved private configuration contract",
+      "source": "_system/agents/skills/auto/_agents/agents-write-a-skill",
+      "status": "excluded"
+    },
+    {
+      "license": "MIT",
+      "name": "code-audit-repo-security",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/auto/_code/code-audit-repo-security",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "code-chrome-devtools-cli",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/auto/_code/code-chrome-devtools-cli",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "code-env-tooling",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/auto/_code/code-env-tooling",
+      "status": "included"
+    },
+    {
+      "name": "code-gh-open-source-pr",
+      "reason": "references an unresolved private configuration contract",
+      "source": "_system/agents/skills/auto/_code/code-gh-open-source-pr",
+      "status": "excluded"
+    },
+    {
+      "license": "MIT",
+      "name": "code-playwright-cli",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/auto/_code/code-playwright-cli",
+      "status": "included"
+    },
+    {
+      "name": "infra-code-folder-and-computer-topology",
+      "reason": "references an unresolved private configuration contract",
+      "source": "_system/agents/skills/auto/_infrastructure/infra-code-folder-and-computer-topology",
+      "status": "excluded"
+    },
+    {
+      "license": "MIT",
+      "name": "infra-file-upload",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/auto/_infrastructure/infra-file-upload",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "infra-kubernetes",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/auto/_infrastructure/infra-kubernetes",
+      "status": "included"
+    },
+    {
+      "name": "infra-manage-fleet-terminal-workspaces",
+      "reason": "references an unresolved private configuration contract",
+      "source": "_system/agents/skills/auto/_infrastructure/infra-manage-fleet-terminal-workspaces",
+      "status": "excluded"
+    },
+    {
+      "name": "infra-manage-rclone-google-drive",
+      "reason": "contains a private or machine-specific reference",
+      "source": "_system/agents/skills/auto/_infrastructure/infra-manage-rclone-google-drive",
+      "status": "excluded"
+    },
+    {
+      "name": "infra-manipulate-threads",
+      "reason": "contains a private or machine-specific reference",
+      "source": "_system/agents/skills/auto/_infrastructure/infra-manipulate-threads",
+      "status": "excluded"
+    },
+    {
+      "license": "MIT",
+      "name": "infra-md-html-publisher",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/auto/_infrastructure/infra-md-html-publisher",
+      "status": "included"
+    },
+    {
+      "name": "infra-onboard-machine",
+      "reason": "contains a private or machine-specific reference",
+      "source": "_system/agents/skills/auto/_infrastructure/infra-onboard-machine",
+      "status": "excluded"
+    },
+    {
+      "license": "MIT",
+      "name": "infra-run-postgresql",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/auto/_infrastructure/infra-run-postgresql",
+      "status": "included"
+    },
+    {
+      "name": "infra-sync-code-workspaces",
+      "reason": "contains a private or machine-specific reference",
+      "source": "_system/agents/skills/auto/_infrastructure/infra-sync-code-workspaces",
+      "status": "excluded"
+    },
+    {
+      "license": "MIT",
+      "name": "infra-update-fleet-coding-tools",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/auto/_infrastructure/infra-update-fleet-coding-tools",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "infra-update-fleet-dependencies",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/auto/_infrastructure/infra-update-fleet-dependencies",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "marketing-lead-magnets",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/auto/_marketing/marketing-lead-magnets",
+      "status": "included"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "spreadsheets-witan-read-source",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/auto/_spreadsheets/spreadsheets-witan-read-source",
+      "source_repository": "https://github.com/witanlabs/witan-cli",
+      "status": "included"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "spreadsheets-witan-xlsx",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/auto/_spreadsheets/spreadsheets-witan-xlsx",
+      "source_repository": "https://github.com/witanlabs/witan-cli",
+      "status": "included"
+    },
+    {
+      "name": "vault",
+      "reason": "contains a private or machine-specific reference",
+      "source": "_system/agents/skills/auto/_vault/vault",
+      "status": "excluded"
+    },
+    {
+      "license": "MIT",
+      "name": "vault-excalidraw-canvas",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/auto/_vault/vault-excalidraw-canvas",
+      "source_repository": "https://github.com/whq25/agent-canvas",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "vault-upgrade-repair",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/auto/_vault/vault-upgrade-repair",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "agents-delay-execution",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_agents/agents-delay-execution",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "agents-grill-me",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_agents/agents-grill-me",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "agents-save-desktop-conversation",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_agents/agents-save-desktop-conversation",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "agents-summary",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_agents/agents-summary",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "blog-competitor-pages",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_blogs/blog-competitor-pages",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "blog-research-competitor",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_blogs/blog-research-competitor",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "blog-research-create-briefs",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_blogs/blog-research-create-briefs",
+      "status": "included"
+    },
+    {
+      "name": "claude-seo",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-audit",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-audit",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-backlinks",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-backlinks",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-cluster",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-cluster",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-competitor-pages",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-competitor-pages",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-content",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-content",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-content-brief",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-content-brief",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-dataforseo",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-dataforseo",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-drift",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-drift",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-ecommerce",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-ecommerce",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-flow",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-flow",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-geo",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-geo",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-google",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-google",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-hreflang",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-hreflang",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-image-gen",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-image-gen",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-images",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-images",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-local",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-local",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-maps",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-maps",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-page",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-page",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-plan",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-plan",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-programmatic",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-programmatic",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-schema",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-schema",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-sitemap",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-sitemap",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-sxo",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-sxo",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "name": "claude-seo-technical",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/manual/_claude-seo/claude-seo-technical",
+      "source_repository": "https://github.com/AgriciDaniel/claude-seo",
+      "status": "excluded"
+    },
+    {
+      "license": "MIT",
+      "name": "code-chrome-agent",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_code/code-chrome-agent",
+      "status": "included"
+    },
+    {
+      "name": "code-chrome-extension-sampler",
+      "reason": "references an unresolved private configuration contract",
+      "source": "_system/agents/skills/manual/_code/code-chrome-extension-sampler",
+      "status": "excluded"
+    },
+    {
+      "license": "MIT",
+      "name": "code-chrome-lost-window-recovery",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_code/code-chrome-lost-window-recovery",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "code-design-an-interface",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_code/code-design-an-interface",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "code-domain-model",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_code/code-domain-model",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "code-improve-codebase-architecture",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_code/code-improve-codebase-architecture",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "code-install-cce-local-embedding-mcp",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_code/code-install-cce-local-embedding-mcp",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "code-reconcile-threads-and-tasks",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_code/code-reconcile-threads-and-tasks",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "code-ubiquitous-language",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_code/code-ubiquitous-language",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-ab-testing",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-ab-testing",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-ad-creative",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-ad-creative",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-ads",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-ads",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-ai-seo",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-ai-seo",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-analytics",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-analytics",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-aso",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-aso",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-attribution",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-attribution",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-churn-prevention",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-churn-prevention",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-co-marketing",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-co-marketing",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-cold-email",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-cold-email",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-community-marketing",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-community-marketing",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-competitor-profiling",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-competitor-profiling",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-competitors",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-competitors",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-content-strategy",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-content-strategy",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-copy-editing",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-copy-editing",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-copywriting",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-copywriting",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-cro",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-cro",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-customer-research",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-customer-research",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-directory-submissions",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-directory-submissions",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-emails",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-emails",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-free-tools",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-free-tools",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-image",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-image",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-influencer-marketing",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-influencer-marketing",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-launch",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-launch",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-lead-magnets",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-lead-magnets",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-marketing-council",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-marketing-council",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-marketing-ideas",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-marketing-ideas",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-marketing-loops",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-marketing-loops",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "name": "corey-marketing-plan",
+      "reason": "contains a private or machine-specific reference",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-marketing-plan",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "excluded"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-marketing-psychology",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-marketing-psychology",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-offers",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-offers",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-onboarding",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-onboarding",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-paywalls",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-paywalls",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-popups",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-popups",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-pricing",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-pricing",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-product-marketing",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-product-marketing",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-programmatic-seo",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-programmatic-seo",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-prospecting",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-prospecting",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-public-relations",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-public-relations",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-referrals",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-referrals",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-revops",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-revops",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-sales-enablement",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-sales-enablement",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-schema",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-schema",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-seo-audit",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-seo-audit",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-signup",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-signup",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-site-architecture",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-site-architecture",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-sms",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-sms",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-social",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-social",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "corey-video",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_corey-marketing-skills/corey-video",
+      "source_repository": "https://github.com/coreyhaines31/marketingskills",
+      "status": "included"
+    },
+    {
+      "name": "creative-frontend-slides",
+      "reason": "contains a private or machine-specific reference",
+      "source": "_system/agents/skills/manual/_creative/creative-frontend-slides",
+      "source_repository": "https://github.com/zarazhangrui/frontend-slides",
+      "status": "excluded"
+    },
+    {
+      "name": "creative-install-font",
+      "reason": "references an unresolved private configuration contract",
+      "source": "_system/agents/skills/manual/_creative/creative-install-font",
+      "status": "excluded"
+    },
+    {
+      "name": "creative-openai-image-batch",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_creative/creative-openai-image-batch",
+      "status": "excluded"
+    },
+    {
+      "license": "MIT",
+      "name": "documents-reliable-pdf-data-extraction",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_documents/documents-reliable-pdf-data-extraction",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "finance-generate-invoice",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_finance/finance-generate-invoice",
+      "status": "included"
+    },
+    {
+      "name": "finance-gmail-invoice-and-statement-collector",
+      "reason": "references an unresolved private configuration contract",
+      "source": "_system/agents/skills/manual/_finance/finance-gmail-invoice-and-statement-collector",
+      "status": "excluded"
+    },
+    {
+      "license": "MIT",
+      "name": "finance-prepare-yearly-tax-returns",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_finance/finance-prepare-yearly-tax-returns",
+      "status": "included"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "gws-calendar",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_gws/gws-calendar",
+      "source_repository": "https://github.com/googleworkspace/cli",
+      "status": "included"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "gws-calendar-agenda",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_gws/gws-calendar-agenda",
+      "source_repository": "https://github.com/googleworkspace/cli",
+      "status": "included"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "gws-calendar-insert",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_gws/gws-calendar-insert",
+      "source_repository": "https://github.com/googleworkspace/cli",
+      "status": "included"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "gws-drive",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_gws/gws-drive",
+      "source_repository": "https://github.com/googleworkspace/cli",
+      "status": "included"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "gws-drive-upload",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_gws/gws-drive-upload",
+      "source_repository": "https://github.com/googleworkspace/cli",
+      "status": "included"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "gws-gmail",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_gws/gws-gmail",
+      "source_repository": "https://github.com/googleworkspace/cli",
+      "status": "included"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "gws-gmail-forward",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_gws/gws-gmail-forward",
+      "source_repository": "https://github.com/googleworkspace/cli",
+      "status": "included"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "gws-gmail-read",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_gws/gws-gmail-read",
+      "source_repository": "https://github.com/googleworkspace/cli",
+      "status": "included"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "gws-gmail-reply",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_gws/gws-gmail-reply",
+      "source_repository": "https://github.com/googleworkspace/cli",
+      "status": "included"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "gws-gmail-reply-all",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_gws/gws-gmail-reply-all",
+      "source_repository": "https://github.com/googleworkspace/cli",
+      "status": "included"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "gws-gmail-send",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_gws/gws-gmail-send",
+      "source_repository": "https://github.com/googleworkspace/cli",
+      "status": "included"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "gws-gmail-triage",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_gws/gws-gmail-triage",
+      "source_repository": "https://github.com/googleworkspace/cli",
+      "status": "included"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "gws-gmail-watch",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_gws/gws-gmail-watch",
+      "source_repository": "https://github.com/googleworkspace/cli",
+      "status": "included"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "gws-shared",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_gws/gws-shared",
+      "source_repository": "https://github.com/googleworkspace/cli",
+      "status": "included"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "gws-sheets",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_gws/gws-sheets",
+      "source_repository": "https://github.com/googleworkspace/cli",
+      "status": "included"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "gws-sheets-append",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_gws/gws-sheets-append",
+      "source_repository": "https://github.com/googleworkspace/cli",
+      "status": "included"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "gws-sheets-read",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_gws/gws-sheets-read",
+      "source_repository": "https://github.com/googleworkspace/cli",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "infra-configure-langfuse-coding-agents",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_infrastructure/infra-configure-langfuse-coding-agents",
+      "status": "included"
+    },
+    {
+      "name": "marketing-google-marketing-measurement",
+      "reason": "references an unresolved private configuration contract",
+      "source": "_system/agents/skills/manual/_marketing/marketing-google-marketing-measurement",
+      "status": "excluded"
+    },
+    {
+      "name": "marketing-manage-utm-tracking-links",
+      "reason": "references an unresolved private configuration contract",
+      "source": "_system/agents/skills/manual/_marketing/marketing-manage-utm-tracking-links",
+      "status": "excluded"
+    },
+    {
+      "name": "marketing-nextjs-seo-audit-and-fix",
+      "reason": "references an unresolved private configuration contract",
+      "source": "_system/agents/skills/manual/_marketing/marketing-nextjs-seo-audit-and-fix",
+      "status": "excluded"
+    },
+    {
+      "license": "MIT",
+      "name": "marketing-search-visibility-diagnostics",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_marketing/marketing-search-visibility-diagnostics",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "marketing-web-quality-assessment",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_marketing/marketing-web-quality-assessment",
+      "status": "included"
+    },
+    {
+      "name": "mp-ask-matt",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_matt-p-skills/_engineering/mp-ask-matt",
+      "status": "excluded"
+    },
+    {
+      "name": "mp-code-review",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_matt-p-skills/_engineering/mp-code-review",
+      "status": "excluded"
+    },
+    {
+      "name": "mp-codebase-design",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_matt-p-skills/_engineering/mp-codebase-design",
+      "status": "excluded"
+    },
+    {
+      "name": "mp-diagnosing-bugs",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_matt-p-skills/_engineering/mp-diagnosing-bugs",
+      "status": "excluded"
+    },
+    {
+      "name": "mp-domain-modeling",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_matt-p-skills/_engineering/mp-domain-modeling",
+      "status": "excluded"
+    },
+    {
+      "name": "mp-grill-with-docs",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_matt-p-skills/_engineering/mp-grill-with-docs",
+      "status": "excluded"
+    },
+    {
+      "name": "mp-implement",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_matt-p-skills/_engineering/mp-implement",
+      "status": "excluded"
+    },
+    {
+      "name": "mp-improve-codebase-architecture",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_matt-p-skills/_engineering/mp-improve-codebase-architecture",
+      "status": "excluded"
+    },
+    {
+      "name": "mp-prototype",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_matt-p-skills/_engineering/mp-prototype",
+      "status": "excluded"
+    },
+    {
+      "name": "mp-research",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_matt-p-skills/_engineering/mp-research",
+      "status": "excluded"
+    },
+    {
+      "name": "mp-resolving-merge-conflicts",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_matt-p-skills/_engineering/mp-resolving-merge-conflicts",
+      "status": "excluded"
+    },
+    {
+      "name": "mp-setup-matt-pocock-skills",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_matt-p-skills/_engineering/mp-setup-matt-pocock-skills",
+      "status": "excluded"
+    },
+    {
+      "name": "mp-tdd",
+      "reason": "contains a private or machine-specific reference",
+      "source": "_system/agents/skills/manual/_matt-p-skills/_engineering/mp-tdd",
+      "status": "excluded"
+    },
+    {
+      "name": "mp-to-spec",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_matt-p-skills/_engineering/mp-to-spec",
+      "status": "excluded"
+    },
+    {
+      "name": "mp-to-tickets",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_matt-p-skills/_engineering/mp-to-tickets",
+      "status": "excluded"
+    },
+    {
+      "name": "mp-triage",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_matt-p-skills/_engineering/mp-triage",
+      "status": "excluded"
+    },
+    {
+      "name": "mp-wayfinder",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_matt-p-skills/_engineering/mp-wayfinder",
+      "status": "excluded"
+    },
+    {
+      "name": "mp-grill-me",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_matt-p-skills/_productivity/mp-grill-me",
+      "status": "excluded"
+    },
+    {
+      "name": "mp-grilling",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_matt-p-skills/_productivity/mp-grilling",
+      "status": "excluded"
+    },
+    {
+      "name": "mp-handoff",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_matt-p-skills/_productivity/mp-handoff",
+      "status": "excluded"
+    },
+    {
+      "name": "mp-teach",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_matt-p-skills/_productivity/mp-teach",
+      "status": "excluded"
+    },
+    {
+      "name": "mp-writing-great-skills",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_matt-p-skills/_productivity/mp-writing-great-skills",
+      "status": "excluded"
+    },
+    {
+      "name": "spreadsheets-housing-decision-model",
+      "reason": "references an unresolved private configuration contract",
+      "source": "_system/agents/skills/manual/_spreadsheets/spreadsheets-housing-decision-model",
+      "status": "excluded"
+    },
+    {
+      "name": "spreadsheets-update-financial-model-from-statements",
+      "reason": "references an unresolved private configuration contract",
+      "source": "_system/agents/skills/manual/_spreadsheets/spreadsheets-update-financial-model-from-statements",
+      "status": "excluded"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-1-to-1-abm-ads",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-1-to-1-abm-ads",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-52-newsletter-ideas",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-52-newsletter-ideas",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-abm-engagement-scoring",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-abm-engagement-scoring",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-abm-measurement-framework",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-abm-measurement-framework",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-abm-on-meta",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-abm-on-meta",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-abm-retargeting-framework",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-abm-retargeting-framework",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-account-health-audit",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-account-health-audit",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-account-intelligence-analyst",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-account-intelligence-analyst",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-account-progression-staging",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-account-progression-staging",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-account-selection-framework",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-account-selection-framework",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-account-tier-scoring",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-account-tier-scoring",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-ad-copywriting",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-ad-copywriting",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-ad-personas",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-ad-personas",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-ads-budget-allocation",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-ads-budget-allocation",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-ads-campaign-planning",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-ads-campaign-planning",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-ads-channel-selection",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-ads-channel-selection",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-ads-measurement-scorecard",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-ads-measurement-scorecard",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-ads-offers-strategy",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-ads-offers-strategy",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-ads-optimization-signals",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-ads-optimization-signals",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-ads-outbound-signaling-guide",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-ads-outbound-signaling-guide",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-ads-scaling-quadrant",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-ads-scaling-quadrant",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-ads-writing-style",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-ads-writing-style",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-advantage-plus",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-advantage-plus",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-advocate-voice-tuning",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-advocate-voice-tuning",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-aeo-citation-drill-down",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-aeo-citation-drill-down",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-aeo-score-audit",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-aeo-score-audit",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-aeo-visibility-tracking",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-aeo-visibility-tracking",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-ai-personalization-prompts",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-ai-personalization-prompts",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-ai-pricing-model-picker",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-ai-pricing-model-picker",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-ai-visibility-sampling",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-ai-visibility-sampling",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-atl-btl-messaging",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-atl-btl-messaging",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-audit-swan",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-audit-swan",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-auto-reply-is-not-a-reply",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-auto-reply-is-not-a-reply",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-b2b-affiliate-program-playbook",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-b2b-affiliate-program-playbook",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-b2b-cold-email-copywriting",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-b2b-cold-email-copywriting",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-battlecard",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-battlecard",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-beehiiv-newsletter-report",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-beehiiv-newsletter-report",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-bridge-before-cold",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-bridge-before-cold",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-bridgebound-firmographic-15",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-bridgebound-firmographic-15",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-bridgebound-history-16",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-bridgebound-history-16",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-bridgebound-in-market-20",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-bridgebound-in-market-20",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-bridgebound-relationship-39",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-bridgebound-relationship-39",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-bridgebound-symptoms-11",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-bridgebound-symptoms-11",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-brief",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-brief",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-build-influencer-marketing-strategy",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-build-influencer-marketing-strategy",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-build-list",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-build-list",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-buying-signals-6",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-buying-signals-6",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-call-scorecards",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-call-scorecards",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-campaign-benchmarking",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-campaign-benchmarking",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-category-of-one-positioning",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-category-of-one-positioning",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-champion-move-detection",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-champion-move-detection",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-citation-gap-outreach",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-citation-gap-outreach",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-clay-buying-signals-5",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-clay-buying-signals-5",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-clay-enrichment-9step",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-clay-enrichment-9step",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-clay-expert",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-clay-expert",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-clear-my-desk",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-clear-my-desk",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-closed-won-replication-play",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-closed-won-replication-play",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-cold-call-scripts",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-cold-call-scripts",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-cold-email-4-sequence",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-cold-email-4-sequence",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-cold-email-first-touch",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-cold-email-first-touch",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-cold-email-inbox-warmup",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-cold-email-inbox-warmup",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-cold-email-preflight",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-cold-email-preflight",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-cold-email-strategist",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-cold-email-strategist",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-cold-email-templates-34",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-cold-email-templates-34",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-cold-offer-architect",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-cold-offer-architect",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-community-radar",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-community-radar",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-competitive-intelligence-radar",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-competitive-intelligence-radar",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-competitor-connection-displacement",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-competitor-connection-displacement",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-conference-recommendation",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-conference-recommendation",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-creating-campaigns-ads-audiences",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-creating-campaigns-ads-audiences",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-creative-cadence-operating-system",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-creative-cadence-operating-system",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-creative-fatigue-detection",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-creative-fatigue-detection",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-creator-deal-pricing",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-creator-deal-pricing",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-creator-led-growth-90-days",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-creator-led-growth-90-days",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-creator-programme-qbr",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-creator-programme-qbr",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-credit-packaging",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-credit-packaging",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-crm-migration-consolidation",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-crm-migration-consolidation",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-cs-operations",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-cs-operations",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-customer-expansion-scoring",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-customer-expansion-scoring",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-data-enrichment",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-data-enrichment",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-deal-desk-operations",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-deal-desk-operations",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-deal-velocity-engineer",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-deal-velocity-engineer",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-demand-lifecycle",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-demand-lifecycle",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-dev-tool-pricing",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-dev-tool-pricing",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-draft-creator-campaign-brief",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-draft-creator-campaign-brief",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-earned-autonomy",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-earned-autonomy",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-email-1-variations-7",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-email-1-variations-7",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-email-content-ideas",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-email-content-ideas",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-email-copy-optimizer",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-email-copy-optimizer",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-email-metrics-benchmarks",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-email-metrics-benchmarks",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-email-sequence",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-email-sequence",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-email-subject-lines",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-email-subject-lines",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-email-writing-frameworks",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-email-writing-frameworks",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-estimate-creator-rate",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-estimate-creator-rate",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-event-radar",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-event-radar",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-expansion-opportunity-analysis",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-expansion-opportunity-analysis",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-expansion-revenue-architect",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-expansion-revenue-architect",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-find-b2b-creators-linkedin",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-find-b2b-creators-linkedin",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-forecast-creator-pipeline",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-forecast-creator-pipeline",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-founder-employees-or-creators",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-founder-employees-or-creators",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-founder-led-sales",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-founder-led-sales",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-founder-post-triggers-24",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-founder-post-triggers-24",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-frontal-messaging-templates",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-frontal-messaging-templates",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-google-ads",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-google-ads",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-google-ads-budget-portfolio-reallocation",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-google-ads-budget-portfolio-reallocation",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-google-ads-pmax-asset-groups",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-google-ads-pmax-asset-groups",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-google-ads-ppc-math",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-google-ads-ppc-math",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-google-ads-quality-score-diagnosis",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-google-ads-quality-score-diagnosis",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-google-ads-write-safety",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-google-ads-write-safety",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-gtm-compensation",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-gtm-compensation",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-gtm-data-architecture",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-gtm-data-architecture",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-gtm-philosophy",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-gtm-philosophy",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-gtm-planning",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-gtm-planning",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-gtm-plays-11",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-gtm-plays-11",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-handle-linkedin-profile-view-signal",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-handle-linkedin-profile-view-signal",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-handle-reply",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-handle-reply",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-hiring-radar",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-hiring-radar",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-i-made-this-for-you-email",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-i-made-this-for-you-email",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-icp",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-icp",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-icp-builder",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-icp-builder",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-icp-matrix-builder",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-icp-matrix-builder",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-inbound-is-data",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-inbound-is-data",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-inbound-triggers-30",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-inbound-triggers-30",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-inbox-warm-up-ramp",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-inbox-warm-up-ramp",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-inbox-zero",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-inbox-zero",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-influencer-post-engager-capture",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-influencer-post-engager-capture",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-josh-braun-copywriting",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-josh-braun-copywriting",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-lead-form-optimization",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-lead-form-optimization",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-lead-magnet-welcome-email",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-lead-magnet-welcome-email",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-lead-routing",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-lead-routing",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-lead-sources-guide",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-lead-sources-guide",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-linkedin-abm-1to1-few-many",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-linkedin-abm-1to1-few-many",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-linkedin-abm-ad-design",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-linkedin-abm-ad-design",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-linkedin-abm-audit",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-linkedin-abm-audit",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-linkedin-abm-monthly-report",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-linkedin-abm-monthly-report",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-linkedin-abm-strategy-planner",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-linkedin-abm-strategy-planner",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-linkedin-ads",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-linkedin-ads",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-linkedin-ads-abm-guide",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-linkedin-ads-abm-guide",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-linkedin-ads-audience-guide",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-linkedin-ads-audience-guide",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-linkedin-ads-ctr-signal",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-linkedin-ads-ctr-signal",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-linkedin-campaign-complete",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-linkedin-campaign-complete",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-linkedin-creator-campaign-launch",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-linkedin-creator-campaign-launch",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-linkedin-dm-signal-classifier",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-linkedin-dm-signal-classifier",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-linkedin-engagement-handler",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-linkedin-engagement-handler",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-linkedin-inmail",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-linkedin-inmail",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-linkedin-limits-warmup",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-linkedin-limits-warmup",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-linkedin-post-to-newsletter",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-linkedin-post-to-newsletter",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-linkedin-success-factors",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-linkedin-success-factors",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-list-architect",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-list-architect",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-list-building-tips",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-list-building-tips",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-local-ai-visibility",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-local-ai-visibility",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-map-contacts",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-map-contacts",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-marketing-operations",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-marketing-operations",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-measure-creator-roi",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-measure-creator-roi",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-message-validation",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-message-validation",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-meta-ads",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-meta-ads",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-meta-ads-operating-system",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-meta-ads-operating-system",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-meta-api-reference",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-meta-api-reference",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-meta-audience-strategy",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-meta-audience-strategy",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-meta-b2b-overview",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-meta-b2b-overview",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-meta-campaign-structure",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-meta-campaign-structure",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-meta-capi-and-events",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-meta-capi-and-events",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-meta-creative-strategy",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-meta-creative-strategy",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-meta-offer-strategy",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-meta-offer-strategy",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-meta-onboarding",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-meta-onboarding",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-meta-optimization-playbook",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-meta-optimization-playbook",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-meta-reporting",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-meta-reporting",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-meta-setup-and-tracking",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-meta-setup-and-tracking",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-meta-third-party-conversion-tracking",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-meta-third-party-conversion-tracking",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-move-gtm-diagnostic",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-move-gtm-diagnostic",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-multi-sender-rotation",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-multi-sender-rotation",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-multi-thread-deals",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-multi-thread-deals",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-negotiate-creator-rate",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-negotiate-creator-rate",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-never-guess-an-email",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-never-guess-an-email",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-newsletter-format",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-newsletter-format",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-newsletter-landing-page",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-newsletter-landing-page",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-newsletter-value-prop",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-newsletter-value-prop",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-newsletter-welcome-email",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-newsletter-welcome-email",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-newsletter-welcome-gift",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-newsletter-welcome-gift",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-newsletter-welcome-sequence",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-newsletter-welcome-sequence",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-objection-mining",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-objection-mining",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-operating-cadence-designer",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-operating-cadence-designer",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-outbound-performance-diagnosis",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-outbound-performance-diagnosis",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-outbound-strategy",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-outbound-strategy",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-outbound-triggers-6",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-outbound-triggers-6",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-outreach-4-categories",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-outreach-4-categories",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-outreach-execution",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-outreach-execution",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-outreach-messaging",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-outreach-messaging",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-pain-is-the-pitch",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-pain-is-the-pitch",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-partner-channel-operations",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-partner-channel-operations",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-partner-ecosystem-architect",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-partner-ecosystem-architect",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-patent-backed-seo-quick-wins",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-patent-backed-seo-quick-wins",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-persona-mapping-framework",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-persona-mapping-framework",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-personalization-6-buckets",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-personalization-6-buckets",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-personalization-hooks",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-personalization-hooks",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-personalization-playbooks",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-personalization-playbooks",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-pipeline-review",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-pipeline-review",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-pipeline-visibility",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-pipeline-visibility",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-positioning-and-story",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-positioning-and-story",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-positioning-messaging-designer",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-positioning-messaging-designer",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-post-meeting-execution",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-post-meeting-execution",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-post-radar",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-post-radar",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-pricing-monetisation-ops",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-pricing-monetisation-ops",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-reach-out",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-reach-out",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-recent-discourse-sweep",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-recent-discourse-sweep",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-reddit-account-health",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-reddit-account-health",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-reddit-account-warmup",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-reddit-account-warmup",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-reddit-attribution-tracking",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-reddit-attribution-tracking",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-reddit-brand-mention-triage",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-reddit-brand-mention-triage",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-reddit-campaign-launcher",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-reddit-campaign-launcher",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-reddit-comment-safety",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-reddit-comment-safety",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-reply-pull-gate",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-reply-pull-gate",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-research",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-research",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-revenue-operating-cadence",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-revenue-operating-cadence",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-reverse-etl-activation",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-reverse-etl-activation",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-revops-change-management",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-revops-change-management",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-revops-crisis",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-revops-crisis",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-revops-data-governance",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-revops-data-governance",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-revops-diagnostic",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-revops-diagnostic",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-revops-forecasting",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-revops-forecasting",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-revops-handoffs",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-revops-handoffs",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-revops-hubspot",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-revops-hubspot",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-revops-metrics",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-revops-metrics",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-revops-org-chart",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-revops-org-chart",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-revops-revenue-planning",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-revops-revenue-planning",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-revops-salesforce",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-revops-salesforce",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-revops-strategy",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-revops-strategy",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-revops-tech-stack",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-revops-tech-stack",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-roi-proof-generator",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-roi-proof-generator",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-saas-lifecycle",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-saas-lifecycle",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-sales-methodology",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-sales-methodology",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-sales-playbook-foundations",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-sales-playbook-foundations",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-scale-b2b-qualified-pipeline",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-scale-b2b-qualified-pipeline",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-score",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-score",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-sdr-master-prompts",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-sdr-master-prompts",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-sdr-outbound-rules",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-sdr-outbound-rules",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-seo-business-context",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-seo-business-context",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-seo-business-fit-filter",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-seo-business-fit-filter",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-seo-keyword-validation",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-seo-keyword-validation",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-seo-opportunity-extraction",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-seo-opportunity-extraction",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-seo-serp-qualification",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-seo-serp-qualification",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-seo-topic-prioritization",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-seo-topic-prioritization",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-seo-topic-research-pipeline",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-seo-topic-research-pipeline",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-seo-topic-shaping",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-seo-topic-shaping",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-set-creator-benchmarks",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-set-creator-benchmarks",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-signal-anchored-message",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-signal-anchored-message",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-signal-interpreter",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-signal-interpreter",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-signal-sourcer",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-signal-sourcer",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-signal-timing",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-signal-timing",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-signal-to-campaign",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-signal-to-campaign",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-skillify",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-skillify",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-stage-aware-follow-up",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-stage-aware-follow-up",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-subreddit-pre-post-check",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-subreddit-pre-post-check",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-subreddit-research",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-subreddit-research",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-tam-builder",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-tam-builder",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-track-contact-job-changes",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-track-contact-job-changes",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-vc-portfolio-research",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-vc-portfolio-research",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-viral-linkedin-lead-magnet-post",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-viral-linkedin-lead-magnet-post",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-visitor-radar",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-visitor-radar",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-warm-intro-intelligence",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-warm-intro-intelligence",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-website-to-signals",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-website-to-signals",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-weekly-roundup-email",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-weekly-roundup-email",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "swan-gtm-write-b2b-sponsored-post",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-write-b2b-sponsored-post",
+      "source_repository": "https://github.com/swan-gtm/gtm-skills",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "vault-scrape-and-organize-notion-in-temp-folder",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_vault/vault-scrape-and-organize-notion-in-temp-folder",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "vault-triage-brain-dump-section",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_vault/vault-triage-brain-dump-section",
+      "status": "included"
+    },
+    {
+      "name": "vibe-marketer-brand-voice",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_vibe-marketer-skills-pack/vibe-marketer-brand-voice",
+      "status": "excluded"
+    },
+    {
+      "name": "vibe-marketer-content-atomizer",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_vibe-marketer-skills-pack/vibe-marketer-content-atomizer",
+      "status": "excluded"
+    },
+    {
+      "name": "vibe-marketer-creative",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_vibe-marketer-skills-pack/vibe-marketer-creative",
+      "status": "excluded"
+    },
+    {
+      "name": "vibe-marketer-direct-response-copy",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_vibe-marketer-skills-pack/vibe-marketer-direct-response-copy",
+      "status": "excluded"
+    },
+    {
+      "name": "vibe-marketer-email-sequences",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_vibe-marketer-skills-pack/vibe-marketer-email-sequences",
+      "status": "excluded"
+    },
+    {
+      "name": "vibe-marketer-keyword-research",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_vibe-marketer-skills-pack/vibe-marketer-keyword-research",
+      "status": "excluded"
+    },
+    {
+      "name": "vibe-marketer-lead-magnet",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_vibe-marketer-skills-pack/vibe-marketer-lead-magnet",
+      "status": "excluded"
+    },
+    {
+      "name": "vibe-marketer-newsletter",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_vibe-marketer-skills-pack/vibe-marketer-newsletter",
+      "status": "excluded"
+    },
+    {
+      "name": "vibe-marketer-positioning-angles",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_vibe-marketer-skills-pack/vibe-marketer-positioning-angles",
+      "status": "excluded"
+    },
+    {
+      "name": "vibe-marketer-seo-content",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_vibe-marketer-skills-pack/vibe-marketer-seo-content",
+      "status": "excluded"
+    },
+    {
+      "name": "vibe-marketer-start-here",
+      "reason": "provenance or redistribution rights are not declared",
+      "source": "_system/agents/skills/manual/_vibe-marketer-skills-pack/vibe-marketer-start-here",
+      "status": "excluded"
+    },
+    {
+      "license": "MIT",
+      "name": "video-ai-production",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_video/video-ai-production",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "video-elevenlabs-voiceover",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_video/video-elevenlabs-voiceover",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "video-ffmpeg-video-assembly",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_video/video-ffmpeg-video-assembly",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "video-heygen-avatar-render",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_video/video-heygen-avatar-render",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "video-hyperframes-motion-graphics",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_video/video-hyperframes-motion-graphics",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "video-qa-review",
+      "reason": "portable first-party skill",
+      "source": "_system/agents/skills/manual/_video/video-qa-review",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "favicon",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/github/favicon",
+      "source_repository": "https://github.com/MohamedAbdallah-14/prompt-to-asset",
+      "status": "included"
+    },
+    {
+      "name": "goplaces",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/github/goplaces",
+      "source_repository": "https://github.com/openclaw/openclaw",
+      "status": "excluded"
+    },
+    {
+      "license": "MIT",
+      "name": "resume-builder",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/github/resume-builder",
+      "source_repository": "https://github.com/amruthpillai/reactive-resume",
+      "status": "included"
+    },
+    {
+      "license": "MIT",
+      "name": "skybridge",
+      "reason": "portable third-party skill with confirmed redistribution license",
+      "source": "_system/agents/skills/github/skybridge",
+      "source_repository": "https://github.com/alpic-ai/skybridge",
+      "status": "included"
+    },
+    {
+      "name": "unslop",
+      "reason": "redistribution license is not confirmed",
+      "source": "_system/agents/skills/github/unslop",
+      "source_repository": "https://github.com/cursor/plugins",
+      "status": "excluded"
+    },
+    {
+      "name": "impression-ai-trace-review",
+      "reason": "repository-owned projection is not a redistributable source",
+      "source": "_system/agents/skills/projected/impression/impression-ai-trace-review",
+      "status": "excluded"
+    },
+    {
+      "name": "impression-debugging-and-testing",
+      "reason": "repository-owned projection is not a redistributable source",
+      "source": "_system/agents/skills/projected/impression/impression-debugging-and-testing",
+      "status": "excluded"
+    },
+    {
+      "name": "impression-find-strong-opinion-about-topic",
+      "reason": "repository-owned projection is not a redistributable source",
+      "source": "_system/agents/skills/projected/impression/impression-find-strong-opinion-about-topic",
+      "status": "excluded"
+    },
+    {
+      "name": "impression-hotfix-build-push",
+      "reason": "repository-owned projection is not a redistributable source",
+      "source": "_system/agents/skills/projected/impression/impression-hotfix-build-push",
+      "status": "excluded"
+    },
+    {
+      "name": "impression-hotfix-publish-all-apps",
+      "reason": "repository-owned projection is not a redistributable source",
+      "source": "_system/agents/skills/projected/impression/impression-hotfix-publish-all-apps",
+      "status": "excluded"
+    },
+    {
+      "name": "impression-persona-extension-roxy-upload",
+      "reason": "repository-owned projection is not a redistributable source",
+      "source": "_system/agents/skills/projected/impression/impression-persona-extension-roxy-upload",
+      "status": "excluded"
+    },
+    {
+      "name": "incident-controller-manage-incidents",
+      "reason": "repository-owned projection is not a redistributable source",
+      "source": "_system/agents/skills/projected/incident-controller/incident-controller-manage-incidents",
+      "status": "excluded"
+    },
+    {
+      "name": "incident-controller-remediate-production-incidents",
+      "reason": "repository-owned projection is not a redistributable source",
+      "source": "_system/agents/skills/projected/incident-controller/incident-controller-remediate-production-incidents",
+      "status": "excluded"
+    },
+    {
+      "name": "personal-monorepo-publish-vault-site-content",
+      "reason": "repository-owned projection is not a redistributable source",
+      "source": "_system/agents/skills/projected/personal-monorepo/personal-monorepo-publish-vault-site-content",
+      "status": "excluded"
+    },
+    {
+      "name": "catalog-collection",
+      "reason": "generated catalog",
+      "source": "_system/agents/skills/catalog",
+      "status": "excluded"
+    },
+    {
+      "name": "dormant-collection",
+      "reason": "dormant source collection",
+      "source": "_system/agents/skills/dormant",
+      "status": "excluded"
+    }
+  ]
+}

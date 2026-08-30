@@ -1,0 +1,8 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "swan-gtm-skills",
+  "source": "skills/alex-vacca/buying-signals-6",
+  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-buying-signals-6",
+  "type": "manual-skill",
+  "title_override": "Swan GTM Skills \u00b7 Buying signals ranked by purchase correlation"
+}

@@ -1,0 +1,8 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "swan-gtm-skills",
+  "source": "skills/thomas-marcelle/linkedin-creator-campaign-launch",
+  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-linkedin-creator-campaign-launch",
+  "type": "manual-skill",
+  "title_override": "Swan GTM Skills \u00b7 Launch a LinkedIn creator campaign"
+}

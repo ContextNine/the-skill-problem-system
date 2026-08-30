@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+export PYTHONDONTWRITEBYTECODE=1
 
 repo_root="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 package_root="${repo_root}/_system/agents/_package"

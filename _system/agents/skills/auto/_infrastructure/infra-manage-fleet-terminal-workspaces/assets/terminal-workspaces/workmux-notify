@@ -1,0 +1,459 @@
+#!/usr/bin/env python3
+"""Durable Codex/Claude turn notifications for managed workmux sessions."""
+
+from __future__ import annotations
+
+import argparse
+from datetime import datetime, timedelta, timezone
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+import tempfile
+import uuid
+from typing import Any
+
+
+SCHEMA_VERSION = 1
+MAX_EVENT_BYTES = 16 * 1024
+EVENT_ID = re.compile(r"^[0-9a-f]{32}$")
+
+
+def utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def state_root() -> Path:
+    override = os.environ.get("WORKMUX_NOTIFY_STATE_DIR")
+    return Path(override).expanduser() if override else Path.home() / ".local/state/workmux/notifications"
+
+
+def config_path() -> Path:
+    override = os.environ.get("WORKMUX_NOTIFY_CONFIG")
+    return Path(override).expanduser() if override else Path.home() / ".config/workmux/notifications.json"
+
+
+def secure_directory(path: Path) -> None:
+    path.mkdir(parents=True, exist_ok=True)
+    path.chmod(0o700)
+
+
+def atomic_json(path: Path, value: Any, mode: int = 0o600) -> None:
+    secure_directory(path.parent)
+    payload = (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()
+    with tempfile.NamedTemporaryFile(dir=path.parent, delete=False) as handle:
+        handle.write(payload)
+        temporary = Path(handle.name)
+    temporary.chmod(mode)
+    os.replace(temporary, path)
+
+
+def read_json(path: Path) -> Any:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_config() -> dict[str, Any]:
+    data = read_json(config_path())
+    if data.get("schema_version") != SCHEMA_VERSION or not isinstance(data.get("machine"), dict):
+        raise ValueError("invalid workmux notification config")
+    return data
+
+
+def hook_payload() -> dict[str, Any]:
+    payload = sys.stdin.buffer.read(MAX_EVENT_BYTES + 1)
+    if len(payload) > MAX_EVENT_BYTES:
+        raise ValueError("hook payload exceeds limit")
+    if not payload.strip():
+        return {}
+    parsed = json.loads(payload)
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def tmux_metadata() -> dict[str, str]:
+    pane = os.environ.get("TMUX_PANE", "").strip()
+    if not pane:
+        return {"session": "", "window_index": "", "window_name": ""}
+    result = subprocess.run(
+        ["tmux", "display-message", "-p", "-t", pane, "#{session_name}\t#{window_index}\t#{window_name}"],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        timeout=2,
+        check=False,
+    )
+    if result.returncode != 0:
+        return {"session": "", "window_index": "", "window_name": ""}
+    values = result.stdout.rstrip("\n").split("\t", 2)
+    values += [""] * (3 - len(values))
+    return {"session": values[0], "window_index": values[1], "window_name": values[2]}
+
+
+def normalize_event(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict) or value.get("schema_version") != SCHEMA_VERSION:
+        raise ValueError("unsupported event schema")
+    required = ("event_id", "created_at", "machine_id", "machine_name", "agent", "event", "project", "tmux")
+    if any(key not in value for key in required):
+        raise ValueError("event missing required field")
+    if not EVENT_ID.fullmatch(str(value["event_id"])):
+        raise ValueError("invalid event id")
+    if value["agent"] not in {"codex", "claude"} or value["event"] != "stop":
+        raise ValueError("unsupported agent event")
+    if not isinstance(value["tmux"], dict):
+        raise ValueError("invalid tmux metadata")
+    encoded = json.dumps(value, separators=(",", ":")).encode()
+    if len(encoded) > MAX_EVENT_BYTES:
+        raise ValueError("event exceeds limit")
+    return value
+
+
+def outbox() -> Path:
+    path = state_root() / "outbox"
+    secure_directory(path)
+    return path
+
+
+def quarantine(path: Path) -> None:
+    target = state_root() / "quarantine"
+    secure_directory(target)
+    os.replace(path, target / path.name)
+
+
+def pending_events() -> list[dict[str, Any]]:
+    events: list[dict[str, Any]] = []
+    for path in sorted(outbox().glob("*.json")):
+        try:
+            events.append(normalize_event(read_json(path)))
+        except (OSError, ValueError, json.JSONDecodeError):
+            quarantine(path)
+    return sorted(events, key=lambda item: (str(item["created_at"]), str(item["event_id"])))
+
+
+def enabled(config: dict[str, Any]) -> bool:
+    return config.get("enabled", True) is not False
+
+
+def queue_event(agent: str, event: str, payload: dict[str, Any]) -> None:
+    config = load_config()
+    if not enabled(config):
+        return
+    cwd = str(payload.get("cwd") or os.environ.get("PWD") or "")
+    machine = config["machine"]
+    value = normalize_event(
+        {
+            "schema_version": SCHEMA_VERSION,
+            "event_id": uuid.uuid4().hex,
+            "created_at": utc_now(),
+            "machine_id": machine["id"],
+            "machine_name": machine["name"],
+            "agent": agent,
+            "event": event,
+            "project": Path(cwd).name if cwd else "",
+            "tmux": tmux_metadata(),
+        }
+    )
+    atomic_json(outbox() / f"{value['event_id']}.json", value)
+
+
+def enqueue(agent: str, event: str) -> int:
+    queue_event(agent, event, hook_payload())
+    print("{}")
+    return 0
+
+
+def codex_notify(raw_payload: str) -> int:
+    config = load_config()
+    try:
+        parsed = json.loads(raw_payload) if raw_payload else {}
+    except json.JSONDecodeError:
+        parsed = {}
+    payload = parsed if isinstance(parsed, dict) else {}
+    queue_event("codex", "stop", payload)
+    passthrough = config.get("codex_notify_passthrough")
+    if isinstance(passthrough, list) and passthrough and all(isinstance(item, str) for item in passthrough):
+        try:
+            run([*passthrough, raw_payload], timeout=5)
+        except subprocess.SubprocessError:
+            pass
+    return 0
+
+
+def export_events() -> int:
+    for event in pending_events():
+        print(json.dumps(event, sort_keys=True, separators=(",", ":")))
+    return 0
+
+
+def acknowledge(event_ids: list[str]) -> int:
+    for event_id in event_ids:
+        if not EVENT_ID.fullmatch(event_id):
+            raise ValueError(f"invalid event id: {event_id}")
+        (outbox() / f"{event_id}.json").unlink(missing_ok=True)
+    return 0
+
+
+def run(argv: list[str], timeout: int = 10) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        argv,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=timeout,
+        check=False,
+    )
+
+
+def ssh_prefix(source: dict[str, Any]) -> list[str]:
+    control = Path("/tmp") / f"workmux-notify-{os.getuid()}"
+    secure_directory(control)
+    return [
+        "/usr/bin/ssh",
+        "-o", "BatchMode=yes",
+        "-o", "ConnectTimeout=5",
+        "-o", "ConnectionAttempts=1",
+        "-o", "ControlMaster=auto",
+        "-o", "ControlPersist=300",
+        "-o", f"ControlPath={control}/%C",
+        source["ssh_alias"],
+    ]
+
+
+def source_events(source: dict[str, Any]) -> list[dict[str, Any]]:
+    if source["transport"] == "local":
+        return pending_events()
+    result = run(ssh_prefix(source) + [source["tool"], "export"], timeout=10)
+    if result.returncode != 0:
+        print(f"workmux-notify: export failed for {source['id']}: {result.stderr.strip()}", file=sys.stderr)
+        return []
+    events: list[dict[str, Any]] = []
+    for line in result.stdout.splitlines():
+        if not line.strip():
+            continue
+        value = normalize_event(json.loads(line))
+        if value["machine_id"] != source["id"]:
+            raise ValueError("remote event machine mismatch")
+        events.append(value)
+    return events
+
+
+def source_ack(source: dict[str, Any], event_ids: list[str]) -> None:
+    if not event_ids:
+        return
+    if source["transport"] == "local":
+        acknowledge(event_ids)
+        return
+    for offset in range(0, len(event_ids), 100):
+        batch = event_ids[offset:offset + 100]
+        result = run(ssh_prefix(source) + [source["tool"], "ack", *batch], timeout=10)
+        if result.returncode != 0:
+            raise RuntimeError(f"ack failed for {source['id']}: {result.stderr.strip()}")
+
+
+def workspaces(tree: Any) -> list[dict[str, Any]]:
+    found: list[dict[str, Any]] = []
+    if isinstance(tree, dict):
+        if isinstance(tree.get("title"), str) and isinstance(tree.get("panes"), list) and tree.get("ref"):
+            found.append(tree)
+        for value in tree.values():
+            found.extend(workspaces(value))
+    elif isinstance(tree, list):
+        for value in tree:
+            found.extend(workspaces(value))
+    return found
+
+
+def target_for(tree: Any, title: str) -> tuple[str, str] | None:
+    matches = [item for item in workspaces(tree) if item.get("title") == title]
+    if len(matches) != 1:
+        return None
+    workspace = matches[0]
+    surfaces = [surface for pane in workspace.get("panes", []) for surface in pane.get("surfaces", [])]
+    mains = [surface for surface in surfaces if surface.get("title") == "main" and surface.get("ref")]
+    if len(mains) != 1:
+        return None
+    return str(workspace["ref"]), str(mains[0]["ref"])
+
+
+def load_delivered() -> dict[str, str]:
+    path = state_root() / "delivered.json"
+    if not path.exists():
+        return {}
+    value = read_json(path)
+    return value if isinstance(value, dict) else {}
+
+
+def save_delivered(value: dict[str, str]) -> None:
+    cutoff = datetime.now(timezone.utc) - timedelta(days=30)
+    kept: dict[str, str] = {}
+    for event_id, stamp in value.items():
+        try:
+            parsed = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+        except (AttributeError, ValueError):
+            continue
+        if parsed >= cutoff:
+            kept[event_id] = stamp
+    atomic_json(state_root() / "delivered.json", kept)
+
+
+def render_notification(event: dict[str, Any]) -> tuple[str, str, str]:
+    title = f"{event['agent'].capitalize()} · {event['machine_name']}"
+    project = event.get("project") or "unknown project"
+    subtitle = f"Completed in {project}"
+    tmux = event.get("tmux", {})
+    window = ":".join(part for part in (str(tmux.get("window_index") or ""), str(tmux.get("window_name") or "")) if part)
+    body = f"tmux {window}" if window else "Turn complete"
+    return title, subtitle, body
+
+
+def warp_running(config: dict[str, Any]) -> bool:
+    warp = config.get("warp")
+    if not isinstance(warp, dict) or not isinstance(warp.get("process"), str):
+        return False
+    pattern = "^" + re.escape(warp["process"]) + "$"
+    return run(["/usr/bin/pgrep", "-f", pattern], timeout=3).returncode == 0
+
+
+def cmux_tree(config: dict[str, Any]) -> dict[str, Any] | None:
+    cmux = config.get("cmux_path") or "cmux"
+    if run([cmux, "ping"], timeout=3).returncode != 0:
+        return None
+    result = run([cmux, "tree", "--all", "--json"], timeout=5)
+    if result.returncode != 0:
+        print(f"workmux-notify: cmux tree failed: {result.stderr.strip()}", file=sys.stderr)
+        return None
+    return json.loads(result.stdout)
+
+
+def delivery_context(config: dict[str, Any]) -> dict[str, Any] | None:
+    if warp_running(config):
+        return {"kind": "warp"}
+    tree = cmux_tree(config)
+    return {"kind": "cmux", "tree": tree} if tree is not None else None
+
+
+def warp_notification_command(config: dict[str, Any], event: dict[str, Any]) -> list[str]:
+    warp = config.get("warp")
+    if not isinstance(warp, dict):
+        raise ValueError("Warp notification config missing")
+    required = ("terminal_notifier", "bundle_id", "icon")
+    if any(not isinstance(warp.get(key), str) or not warp[key] for key in required):
+        raise ValueError("Warp notification config invalid")
+    title, subtitle, body = render_notification(event)
+    return [
+        warp["terminal_notifier"],
+        "-title", title,
+        "-subtitle", subtitle,
+        "-message", body,
+        "-group", event["event_id"],
+        "-activate", warp["bundle_id"],
+        "-appIcon", warp["icon"],
+    ]
+
+
+def deliver_event(
+    config: dict[str, Any], context: dict[str, Any], source: dict[str, Any], event: dict[str, Any]
+) -> bool:
+    if context["kind"] == "warp":
+        result = run(warp_notification_command(config, event), timeout=5)
+        if result.returncode != 0:
+            print(f"workmux-notify: Warp notify failed for {event['event_id']}: {result.stderr.strip()}", file=sys.stderr)
+            return False
+        return True
+    target = target_for(context["tree"], source["workspace"])
+    if target is None:
+        print(f"workmux-notify: missing unique main surface for {source['workspace']}", file=sys.stderr)
+        return False
+    title, subtitle, body = render_notification(event)
+    workspace_ref, surface_ref = target
+    cmux = config.get("cmux_path") or "cmux"
+    result = run(
+        [cmux, "notify", "--workspace", workspace_ref, "--surface", surface_ref,
+         "--title", title, "--subtitle", subtitle, "--body", body],
+        timeout=5,
+    )
+    if result.returncode != 0:
+        print(f"workmux-notify: cmux notify failed for {event['event_id']}: {result.stderr.strip()}", file=sys.stderr)
+        return False
+    return True
+
+
+def poll() -> int:
+    config = load_config()
+    if not enabled(config):
+        return 0
+    context = delivery_context(config)
+    if context is None:
+        return 0
+    delivered = load_delivered()
+    changed = False
+    for source in config.get("sources", []):
+        acked: list[str] = []
+        for event in source_events(source):
+            event_id = event["event_id"]
+            if event_id in delivered:
+                acked.append(event_id)
+                continue
+            if not deliver_event(config, context, source, event):
+                continue
+            delivered[event_id] = utc_now()
+            save_delivered(delivered)
+            changed = True
+            acked.append(event_id)
+        source_ack(source, acked)
+    if changed:
+        save_delivered(delivered)
+    return 0
+
+
+def status() -> int:
+    config = load_config()
+    print(json.dumps({
+        "enabled": enabled(config),
+        "machine": config["machine"],
+        "pending": len(pending_events()),
+        "quarantined": len(list((state_root() / "quarantine").glob("*.json"))) if (state_root() / "quarantine").exists() else 0,
+        "sources": [source["id"] for source in config.get("sources", [])],
+    }, sort_keys=True))
+    return 0
+
+
+def parser() -> argparse.ArgumentParser:
+    result = argparse.ArgumentParser(description=__doc__)
+    commands = result.add_subparsers(dest="command", required=True)
+    enqueue_parser = commands.add_parser("enqueue")
+    enqueue_parser.add_argument("--agent", required=True, choices=("codex", "claude"))
+    enqueue_parser.add_argument("--event", required=True, choices=("stop",))
+    commands.add_parser("export")
+    ack_parser = commands.add_parser("ack")
+    ack_parser.add_argument("event_ids", nargs="+")
+    commands.add_parser("poll")
+    commands.add_parser("status")
+    codex_parser = commands.add_parser("codex-notify")
+    codex_parser.add_argument("payload", nargs="?", default="")
+    return result
+
+
+def main() -> int:
+    args = parser().parse_args()
+    if args.command == "enqueue":
+        return enqueue(args.agent, args.event)
+    if args.command == "export":
+        return export_events()
+    if args.command == "ack":
+        return acknowledge(args.event_ids)
+    if args.command == "poll":
+        return poll()
+    if args.command == "status":
+        return status()
+    if args.command == "codex-notify":
+        return codex_notify(args.payload)
+    raise ValueError("unknown command")
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main())
+    except (OSError, ValueError, RuntimeError, json.JSONDecodeError, subprocess.SubprocessError) as exc:
+        print(f"workmux-notify: {exc}", file=sys.stderr)
+        raise SystemExit(2)

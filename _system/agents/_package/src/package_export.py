@@ -16,8 +16,8 @@ from package_layout import AGENTS_ROOT, EXPORT_ROOT
 
 
 MANIFEST_NAME = ".ctx9-agent-export-manifest.json"
-INVENTORY_NAME = "PUBLIC_SKILLS_INVENTORY.json"
 NOTICE_NAME = "THIRD_PARTY_NOTICES.md"
+INTERNAL_INVENTORY_PATH = AGENTS_ROOT.parent / "local/state/public-skills-export-inventory.json"
 SKILL_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 CREDENTIAL_PATTERNS = (
     ("private key", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
@@ -33,17 +33,6 @@ CREDENTIAL_PATTERNS = (
             r"\s*[:=]\s*['\"][A-Za-z0-9_./+=-]{16,}['\"]"
         ),
     ),
-)
-PRIVATE_MARKERS = (
-    "matthew" + "derman",
-    "Matt" + " Derman",
-    "matt" + "book",
-    "woot" + "book",
-    "worker" + "macair",
-    "/" + "Users/",
-    "/" + "home/",
-    "~" + "/Code",
-    "langfuse" + ".impression.so",
 )
 FORBIDDEN_PARTS = {"private", "__pycache__", ".git", "catalog", "dormant"}
 FORBIDDEN_SUFFIXES = {".pyc", ".pyo"}
@@ -159,26 +148,18 @@ def skill_decision(
     text = "\n".join(texts)
     source_key = f"skills/{mode}/{relative.as_posix()}"
     repo = projected_sources.get(source_key) or github_repo(skill_file)
-    licenses = manifest.get("third_party_licenses", {})
     if mode == "projected":
         return False, "repository-owned projection is not a redistributable source", repo, None
-    if any(marker.casefold() in text.casefold() for marker in PRIVATE_MARKERS):
-        return False, "contains a private or machine-specific reference", repo, None
-    if "_package/instance/skills/config/" in text or "_system/local/skills/" in text:
-        return False, "references an unresolved private configuration contract", repo, None
     for label, pattern in CREDENTIAL_PATTERNS:
         if pattern.search(text):
             raise ExportError(f"credential-like {label} found in active skill: {skill_file}")
-    if repo:
-        declaration = licenses.get(repo)
-        if not isinstance(declaration, dict) or not declaration.get("spdx"):
-            return False, "redistribution license is not confirmed", repo, None
-        return True, "portable third-party skill with confirmed redistribution license", repo, str(declaration["spdx"])
-    first_party_groups = set(manifest.get("first_party_groups", []))
-    group = relative.parts[0] if len(relative.parts) > 1 else ""
-    if group not in first_party_groups:
-        return False, "provenance or redistribution rights are not declared", None, None
-    return True, "portable first-party skill", None, "MIT"
+    licenses = {
+        key.casefold(): value
+        for key, value in manifest.get("third_party_licenses", {}).items()
+    }
+    declaration = licenses.get(repo.casefold()) if repo else None
+    license_id = str(declaration["spdx"]) if isinstance(declaration, dict) and declaration.get("spdx") else None
+    return True, "active non-repository skill", repo, license_id
 
 
 def discover_skills(stage: Path, manifest: dict[str, Any]) -> list[dict[str, Any]]:
@@ -219,35 +200,50 @@ def discover_skills(stage: Path, manifest: dict[str, Any]) -> list[dict[str, Any
                 target = stage / "_system/agents/skills" / mode / relative
                 copy_tree(skill_dir, target)
                 strip_install_metadata(target / "SKILL.md")
-    inventory.extend(
-        {
-            "name": f"{collection}-collection",
-            "source": f"_system/agents/skills/{collection}",
-            "status": "excluded",
-            "reason": "generated catalog" if collection == "catalog" else "dormant source collection",
-        }
-        for collection in ("catalog", "dormant")
-    )
     return inventory
 
 
-def write_inventory(stage: Path, inventory: list[dict[str, Any]], manifest: dict[str, Any]) -> None:
-    payload = {
+def inventory_payload(inventory: list[dict[str, Any]]) -> dict[str, Any]:
+    return {
         "schema_version": 1,
         "included": sum(item["status"] == "included" for item in inventory),
         "excluded": sum(item["status"] == "excluded" for item in inventory),
+        "omitted_collections": {
+            "catalog": "generated symlink-only view",
+            "dormant": "intentionally inactive skill sources",
+        },
         "skills": inventory,
     }
-    (stage / INVENTORY_NAME).write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def write_internal_inventory(
+    inventory: list[dict[str, Any]],
+    path: Path = INTERNAL_INVENTORY_PATH,
+) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(inventory_payload(inventory), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def write_notices(stage: Path, inventory: list[dict[str, Any]], manifest: dict[str, Any]) -> None:
     used = sorted({item.get("source_repository") for item in inventory if item["status"] == "included" and item.get("source_repository")})
     lines = ["# Third-party notices", "", "The following skill sources are redistributed under their original licenses.", ""]
+    licenses = {
+        key.casefold(): value
+        for key, value in manifest.get("third_party_licenses", {}).items()
+    }
     for repo in used:
-        declaration = manifest["third_party_licenses"][repo]
-        lines.append(f"- {repo}: {declaration['spdx']}, {declaration['license_url']}")
+        declaration = licenses.get(str(repo).casefold())
+        if isinstance(declaration, dict):
+            lines.append(f"- {repo}: {declaration['spdx']}, {declaration['license_url']}")
+        else:
+            lines.append(f"- {repo}")
     (stage / NOTICE_NAME).write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def materialize(stage: Path, manifest: dict[str, Any]) -> list[str]:
+def materialize(stage: Path, manifest: dict[str, Any]) -> tuple[list[str], list[dict[str, Any]]]:
     for raw in manifest.get("trees", []):
         copy_tree(
             AGENTS_ROOT / safe_relative(raw.get("source"), "tree source"),
@@ -260,7 +256,7 @@ def materialize(stage: Path, manifest: dict[str, Any]) -> list[str]:
         )
     copy_file(stage / "AGENTS.md", stage / "CLAUDE.md")
     inventory = discover_skills(stage, manifest)
-    write_inventory(stage, inventory, manifest)
+    write_notices(stage, inventory, manifest)
     owned = sorted(
         path.relative_to(stage).as_posix()
         for path in stage.rglob("*")
@@ -268,7 +264,7 @@ def materialize(stage: Path, manifest: dict[str, Any]) -> list[str]:
     )
     value = {"schema_version": 1, "owned_paths": owned}
     (stage / MANIFEST_NAME).write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
-    return [*owned, MANIFEST_NAME]
+    return [*owned, MANIFEST_NAME], inventory
 
 
 def scan(stage: Path) -> None:
@@ -289,26 +285,25 @@ def scan(stage: Path) -> None:
             text = path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
             continue
-        for marker in PRIVATE_MARKERS:
-            if marker.casefold() in text.casefold():
-                raise ExportError(f"private marker {marker!r} found in {rendered}")
         for label, pattern in CREDENTIAL_PATTERNS:
             if pattern.search(text):
                 raise ExportError(f"credential-like {label} found in {rendered}")
 
 
-def prevent_silent_skill_removal(destination: Path, stage: Path, manifest: dict[str, Any]) -> None:
-    old_path = destination / INVENTORY_NAME
-    if not old_path.is_file():
+def public_skill_names(root: Path) -> set[str]:
+    return {
+        name
+        for skill_file in root.rglob("SKILL.md")
+        if (name := frontmatter_name(skill_file)) is not None
+    }
+
+
+def prevent_silent_skill_removal(destination: Path, stage: Path) -> None:
+    if not destination.is_dir():
         return
-    old = json.loads(old_path.read_text(encoding="utf-8"))
-    new = json.loads((stage / INVENTORY_NAME).read_text(encoding="utf-8"))
-    old_public = {item["name"] for item in old.get("skills", []) if item.get("status") == "included"}
-    new_public = {item["name"] for item in new.get("skills", []) if item.get("status") == "included"}
-    allowed = set(manifest.get("allowed_public_skill_removals", []))
-    silent = sorted(old_public - new_public - allowed)
+    silent = sorted(public_skill_names(destination) - public_skill_names(stage))
     if silent:
-        raise ExportError("previously public skills disappeared without an approved removal: " + ", ".join(silent))
+        raise ExportError("previously public skills disappeared from the export: " + ", ".join(silent))
 
 
 def replace_owned(destination: Path, stage: Path) -> None:
@@ -338,20 +333,23 @@ def export(destination: Path, *, apply: bool, manifest_path: Path | None = None)
     manifest = read_manifest(manifest_path)
     with tempfile.TemporaryDirectory(prefix="ctx9-agent-export-") as temporary:
         stage = Path(temporary)
-        owned = materialize(stage, manifest)
+        owned, inventory = materialize(stage, manifest)
         scan(stage)
-        prevent_silent_skill_removal(destination, stage, manifest)
-        inventory = json.loads((stage / INVENTORY_NAME).read_text(encoding="utf-8"))
+        prevent_silent_skill_removal(destination, stage)
         if apply:
             destination.mkdir(parents=True, exist_ok=True)
             replace_owned(destination, stage)
+            default_destination = Path(str(manifest["default_export_root"])).expanduser().resolve()
+            if destination == default_destination:
+                write_internal_inventory(inventory)
+    counts = inventory_payload(inventory)
     return {
         "ok": True,
         "applied": apply,
         "destination": str(destination),
         "files": len(owned),
-        "included_skills": inventory["included"],
-        "excluded_skills": inventory["excluded"],
+        "included_skills": counts["included"],
+        "excluded_skills": counts["excluded"],
     }
 
 

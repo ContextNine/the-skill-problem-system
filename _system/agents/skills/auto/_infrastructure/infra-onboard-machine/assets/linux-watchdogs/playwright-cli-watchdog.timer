@@ -1,0 +1,12 @@
+[Unit]
+Description=Periodically close stale Playwright CLI browser sessions
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=10min
+RandomizedDelaySec=1min
+Persistent=true
+Unit=playwright-cli-watchdog.service
+
+[Install]
+WantedBy=timers.target

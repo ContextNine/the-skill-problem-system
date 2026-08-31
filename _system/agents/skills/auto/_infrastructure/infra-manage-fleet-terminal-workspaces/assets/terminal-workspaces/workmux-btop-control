@@ -1,0 +1,34 @@
+#!/bin/sh
+set -eu
+
+managed_session=__DEFAULT_SESSION__
+session=${1:-}
+
+[ "$session" = "$managed_session" ] || exit 0
+tmux has-session -t "=$managed_session" 2>/dev/null || exit 0
+
+target="$managed_session:0.0"
+window_name=$(tmux display-message -p -t "$target" '#{window_name}' 2>/dev/null || true)
+pane_command=$(tmux display-message -p -t "$target" '#{pane_current_command}' 2>/dev/null || true)
+[ "$window_name" = "btop" ] || exit 0
+
+active_clients=$(tmux display-message -p -t "$managed_session:0" '#{window_active_clients}' 2>/dev/null || printf '0')
+
+if [ "$active_clients" -gt 0 ]; then
+  case "$pane_command" in
+    btop) ;;
+    sleep)
+      btop_bin=$(command -v btop 2>/dev/null || true)
+      case "$btop_bin" in
+        /*) tmux respawn-pane -k -t "$target" "exec \"$btop_bin\" --update 1000" ;;
+      esac
+      ;;
+    *) exit 0 ;;
+  esac
+else
+  [ "$pane_command" = "btop" ] || exit 0
+  sleep_bin=$(command -v sleep 2>/dev/null || true)
+  case "$sleep_bin" in
+    /*) tmux respawn-pane -k -t "$target" "exec \"$sleep_bin\" 2147483647" ;;
+  esac
+fi

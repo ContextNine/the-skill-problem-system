@@ -1,0 +1,3 @@
+#!/bin/sh
+# ctx9-playwright-cli-watchdog-v1
+exec "$HOME/.local/libexec/playwright-cli-watchdog" "$@"

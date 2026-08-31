@@ -1,0 +1,6 @@
+interface:
+  short_description: "Manage fleet terminal workspaces"
+  default_prompt: "Use $infra-manage-fleet-terminal-workspaces to configure or repair Warp, cmux, tmux, and workmux across the fleet."
+
+policy:
+  allow_implicit_invocation: true

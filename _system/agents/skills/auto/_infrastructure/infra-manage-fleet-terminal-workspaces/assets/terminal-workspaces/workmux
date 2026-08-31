@@ -1,0 +1,80 @@
+#!/bin/sh
+set -eu
+
+session=${1:-__DEFAULT_SESSION__}
+plugin_root="$HOME/.local/share/workmux/plugins"
+btop_bin=$(command -v btop 2>/dev/null || true)
+
+case "$btop_bin" in
+  /*) ;;
+  *)
+    echo "workmux: btop not found at an absolute path" >&2
+    exit 1
+    ;;
+esac
+
+bootstrap="__workmux_bootstrap_${session}_$$"
+restore_lock="workmux-restore-${session}"
+lock_held=0
+
+cleanup() {
+  if [ "$lock_held" -eq 1 ]; then
+    tmux wait-for -U "$restore_lock" 2>/dev/null || true
+  fi
+  tmux kill-session -t "=$bootstrap" 2>/dev/null || true
+}
+trap cleanup EXIT HUP INT TERM
+
+if ! tmux has-session -t "=$session" 2>/dev/null; then
+  # Hold tmux server open and serialize restore attempts from concurrent clients.
+  tmux new-session -d -s "$bootstrap" -n bootstrap "sleep 86400"
+  tmux wait-for -L "$restore_lock"
+  lock_held=1
+  if ! tmux has-session -t "=$session" 2>/dev/null \
+    && [ -x "$plugin_root/tmux-resurrect/scripts/restore.sh" ]; then
+    "$plugin_root/tmux-resurrect/scripts/restore.sh" >/dev/null 2>&1 || true
+  fi
+fi
+
+fresh=0
+if ! tmux has-session -t "=$session" 2>/dev/null; then
+  tmux new-session -d -s "$session" -n btop "exec \"$btop_bin\" --update 1000"
+  tmux set-window-option -t "$session:0" automatic-rename off
+  fresh=1
+fi
+
+window_zero=$(tmux list-windows -t "=$session" -F '#{window_index}|#{window_name}' | awk -F '|' '$1 == "0" { print $2 }')
+if [ -z "$window_zero" ]; then
+  tmux new-window -d -t "$session:0" -n btop "exec \"$btop_bin\" --update 1000"
+elif [ "$window_zero" != "btop" ]; then
+  echo "workmux: refusing to replace unexpected window 0:$window_zero in $session" >&2
+  exit 1
+fi
+tmux set-window-option -t "$session:0" automatic-rename off
+
+btop_process=$(tmux display-message -p -t "$session:0.0" '#{pane_current_command}')
+case "$btop_process" in
+  btop|sleep) ;;
+  *) tmux respawn-pane -k -t "$session:0.0" "exec \"$btop_bin\" --update 1000" ;;
+esac
+
+window_one=$(tmux list-windows -t "=$session" -F '#{window_index}|#{window_name}' | awk -F '|' '$1 == "1" { print $2 }')
+if [ -z "$window_one" ]; then
+  tmux new-window -d -t "$session:1" -n shell
+elif [ "$window_one" != "shell" ]; then
+  echo "workmux: window 1 exists as $window_one; refusing to replace it" >&2
+  exit 1
+fi
+tmux set-window-option -t "$session:1" automatic-rename off
+
+if [ "$fresh" -eq 1 ]; then
+  tmux select-window -t "$session:1"
+fi
+
+cleanup
+trap - EXIT HUP INT TERM
+
+if [ -n "${TMUX:-}" ]; then
+  exec tmux switch-client -t "=$session"
+fi
+exec tmux attach-session -t "=$session"

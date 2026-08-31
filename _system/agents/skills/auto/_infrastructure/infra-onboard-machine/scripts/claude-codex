@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+effort="medium"
+case "$(basename "$0")" in
+  claude-codex-high)
+    effort="high"
+    ;;
+  claude-codex-xhigh)
+    effort="xhigh"
+    ;;
+esac
+
+if [[ "${1-}" == "--effort" ]]; then
+  if [[ $# -lt 2 ]]; then
+    printf '%s\n' "claude-codex: --effort requires medium, high, or xhigh" >&2
+    exit 2
+  fi
+  effort="$2"
+  shift 2
+elif [[ "${1-}" == --effort=* ]]; then
+  effort="${1#--effort=}"
+  shift
+fi
+
+case "$effort" in
+  medium|high|xhigh)
+    ;;
+  *)
+    printf '%s\n' "claude-codex: unsupported effort '$effort'; use medium, high, or xhigh" >&2
+    exit 2
+    ;;
+esac
+
+token_file="$HOME/cliproxyapi/client-token"
+if [[ ! -r "$token_file" ]]; then
+  printf '%s\n' "claude-codex: missing readable token file: $token_file" >&2
+  exit 1
+fi
+
+claude_bin="$HOME/.local/bin/claude"
+if [[ ! -x "$claude_bin" ]]; then
+  printf '%s\n' "claude-codex: missing Claude Code executable: $claude_bin" >&2
+  exit 1
+fi
+
+unset \
+  ANTHROPIC_API_KEY \
+  CLAUDE_CODE_OAUTH_TOKEN \
+  CLAUDE_CODE_OAUTH_REFRESH_TOKEN \
+  CLAUDE_CODE_OAUTH_SCOPES \
+  CLAUDE_CODE_USE_BEDROCK \
+  CLAUDE_CODE_USE_VERTEX \
+  CLAUDE_CODE_USE_FOUNDRY \
+  ANTHROPIC_BEDROCK_BASE_URL \
+  ANTHROPIC_VERTEX_BASE_URL \
+  ANTHROPIC_FOUNDRY_BASE_URL
+
+model="gpt-5.6-sol($effort)"
+export ANTHROPIC_BASE_URL="http://127.0.0.1:8317"
+export ANTHROPIC_AUTH_TOKEN="$(<"$token_file")"
+export ANTHROPIC_MODEL="$model"
+export ANTHROPIC_DEFAULT_OPUS_MODEL="$model"
+export ANTHROPIC_DEFAULT_SONNET_MODEL="$model"
+export ANTHROPIC_DEFAULT_HAIKU_MODEL="$model"
+
+printf 'Claude route: provider=Codex model=%s effort=%s base=%s\n' \
+  "$model" "$effort" "$ANTHROPIC_BASE_URL" >&2
+
+exec "$claude_bin" \
+  --dangerously-skip-permissions \
+  --permission-mode bypassPermissions \
+  "$@"

@@ -1,0 +1,8 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "frontend-slides",
+  "source": "plugins/frontend-slides/skills/frontend-slides",
+  "target": "_system/agents/skills/manual/_creative/creative-frontend-slides",
+  "type": "manual-skill",
+  "title_override": "Creative \u00b7 Frontend Slides"
+}

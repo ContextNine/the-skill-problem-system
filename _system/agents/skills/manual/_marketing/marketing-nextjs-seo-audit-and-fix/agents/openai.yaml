@@ -1,0 +1,5 @@
+interface:
+  short_description: "Audit and fix SEO in Next.js sites"
+  default_prompt: "Use $marketing-nextjs-seo-audit-and-fix to audit this Next.js site's live behavior, source implementation, Search Console evidence, content/entity signals, and performance, then implement and verify authorized fixes."
+policy:
+  allow_implicit_invocation: false

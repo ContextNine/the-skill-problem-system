@@ -1,0 +1,9 @@
+[Unit]
+Description=Close stale Playwright CLI browser sessions
+Documentation=https://github.com/microsoft/playwright-cli
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/libexec/playwright-cli-watchdog --watchdog-sweep --idle-seconds 3600
+NoNewPrivileges=true
+TimeoutStartSec=2min

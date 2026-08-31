@@ -1,0 +1,5 @@
+interface:
+  short_description: "Save Gmail invoice and statement PDFs"
+  default_prompt: "Use $finance-gmail-invoice-and-statement-collector to dry-run unread Gmail invoice and statement collection."
+policy:
+  allow_implicit_invocation: false

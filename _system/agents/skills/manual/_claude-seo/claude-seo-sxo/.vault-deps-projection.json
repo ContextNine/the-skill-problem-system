@@ -1,0 +1,7 @@
+{
+  "managed_by": "ctx9-agents sync",
+  "repo_id": "claude-seo",
+  "source": "skills/seo-sxo",
+  "target": "_system/agents/skills/manual/_claude-seo/claude-seo-sxo",
+  "type": "manual-skill"
+}

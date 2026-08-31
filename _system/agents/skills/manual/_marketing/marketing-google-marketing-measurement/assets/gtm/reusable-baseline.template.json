@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "kind": "google-tag-manager-reusable-baseline",
+  "placeholders": {
+    "{{GTM_ACCOUNT_ID}}": "Numeric GTM account ID",
+    "{{GTM_CONTAINER_ID}}": "Numeric GTM container resource ID",
+    "{{GTM_PUBLIC_ID}}": "Public GTM-... container ID",
+    "{{GA4_MEASUREMENT_ID}}": "Destination G-... measurement ID",
+    "{{SITE_NAME}}": "Human-readable site name",
+    "{{SITE_URL}}": "Canonical HTTPS URL"
+  },
+  "builtInVariables": ["Event", "Page Hostname", "Page Path", "Page URL", "Referrer"],
+  "dataLayerVariables": [
+    { "name": "DLV - content_type", "path": "content_type", "version": 2 },
+    { "name": "DLV - content_id", "path": "content_id", "version": 2 },
+    { "name": "DLV - lead_source", "path": "lead_source", "version": 2 },
+    { "name": "DLV - offer_id", "path": "offer_id", "version": 2 }
+  ],
+  "triggers": [
+    { "name": "CE - consent_preferences_updated", "type": "CUSTOM_EVENT", "event": "consent_preferences_updated" },
+    { "name": "CE - select_content", "type": "CUSTOM_EVENT", "event": "select_content" },
+    { "name": "CE - generate_lead", "type": "CUSTOM_EVENT", "event": "generate_lead" }
+  ],
+  "tags": [
+    {
+      "name": "Google tag - {{SITE_NAME}}",
+      "type": "GOOGLE_TAG",
+      "measurementId": "{{GA4_MEASUREMENT_ID}}",
+      "trigger": "All Pages"
+    },
+    {
+      "name": "Consent Mode - Initialize",
+      "type": "CUSTOM_TEMPLATE",
+      "mode": "DEFAULT",
+      "trigger": "Consent Initialization - All Pages"
+    },
+    {
+      "name": "Consent Mode - Update",
+      "type": "CUSTOM_TEMPLATE",
+      "mode": "UPDATE",
+      "trigger": "CE - consent_preferences_updated"
+    },
+    {
+      "name": "GA4 Event - select_content",
+      "type": "GA4_EVENT",
+      "event": "select_content",
+      "parameters": ["content_type", "content_id"],
+      "trigger": "CE - select_content"
+    },
+    {
+      "name": "GA4 Event - generate_lead",
+      "type": "GA4_EVENT",
+      "event": "generate_lead",
+      "parameters": ["lead_source", "offer_id"],
+      "trigger": "CE - generate_lead"
+    }
+  ],
+  "consentCookie": {
+    "name": "gtm_cookie_consent",
+    "topLevelConsentKeys": [
+      "ad_storage",
+      "analytics_storage",
+      "ad_user_data",
+      "ad_personalization",
+      "functionality_storage",
+      "personalization_storage",
+      "security_storage"
+    ],
+    "updateEvent": "consent_preferences_updated"
+  },
+  "note": "Declarative sanitized baseline. Generate/import a native container export only after replacing placeholders and validating the destination container's native tag schema."
+}

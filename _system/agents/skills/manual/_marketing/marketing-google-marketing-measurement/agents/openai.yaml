@@ -1,0 +1,5 @@
+interface:
+  short_description: "Audit and version Google measurement setups"
+  default_prompt: "Use $marketing-google-marketing-measurement to snapshot, audit, troubleshoot, or safely reproduce my GTM, GA4, consent, dataLayer, UTM, and adjacent PostHog setup. Keep mutations dry-run unless I explicitly authorize apply or publish."
+policy:
+  allow_implicit_invocation: false

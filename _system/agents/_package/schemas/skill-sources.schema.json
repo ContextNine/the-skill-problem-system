@@ -2,16 +2,56 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Skill source selections",
   "type": "object",
-  "required": ["schema_version", "repos", "repository_skills"],
+  "required": ["schema_version", "repos"],
   "properties": {
-    "schema_version": {"const": 3},
-    "github_skills": {
+    "schema_version": {"const": 4},
+    "gh_skills": {
       "type": "object",
-      "additionalProperties": {"enum": ["auto", "manual"]},
-      "propertyNames": {"pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"}
+      "propertyNames": {"pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "prefix": {"pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+          "invocation": {
+            "type": "object",
+            "additionalProperties": {"type": "boolean"}
+          }
+        },
+        "additionalProperties": false
+      }
     },
-    "repos": {"type": "array"},
-    "repository_skills": {"type": "object"}
+    "repos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path"],
+        "properties": {
+          "path": {"pattern": "^~/[^.].*"},
+          "github": {"pattern": "^https://github\\.com/[^/]+/[^/]+/?$"},
+          "prefix": {"pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+          "all_skills": {"const": true},
+          "skills": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["source"],
+              "properties": {"source": {"type": "string", "minLength": 1}},
+              "additionalProperties": false
+            }
+          },
+          "invocation": {
+            "type": "object",
+            "additionalProperties": {"type": "boolean"}
+          }
+        },
+        "oneOf": [
+          {"required": ["all_skills"], "not": {"required": ["skills"]}},
+          {"required": ["skills"], "not": {"required": ["all_skills"]}}
+        ],
+        "additionalProperties": false
+      }
+    }
   },
   "additionalProperties": false
 }

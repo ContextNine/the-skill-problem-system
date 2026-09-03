@@ -3,7 +3,7 @@
 The Skill Problem System keeps agent skills as ordinary Git-backed files and projects them into the locations used by supported agents.
 
 - Name skills with lowercase letters, numbers, and hyphens. The directory name and frontmatter `name` must match.
-- Put implicit shared skills in `_system/agents/skills/auto/` and explicit-only skills in `_system/agents/skills/manual/`.
+- Put implicit shared skills in `_system/agents/skills/` and explicit-only skills in `_system/agents/skills/`.
 - Keep related skills under a `_lower-kebab` group folder.
 - Put public defaults and schemas under `_system/agents/_package/defaults/` and `_system/agents/_package/schemas/`.
 - Put user-specific configuration under `_system/agents/_package/instance/`. Put skill-specific private configuration under `_system/agents/_package/instance/skills/config/<skill>/private/`.

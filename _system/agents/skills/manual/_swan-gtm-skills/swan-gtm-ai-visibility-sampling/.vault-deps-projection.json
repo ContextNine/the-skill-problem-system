@@ -1,8 +1,0 @@
-{
-  "managed_by": "ctx9-agents sync",
-  "repo_id": "swan-gtm-skills",
-  "source": "skills/huxley-peckham/ai-visibility-sampling",
-  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-ai-visibility-sampling",
-  "type": "manual-skill",
-  "title_override": "Swan GTM Skills \u00b7 AI visibility sampling"
-}

@@ -1,8 +1,0 @@
-{
-  "managed_by": "ctx9-agents sync",
-  "repo_id": "swan-gtm-skills",
-  "source": "skills/thomas-marcelle/creator-deal-pricing",
-  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-creator-deal-pricing",
-  "type": "manual-skill",
-  "title_override": "Swan GTM Skills \u00b7 Creator deal pricing \u2014 CPC vs flat fee"
-}

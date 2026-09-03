@@ -1,8 +1,0 @@
-{
-  "managed_by": "ctx9-agents sync",
-  "repo_id": "swan-gtm-skills",
-  "source": "skills/alex-vacca/clay-expert",
-  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-clay-expert",
-  "type": "manual-skill",
-  "title_override": "Swan GTM Skills \u00b7 The Clay expert"
-}

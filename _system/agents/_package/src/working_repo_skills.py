@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plan and materialize selected working-repository skills in the Vault."""
+"""Plan linked, overlaid, and snapshotted non-Vault skill sources."""
 
 from __future__ import annotations
 
@@ -8,69 +8,36 @@ import json
 import os
 import re
 import shutil
-import stat
-import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-COMMANDS_DIR = Path(__file__).resolve().parents[3] / "commands"
-if str(COMMANDS_DIR) not in sys.path:
-    sys.path.insert(0, str(COMMANDS_DIR))
-
-from package_layout import expand_registered_path
-from skill_source_config import SkillSourceConfigError, validate_config
-
-MARKER = ".vault-working-repo-projection.json"
-REGISTRY = Path(
-    "_system/agents/_package/instance/fleet/workspaces.json"
+from skill_source_config import (
+    SkillSourceConfigError,
+    derive_repo_records,
+    github_policies,
+    validate_config,
 )
-SELECTION = Path("_system/agents/_package/instance/skills/sources.json")
-WORKING_ROOT = Path("_system/agents/skills/projected")
+
+
+SELECTION = Path("_system/agents/_package/instance/skills/skill-sources.json")
+GH_ROOT = Path("_system/agents/skills/github")
+OVERLAY_ROOT = Path("_system/agents/skills/overlays")
+SNAPSHOT_ROOT = Path("_system/agents/skills/snapshots")
+MARKER = ".ctx9-skill-materialization.json"
+MANAGED_BY = "ctx9-agents sync"
 SKILL_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
-LOCAL_NAME_RE = re.compile(r"^l-[a-z0-9]+(?:-[a-z0-9]+)*$")
 NAME_RE = re.compile(r"(?m)^name:\s*['\"]?([^'\"\n]+)['\"]?\s*$")
 POLICY_RE = re.compile(
     r"(?m)^(\s*allow_implicit_invocation:\s*)(?:true|false)(\s*(?:#.*)?)$"
 )
-LOCAL_REFERENCE_RE = re.compile(r"\$(l-[a-z0-9]+(?:-[a-z0-9]+)*)")
 TEXT_SUFFIXES = {".md", ".txt", ".yaml", ".yml", ".json", ".toml"}
 IGNORED_NAMES = {".DS_Store", "__pycache__", MARKER}
-MANAGED_BY = "ctx9-agents sync"
 
 
 class ProjectionError(RuntimeError):
     pass
-
-
-def managed_marker(marker: dict[str, Any]) -> bool:
-    return marker.get("managed_by") == MANAGED_BY
-
-
-@dataclass(frozen=True)
-class ProjectionSpec:
-    repo_id: str
-    repo_path: Path
-    source: PurePosixPath
-    mode: str
-    local_name: str
-    name: str
-    target: Path
-
-
-@dataclass(frozen=True)
-class ProjectedFile:
-    relative: PurePosixPath
-    content: bytes
-    executable: bool
-
-
-@dataclass(frozen=True)
-class ProjectionAction:
-    kind: str
-    target: Path
-    files: tuple[ProjectedFile, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -78,132 +45,77 @@ class ProjectedSkill:
     name: str
     path: Path
     mode: str
+    origin: str
+    canonical_path: Path
+    declared_path: str | None
+    materialization: str
+
+
+@dataclass(frozen=True)
+class ProjectionAction:
+    kind: str
+    target: Path
+    canonical_path: Path | None = None
+    name: str | None = None
+    allowed: bool = False
+    mappings: tuple[tuple[str, str], ...] = ()
+    marker: str | None = None
 
 
 @dataclass(frozen=True)
 class ProjectionPlan:
     skills: tuple[ProjectedSkill, ...]
     actions: tuple[ProjectionAction, ...]
-    warnings: tuple[str, ...]
+    warnings: tuple[str, ...] = ()
 
 
 def read_json(path: Path) -> dict[str, Any]:
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError as exc:
-        raise ProjectionError(f"Repository registry missing: {path}") from exc
+        raise ProjectionError(f"Skill source registry missing: {path}") from exc
     except json.JSONDecodeError as exc:
-        raise ProjectionError(f"Repository registry is invalid JSON: {exc}") from exc
+        raise ProjectionError(f"Skill source registry is invalid JSON: {exc}") from exc
     if not isinstance(value, dict):
-        raise ProjectionError(f"Repository registry must contain an object: {path}")
+        raise ProjectionError(f"Skill source registry must contain an object: {path}")
     return value
 
 
-def repo_title(repo_id: str) -> str:
-    return " ".join("K3s" if part == "k3s" else part.title() for part in repo_id.split("-"))
-
-
-def capability_title(local_name: str) -> str:
-    words = local_name.removeprefix("l-").split("-")
-    return " ".join("AI" if word == "ai" else word.title() for word in words)
-
-
-def safe_source(value: object, repo_id: str) -> PurePosixPath:
-    if not isinstance(value, str) or not value:
-        raise ProjectionError(f"Repository {repo_id!r} skill projection needs a source")
-    source = PurePosixPath(value)
-    if source.is_absolute() or ".." in source.parts or source.as_posix() in {"", "."}:
-        raise ProjectionError(f"Repository {repo_id!r} has unsafe skill source: {value!r}")
-    return source
-
-
-def load_specs(root: Path) -> list[ProjectionSpec]:
-    if not (root / REGISTRY).is_file():
-        return []
-    registry = read_json(root / REGISTRY)
-    selection = read_json(root / SELECTION)
+def read_source_name(skill: Path) -> str:
+    skill_file = skill / "SKILL.md"
     try:
-        validate_config(selection)
-    except SkillSourceConfigError as exc:
-        raise ProjectionError(str(exc)) from exc
-    repositories = registry.get("entries")
-    if not isinstance(repositories, dict):
-        raise ProjectionError("Repository registry needs an entries object")
-    machines = read_json(root / "_system/agents/_package/instance/fleet/machines.json")
-    primary = next((item for item in machines.get("machines", []) if isinstance(item, dict) and item.get("role") == "primary"), None)
-    if not isinstance(primary, dict):
-        raise ProjectionError("Machine registry needs one primary")
-    roots = primary.get("roots")
-    code_root = expand_registered_path(roots.get("code") if isinstance(roots, dict) else None, primary.get("home"))
-    projections_by_repo = selection.get("repository_skills", {})
-    if not isinstance(projections_by_repo, dict):
-        raise ProjectionError("Skill source selection needs a repository_skills object")
-
-    specs: list[ProjectionSpec] = []
-    names: dict[str, ProjectionSpec] = {}
-    targets: set[Path] = set()
-    for repo_id, raw_repo in repositories.items():
-        if not isinstance(repo_id, str) or not SKILL_RE.fullmatch(repo_id):
-            raise ProjectionError(f"Invalid repository ID: {repo_id!r}")
-        if not isinstance(raw_repo, dict):
-            raise ProjectionError(f"Repository entry must be an object: {repo_id}")
-        projections = projections_by_repo.get(repo_id, [])
-        if not isinstance(projections, list):
-            raise ProjectionError(f"Repository {repo_id!r} skill_projections must be a list")
-        raw_path = raw_repo.get("path")
-        if projections and (not isinstance(raw_path, str) or not raw_path):
-            raise ProjectionError(f"Repository {repo_id!r} needs a path for skill projections")
-        candidate = PurePosixPath(str(raw_path)) if raw_path else PurePosixPath("__missing__")
-        if candidate.is_absolute() or ".." in candidate.parts or str(raw_path).startswith("~"):
-            raise ProjectionError(f"Repository {repo_id!r} path must be Code-root-relative")
-        repo_path = Path(str(code_root)).joinpath(*candidate.parts).resolve()
-
-        for raw_projection in projections:
-            if not isinstance(raw_projection, dict):
-                raise ProjectionError(f"Repository {repo_id!r} skill projection must be an object")
-            source = safe_source(raw_projection.get("source"), repo_id)
-            mode = raw_projection.get("mode", "auto")
-            if mode not in {"auto", "manual"}:
-                raise ProjectionError(
-                    f"Repository {repo_id!r} projection {source} has invalid mode {mode!r}"
-                )
-            local_name = source.name
-            if not LOCAL_NAME_RE.fullmatch(local_name):
-                raise ProjectionError(
-                    f"Projected repository skill folder must use l-<capability>: {repo_id}:{source}"
-                )
-            name = f"{repo_id}-{local_name.removeprefix('l-')}"
-            if not SKILL_RE.fullmatch(name) or len(name) > 64:
-                raise ProjectionError(f"Derived projected skill name is invalid or over 64 characters: {name}")
-            target = root / WORKING_ROOT / repo_id / name
-            spec = ProjectionSpec(repo_id, repo_path, source, mode, local_name, name, target)
-            if name in names:
-                raise ProjectionError(
-                    f"Duplicate projected skill name {name!r}: {names[name].source} and {source}"
-                )
-            if target in targets:
-                raise ProjectionError(f"Duplicate projected skill target: {target}")
-            names[name] = spec
-            targets.add(target)
-            specs.append(spec)
-    return specs
-
-
-def read_source_name(skill_file: Path) -> str:
-    text = skill_file.read_text(encoding="utf-8")
+        text = skill_file.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise ProjectionError(f"Skill source lacks readable SKILL.md: {skill}") from exc
     if not text.startswith("---\n"):
-        raise ProjectionError(f"Repository skill frontmatter missing: {skill_file}")
+        raise ProjectionError(f"Skill frontmatter missing: {skill_file}")
     end = text.find("\n---", 4)
     if end == -1:
-        raise ProjectionError(f"Repository skill frontmatter malformed: {skill_file}")
+        raise ProjectionError(f"Skill frontmatter malformed: {skill_file}")
     match = NAME_RE.search(text[4:end])
     if not match:
-        raise ProjectionError(f"Repository skill frontmatter name missing: {skill_file}")
-    return match.group(1).strip()
+        raise ProjectionError(f"Skill frontmatter name missing: {skill_file}")
+    name = match.group(1).strip()
+    if not SKILL_RE.fullmatch(name) or len(name) > 64:
+        raise ProjectionError(f"Invalid skill name {name!r}: {skill_file}")
+    if skill.name != name:
+        raise ProjectionError(f"Skill folder/name mismatch: {skill} declares {name!r}")
+    return name
 
 
-def policy_text(text: str, allowed: bool) -> str:
+def read_policy(skill: Path) -> bool | None:
+    metadata = skill / "agents/openai.yaml"
+    if not metadata.is_file():
+        return None
+    match = POLICY_RE.search(metadata.read_text(encoding="utf-8"))
+    if not match:
+        return None
+    return "true" in match.group(0).lower()
+
+
+def policy_text(path: Path, allowed: bool) -> str:
     value = "true" if allowed else "false"
+    text = path.read_text(encoding="utf-8") if path.is_file() else ""
     if POLICY_RE.search(text):
         return POLICY_RE.sub(rf"\g<1>{value}\g<2>", text, count=1)
     policy = re.search(r"(?m)^policy:\s*(?:#.*)?$", text)
@@ -214,285 +126,407 @@ def policy_text(text: str, allowed: bool) -> str:
     return text + suffix + f"policy:\n  allow_implicit_invocation: {value}\n"
 
 
-def transform_references(text: str, sibling_names: dict[str, str], source: Path) -> str:
-    dangling: set[str] = set()
-
-    def replace(match: re.Match[str]) -> str:
-        local_name = match.group(1)
-        projected = sibling_names.get(local_name)
-        if projected is None:
-            dangling.add(local_name)
-            return match.group(0)
-        return f"${projected}"
-
-    result = LOCAL_REFERENCE_RE.sub(replace, text)
-    if dangling:
-        values = ", ".join(f"${name}" for name in sorted(dangling))
-        raise ProjectionError(
-            f"Projected skill {source} references unprojected repository skills: {values}"
-        )
+def effective_name(name: str, prefix: str | None) -> str:
+    result = f"{prefix}-{name}" if prefix else name
+    if not SKILL_RE.fullmatch(result) or len(result) > 64:
+        raise ProjectionError(f"Effective skill name is invalid or over 64 characters: {result}")
     return result
 
 
-def transform_skill_text(text: str, spec: ProjectionSpec, source: Path) -> str:
-    text, count = NAME_RE.subn(f"name: {spec.name}", text, count=1)
-    if count != 1:
-        raise ProjectionError(f"Could not rewrite projected skill name: {source}")
-    heading = f"# {repo_title(spec.repo_id)} · {capability_title(spec.local_name)}"
-    text, count = re.subn(r"(?m)^# .+$", heading, text, count=1)
-    if count != 1:
-        raise ProjectionError(f"Repository skill needs one H1: {source}")
-    return text
-
-
-def source_entries(source: Path) -> list[Path]:
-    entries: list[Path] = []
-    for path in sorted(source.rglob("*")):
-        if any(part in IGNORED_NAMES for part in path.relative_to(source).parts):
-            continue
-        if path.is_symlink():
-            raise ProjectionError(f"Repository skill projections do not follow symlinks: {path}")
-        if path.is_file():
-            entries.append(path)
-    return entries
-
-
-def digest_files(files: list[ProjectedFile]) -> str:
+def skill_digest(source: Path) -> str:
     digest = hashlib.sha256()
-    for item in sorted(files, key=lambda value: value.relative.as_posix()):
-        digest.update(item.relative.as_posix().encode("utf-8"))
+    for path in sorted(source.rglob("*"), key=lambda item: item.relative_to(source).as_posix()):
+        relative = path.relative_to(source)
+        if any(part in IGNORED_NAMES for part in relative.parts) or path.is_dir():
+            continue
+        digest.update(relative.as_posix().encode())
         digest.update(b"\0")
-        digest.update(b"1" if item.executable else b"0")
-        digest.update(b"\0")
-        digest.update(item.content)
+        if path.is_symlink():
+            digest.update(b"L\0" + os.readlink(path).encode())
+        elif path.is_file():
+            digest.update(b"F\0" + path.read_bytes())
+        else:
+            raise ProjectionError(f"Unsupported skill source entry: {path}")
         digest.update(b"\0")
     return digest.hexdigest()
 
 
-def build_projected_files(spec: ProjectionSpec, sibling_names: dict[str, str]) -> tuple[ProjectedFile, ...]:
-    source = spec.repo_path.joinpath(*spec.source.parts)
-    skill_file = source / "SKILL.md"
-    if not skill_file.is_file():
-        raise ProjectionError(f"Repository skill source lacks SKILL.md: {source}")
-    declared = read_source_name(skill_file)
-    if declared != spec.local_name:
-        raise ProjectionError(
-            f"Repository skill folder/name mismatch: {source} declares {declared!r}"
-        )
-
-    files: list[ProjectedFile] = []
-    metadata_found = False
-    for path in source_entries(source):
-        relative = PurePosixPath(path.relative_to(source).as_posix())
-        content = path.read_bytes()
-        executable = bool(path.stat().st_mode & stat.S_IXUSR)
-        if relative.as_posix() == "SKILL.md":
-            text = transform_skill_text(content.decode("utf-8"), spec, path)
-            text = transform_references(text, sibling_names, path)
-            content = text.encode("utf-8")
-        elif relative.as_posix() == "agents/openai.yaml":
-            metadata_found = True
-            text = policy_text(content.decode("utf-8"), spec.mode == "auto")
-            content = transform_references(text, sibling_names, path).encode("utf-8")
-        elif path.suffix.lower() in TEXT_SUFFIXES:
-            text = transform_references(content.decode("utf-8"), sibling_names, path)
-            content = text.encode("utf-8")
-        files.append(ProjectedFile(relative, content, executable))
-
-    if not metadata_found:
-        metadata = policy_text("", spec.mode == "auto").encode("utf-8")
-        files.append(ProjectedFile(PurePosixPath("agents/openai.yaml"), metadata, False))
-
-    files.append(projection_marker(spec, digest_files(files)))
-    return tuple(sorted(files, key=lambda value: value.relative.as_posix()))
-
-
-def projection_marker(spec: ProjectionSpec, content_digest: str) -> ProjectedFile:
-    marker = {
+def marker_text(
+    *,
+    source_id: str,
+    source: Path,
+    name: str,
+    allowed: bool,
+    materialization: str,
+    digest: str | None = None,
+) -> str:
+    payload: dict[str, Any] = {
         "managed_by": MANAGED_BY,
-        "repo_id": spec.repo_id,
-        "source": spec.source.as_posix(),
-        "mode": spec.mode,
-        "local_name": spec.local_name,
-        "name": spec.name,
-        "target": (
-            WORKING_ROOT / spec.repo_id / spec.name
-        ).as_posix(),
-        "content_digest": content_digest,
+        "source_id": source_id,
+        "source": str(source),
+        "name": name,
+        "allow_implicit_invocation": allowed,
+        "materialization": materialization,
     }
-    return ProjectedFile(
-        PurePosixPath(MARKER),
-        (json.dumps(marker, indent=2) + "\n").encode("utf-8"),
-        False,
-    )
+    if digest is not None:
+        payload["source_sha256"] = digest
+    return json.dumps(payload, indent=2, sort_keys=True) + "\n"
 
 
-def actual_files(target: Path) -> tuple[ProjectedFile, ...]:
-    files: list[ProjectedFile] = []
-    for path in sorted(target.rglob("*")):
-        if path.is_symlink():
-            return ()
-        if path.is_file():
-            files.append(
-                ProjectedFile(
-                    PurePosixPath(path.relative_to(target).as_posix()),
-                    path.read_bytes(),
-                    bool(path.stat().st_mode & stat.S_IXUSR),
-                )
-            )
-    return tuple(files)
-
-
-def read_marker(target: Path, marker_name: str = MARKER) -> dict[str, Any]:
-    marker = target / marker_name
-    if not marker.is_file():
-        return {}
-    try:
-        value = json.loads(marker.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return {}
-    return value if isinstance(value, dict) else {}
-
-
-def marker_matches_spec(marker: dict[str, Any], spec: ProjectionSpec) -> bool:
-    return managed_marker(marker) and all(
-        marker.get(key) == value
-        for key, value in {
-            "repo_id": spec.repo_id,
-            "source": spec.source.as_posix(),
-            "mode": spec.mode,
-            "local_name": spec.local_name,
-            "name": spec.name,
-            "target": (
-                WORKING_ROOT / spec.repo_id / spec.name
-            ).as_posix(),
-        }.items()
-    )
-
-
-def validate_existing_projection(spec: ProjectionSpec, target: Path | None = None) -> None:
-    target = target or spec.target
-    marker = read_marker(target)
-    if not marker_matches_spec(marker, spec):
+def discover_all(repo_path: Path) -> list[tuple[str, Path]]:
+    roots = [candidate for candidate in (repo_path / ".agents/skills", repo_path / "skills") if candidate.is_dir()]
+    if len(roots) != 1:
+        found = ", ".join(str(path) for path in roots) or "none"
         raise ProjectionError(
-            f"Repository checkout is unavailable and managed projection is missing or invalid: {target}"
+            f"all_skills requires exactly one .agents/skills or skills root in {repo_path}; found {found}"
         )
-    skill_file = target / "SKILL.md"
-    if not skill_file.is_file() or read_source_name(skill_file) != spec.name:
-        raise ProjectionError(f"Managed projection SKILL.md is invalid: {skill_file}")
+    selected: list[tuple[str, Path]] = []
+    for skill_file in sorted(roots[0].rglob("SKILL.md")):
+        skill = skill_file.parent
+        if skill.is_symlink() or any(parent.is_symlink() for parent in skill.parents if parent != repo_path.parent):
+            raise ProjectionError(f"Repository skill source may not traverse symlinks: {skill}")
+        relative = skill.relative_to(repo_path).as_posix()
+        selected.append((relative, skill))
+    if not selected:
+        raise ProjectionError(f"all_skills found no skills in {roots[0]}")
+    return selected
 
 
-def plan(root: Path, *, require_sources: bool = False) -> ProjectionPlan:
-    specs = load_specs(root)
-    by_repo: dict[str, dict[str, str]] = {}
-    for spec in specs:
-        by_repo.setdefault(spec.repo_id, {})[spec.local_name] = spec.name
+def explicit_skills(repo_path: Path, sources: list[str]) -> list[tuple[str, Path]]:
+    selected: list[tuple[str, Path]] = []
+    resolved_repo = repo_path.resolve()
+    for source in sources:
+        skill = repo_path.joinpath(*PurePosixPath(source).parts)
+        try:
+            skill.resolve().relative_to(resolved_repo)
+        except ValueError as exc:
+            raise ProjectionError(f"Repository skill escapes its checkout: {source}") from exc
+        selected.append((source, skill))
+    return selected
 
-    actions: list[ProjectionAction] = []
-    warnings: list[str] = []
-    skills: list[ProjectedSkill] = []
-    desired_targets = {spec.target for spec in specs}
-    working_root = root / WORKING_ROOT
 
-    if working_root.is_dir():
-        for marker_path in sorted(working_root.rglob(MARKER)):
-            target = marker_path.parent
-            if target not in desired_targets:
-                marker = read_marker(target)
-                if not managed_marker(marker):
-                    raise ProjectionError(f"Unmanaged working repository projection marker: {marker_path}")
-                actions.append(ProjectionAction("remove", target))
-        for skill_file in sorted(working_root.rglob("SKILL.md")):
-            if not (skill_file.parent / MARKER).is_file():
-                raise ProjectionError(f"Unmanaged skill inside generated working-repos tree: {skill_file.parent}")
-
-    for spec in specs:
-        source = spec.repo_path.joinpath(*spec.source.parts)
-        if not spec.repo_path.exists():
-            if spec.target.exists():
-                validate_existing_projection(spec)
-            else:
-                validate_existing_projection(spec)
-            if require_sources:
+def gh_sources(root: Path, data: dict[str, Any]) -> list[dict[str, Any]]:
+    gh_root = root / GH_ROOT
+    if not gh_root.is_dir():
+        raise ProjectionError(f"GitHub skill root missing: {gh_root}")
+    policies = github_policies(data)
+    directories = {
+        child.name: child for child in gh_root.iterdir() if child.is_dir() and not child.is_symlink()
+    }
+    unknown = set(policies) - set(directories)
+    if unknown:
+        raise ProjectionError(f"GH policy references missing repository directories: {sorted(unknown)}")
+    result: list[dict[str, Any]] = []
+    for source_id, repo_root in sorted(directories.items()):
+        skills_root = repo_root / "skills"
+        if not skills_root.is_dir():
+            raise ProjectionError(f"GitHub repository directory needs skills/: {repo_root}")
+        policy = policies.get(source_id, {"invocation": {}})
+        installed: list[tuple[str, Path]] = []
+        for child in sorted(skills_root.iterdir()):
+            if child.name in {".DS_Store"}:
+                continue
+            if child.is_symlink() or not child.is_dir() or not (child / "SKILL.md").is_file():
+                raise ProjectionError(f"Malformed GH skill entry: {child}")
+            source_text = (child / "SKILL.md").read_text(encoding="utf-8")
+            missing_metadata = [
+                key
+                for key in ("github-repo", "github-path", "github-ref", "github-tree-sha")
+                if not re.search(rf"(?m)^\s*{key}:\s*\S+\s*$", source_text)
+            ]
+            if missing_metadata:
                 raise ProjectionError(
-                    f"Required repository checkout is unavailable: {spec.repo_id}:{spec.repo_path}"
+                    f"GH skill lacks install metadata {missing_metadata}: {child}"
                 )
-            warnings.append(
-                f"Repository checkout unavailable; preserving tracked projection: {spec.repo_id}:{spec.source}"
+            installed.append((child.name, child))
+        if not installed:
+            raise ProjectionError(f"GitHub repository has no installed skills: {repo_root}")
+        invocation = policy.get("invocation", {})
+        unknown_invocation = set(invocation) - {name for name, _ in installed}
+        if unknown_invocation:
+            raise ProjectionError(
+                f"GH invocation policy references missing skills in {source_id}: {sorted(unknown_invocation)}"
             )
-        else:
-            if not source.exists():
-                if spec.target.exists():
-                    validate_existing_projection(spec)
-                else:
-                    validate_existing_projection(spec)
-                if require_sources:
-                    raise ProjectionError(
-                        f"Required projected skill source is missing: {source}"
-                    )
-                warnings.append(
-                    f"Repository source unavailable; preserving tracked projection: {spec.repo_id}:{spec.source}"
-                )
-            else:
-                files = build_projected_files(spec, by_repo[spec.repo_id])
-                if spec.target.exists() and not read_marker(spec.target):
-                    raise ProjectionError(f"Unmanaged content blocks working projection target: {spec.target}")
-                if actual_files(spec.target) != files:
-                    actions.append(ProjectionAction("replace", spec.target, files))
-        skills.append(ProjectedSkill(spec.name, spec.target, spec.mode))
+        result.append(
+            {
+                "id": source_id,
+                "origin": "gh",
+                "selected": installed,
+                "prefix": policy.get("prefix"),
+                "invocation": invocation,
+                "declared_root": None,
+            }
+        )
+    return result
 
+
+def repo_sources(data: dict[str, Any], home: Path, require_sources: bool) -> tuple[list[dict[str, Any]], list[str]]:
+    sources: list[dict[str, Any]] = []
+    warnings: list[str] = []
+    for record in derive_repo_records(data, home=home):
+        repo_path = Path(record["path"])
+        if not repo_path.is_dir():
+            message = f"Repository skill checkout unavailable: {record['declared_path']}"
+            if require_sources:
+                raise ProjectionError(message)
+            warnings.append(message)
+            continue
+        selected = (
+            discover_all(repo_path)
+            if record["all_skills"]
+            else explicit_skills(repo_path, record["skills"] or [])
+        )
+        invocation = record["invocation"]
+        unknown_invocation = set(invocation) - {name for name, _ in selected}
+        if unknown_invocation:
+            raise ProjectionError(
+                f"Repository invocation policy references missing selected skills in {record['id']}: {sorted(unknown_invocation)}"
+            )
+        sources.append(
+            {
+                "id": record["id"],
+                "origin": "repo",
+                "selected": selected,
+                "prefix": record.get("prefix"),
+                "invocation": invocation,
+                "declared_root": record["declared_path"],
+            }
+        )
+    return sources, warnings
+
+
+def plan(root: Path, *, home: Path | None = None, require_sources: bool = False) -> ProjectionPlan:
+    data = read_json(root / SELECTION)
+    try:
+        validate_config(data)
+    except SkillSourceConfigError as exc:
+        raise ProjectionError(str(exc)) from exc
+    selected_home = (home or Path.home()).expanduser().resolve()
+    repo, warnings = repo_sources(data, selected_home, require_sources)
+    sources = [*gh_sources(root, data), *repo]
+    skills: list[ProjectedSkill] = []
+    actions: list[ProjectionAction] = []
+    desired_generated: set[Path] = set()
+
+    for source in sources:
+        mappings: dict[str, str] = {}
+        canonical_by_relative: dict[str, tuple[str, Path]] = {}
+        for relative, canonical in source["selected"]:
+            declared = read_source_name(canonical)
+            effective = effective_name(declared, source.get("prefix"))
+            mappings[declared] = effective
+            canonical_by_relative[relative] = (effective, canonical)
+        for relative, (name, canonical) in canonical_by_relative.items():
+            allowed = bool(source["invocation"].get(relative, source["invocation"].get(canonical.name, False)))
+            declared_path = None
+            if source["origin"] == "repo":
+                declared_path = f"{source['declared_root']}/{relative}"
+            if source.get("prefix"):
+                materialization = "snapshot"
+                target = root / SNAPSHOT_ROOT / source["id"] / name
+                marker = marker_text(
+                    source_id=source["id"],
+                    source=canonical,
+                    name=name,
+                    allowed=allowed,
+                    materialization=materialization,
+                    digest=skill_digest(canonical),
+                )
+                action_kind = "snapshot"
+            elif read_policy(canonical) == allowed:
+                materialization = "direct"
+                target = canonical
+                marker = None
+                action_kind = None
+            else:
+                materialization = "overlay"
+                target = root / OVERLAY_ROOT / source["id"] / name
+                marker = marker_text(
+                    source_id=source["id"],
+                    source=canonical,
+                    name=name,
+                    allowed=allowed,
+                    materialization=materialization,
+                )
+                action_kind = "overlay"
+            if action_kind:
+                desired_generated.add(target)
+                current_marker = target / MARKER
+                if (target.exists() or target.is_symlink()) and not current_marker.is_file():
+                    raise ProjectionError(f"Generated skill target collides with unmanaged content: {target}")
+                current = (
+                    overlay_is_current(target, canonical, marker)
+                    if action_kind == "overlay"
+                    else target.is_dir()
+                    and current_marker.is_file()
+                    and current_marker.read_text(encoding="utf-8") == marker
+                )
+                if not current:
+                    actions.append(
+                        ProjectionAction(
+                            action_kind,
+                            target,
+                            canonical,
+                            name,
+                            allowed,
+                            tuple(sorted(mappings.items())),
+                            marker,
+                        )
+                    )
+            skills.append(
+                ProjectedSkill(
+                    name,
+                    target,
+                    "auto" if allowed else "manual",
+                    source["origin"],
+                    canonical,
+                    declared_path,
+                    materialization,
+                )
+            )
+
+    for generated_root in (root / OVERLAY_ROOT, root / SNAPSHOT_ROOT):
+        if not generated_root.exists():
+            continue
+        for marker_path in sorted(generated_root.rglob(MARKER)):
+            target = marker_path.parent
+            if target not in desired_generated:
+                actions.append(ProjectionAction("remove", target))
+        for child in generated_root.iterdir():
+            if child.is_symlink() or not child.is_dir():
+                raise ProjectionError(f"Unexpected generated skill entry: {child}")
+
+    names: dict[str, ProjectedSkill] = {}
+    for skill in skills:
+        previous = names.get(skill.name)
+        if previous:
+            raise ProjectionError(
+                f"Duplicate external skill name {skill.name!r}: {previous.canonical_path} and {skill.canonical_path}"
+            )
+        names[skill.name] = skill
     return ProjectionPlan(tuple(skills), tuple(actions), tuple(warnings))
 
 
-def write_projection(target: Path, files: tuple[ProjectedFile, ...]) -> None:
-    target.parent.mkdir(parents=True, exist_ok=True)
-    staged = Path(tempfile.mkdtemp(prefix=f".{target.name}-", dir=target.parent))
-    backup: Path | None = None
-    try:
-        for item in files:
-            destination = staged.joinpath(*item.relative.parts)
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            destination.write_bytes(item.content)
-            destination.chmod(0o755 if item.executable else 0o644)
-        if target.exists():
-            if not managed_marker(read_marker(target)):
-                raise ProjectionError(f"Refusing to replace unmanaged projection target: {target}")
-            backup = target.with_name(f".{target.name}.backup")
-            if backup.exists():
-                raise ProjectionError(f"Projection backup path already exists: {backup}")
-            target.rename(backup)
-        os.replace(staged, target)
-        if backup is not None:
-            shutil.rmtree(backup)
-    except Exception:
-        if staged.exists():
-            shutil.rmtree(staged)
-        if backup is not None and backup.exists() and not target.exists():
-            backup.rename(target)
-        raise
-
-
-def apply(plan_value: ProjectionPlan, root: Path) -> None:
-    for action in plan_value.actions:
-        if action.kind == "replace":
-            write_projection(action.target, action.files)
-        elif action.kind == "remove":
-            marker = read_marker(action.target)
-            if not managed_marker(marker):
-                raise ProjectionError(f"Refusing to remove unmanaged projection target: {action.target}")
-            shutil.rmtree(action.target)
-        else:
-            raise AssertionError(action.kind)
-
-    for generated_root in (root / WORKING_ROOT,):
-        if not generated_root.is_dir():
+def overlay_is_current(target: Path, source: Path, marker: str) -> bool:
+    marker_path = target / MARKER
+    if not target.is_dir() or not marker_path.is_file() or marker_path.read_text(encoding="utf-8") != marker:
+        return False
+    expected = {child.name for child in source.iterdir() if child.name not in IGNORED_NAMES}
+    expected.add("agents")
+    actual = {child.name for child in target.iterdir() if child.name != MARKER}
+    if expected != actual:
+        return False
+    for child in source.iterdir():
+        if child.name in IGNORED_NAMES or child.name == "agents":
             continue
-        for folder in sorted(
-            (path for path in generated_root.rglob("*") if path.is_dir()),
-            key=lambda path: len(path.parts),
-            reverse=True,
-        ):
-            if not any(folder.iterdir()):
-                folder.rmdir()
-        if generated_root.is_dir() and not any(generated_root.iterdir()):
-            generated_root.rmdir()
+        linked = target / child.name
+        if not linked.is_symlink() or linked.resolve(strict=False) != child.resolve(strict=False):
+            return False
+    return (target / "agents/openai.yaml").is_file()
+
+
+def materialize_overlay(action: ProjectionAction, target: Path) -> None:
+    source = action.canonical_path
+    if source is None:
+        raise ProjectionError("Overlay action has no source")
+    target.mkdir(parents=True)
+    for child in source.iterdir():
+        if child.name in IGNORED_NAMES:
+            continue
+        if child.name != "agents":
+            (target / child.name).symlink_to(child.resolve(), target_is_directory=child.is_dir())
+            continue
+        agents = target / "agents"
+        agents.mkdir()
+        for metadata in child.iterdir():
+            if metadata.name == "openai.yaml":
+                continue
+            (agents / metadata.name).symlink_to(metadata.resolve(), target_is_directory=metadata.is_dir())
+    metadata = target / "agents/openai.yaml"
+    metadata.parent.mkdir(parents=True, exist_ok=True)
+    metadata.write_text(policy_text(source / "agents/openai.yaml", action.allowed), encoding="utf-8")
+    (target / MARKER).write_text(action.marker or "", encoding="utf-8")
+
+
+def rewrite_snapshot(target: Path, action: ProjectionAction) -> None:
+    skill_file = target / "SKILL.md"
+    text = skill_file.read_text(encoding="utf-8")
+    text, count = NAME_RE.subn(f"name: {action.name}", text, count=1)
+    if count != 1:
+        raise ProjectionError(f"Could not rewrite snapshot name: {skill_file}")
+    original_name = next(
+        (old for old, new in action.mappings if new == action.name),
+        None,
+    )
+    prefix = (
+        (action.name or "")[: -(len(original_name) + 1)]
+        if original_name and action.name and action.name.endswith(f"-{original_name}")
+        else ""
+    )
+    if prefix:
+        title = " ".join(part.upper() if len(part) <= 3 else part.title() for part in prefix.split("-"))
+        text = re.sub(r"(?m)^# (.+)$", rf"# {title} · \1", text, count=1)
+    skill_file.write_text(text, encoding="utf-8")
+    mapping = dict(action.mappings)
+    for path in target.rglob("*"):
+        if not path.is_file() or path.is_symlink() or path.suffix.lower() not in TEXT_SUFFIXES:
+            continue
+        original = path.read_text(encoding="utf-8")
+        updated = original
+        for old, new in sorted(mapping.items(), key=lambda item: len(item[0]), reverse=True):
+            updated = re.sub(rf"\${re.escape(old)}\b", f"${new}", updated)
+        if updated != original:
+            path.write_text(updated, encoding="utf-8")
+    metadata = target / "agents/openai.yaml"
+    metadata.parent.mkdir(parents=True, exist_ok=True)
+    metadata.write_text(policy_text(metadata, action.allowed), encoding="utf-8")
+    (target / MARKER).write_text(action.marker or "", encoding="utf-8")
+
+
+def materialize_action(action: ProjectionAction, target: Path | None = None) -> Path:
+    destination = target or action.target
+    if action.kind == "overlay":
+        materialize_overlay(action, destination)
+    elif action.kind == "snapshot":
+        if action.canonical_path is None:
+            raise ProjectionError("Snapshot action has no source")
+        shutil.copytree(action.canonical_path, destination, symlinks=False)
+        rewrite_snapshot(destination, action)
+    else:
+        raise ProjectionError(f"Cannot materialize action: {action.kind}")
+    return destination
+
+
+def remove_path(path: Path) -> None:
+    if path.is_symlink() or path.is_file():
+        path.unlink(missing_ok=True)
+    elif path.exists():
+        shutil.rmtree(path)
+
+
+def replace_generated(action: ProjectionAction) -> None:
+    action.target.parent.mkdir(parents=True, exist_ok=True)
+    staging = Path(tempfile.mkdtemp(prefix=f".{action.target.name}.incoming-", dir=action.target.parent))
+    temporary = staging / "skill"
+    try:
+        materialize_action(action, temporary)
+        previous = action.target.parent / f".{action.target.name}.previous-{os.getpid()}"
+        remove_path(previous)
+        if action.target.exists() or action.target.is_symlink():
+            os.replace(action.target, previous)
+        os.replace(temporary, action.target)
+        remove_path(previous)
+    finally:
+        remove_path(staging)
+
+
+def apply(plan: ProjectionPlan, root: Path) -> None:
+    del root
+    for action in plan.actions:
+        if action.kind == "remove":
+            marker = action.target / MARKER
+            if not marker.is_file():
+                raise ProjectionError(f"Refusing to remove unmanaged generated skill: {action.target}")
+            remove_path(action.target)
+        else:
+            replace_generated(action)

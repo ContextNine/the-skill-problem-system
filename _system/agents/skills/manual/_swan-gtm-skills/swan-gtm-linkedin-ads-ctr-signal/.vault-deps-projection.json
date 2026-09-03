@@ -1,8 +1,0 @@
-{
-  "managed_by": "ctx9-agents sync",
-  "repo_id": "swan-gtm-skills",
-  "source": "skills/brianne-thomas/linkedin-ads-ctr-signal",
-  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-linkedin-ads-ctr-signal",
-  "type": "manual-skill",
-  "title_override": "Swan GTM Skills \u00b7 LinkedIn Ads CTR signal"
-}

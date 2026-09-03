@@ -9,6 +9,7 @@ The following skill sources are redistributed under their original licenses.
 - https://github.com/coreyhaines31/marketingskills: MIT, https://github.com/coreyhaines31/marketingskills/blob/main/LICENSE
 - https://github.com/cursor/plugins
 - https://github.com/googleworkspace/cli: Apache-2.0, https://github.com/googleworkspace/cli/blob/main/LICENSE
+- https://github.com/mattpocock/skills: MIT, https://github.com/mattpocock/skills/blob/main/LICENSE
 - https://github.com/openclaw/openclaw
 - https://github.com/swan-gtm/gtm-skills: MIT, https://github.com/swan-gtm/gtm-skills/blob/main/LICENSE
 - https://github.com/whq25/agent-canvas: MIT, https://github.com/whq25/agent-canvas/blob/main/LICENSE

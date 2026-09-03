@@ -1,8 +1,0 @@
-{
-  "managed_by": "ctx9-agents sync",
-  "repo_id": "googleworkspace-cli",
-  "source": "skills/gws-sheets-append",
-  "target": "_system/agents/skills/manual/_gws/gws-sheets-append",
-  "type": "manual-skill",
-  "title_override": "GWS \u00b7 Sheets Append"
-}

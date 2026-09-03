@@ -1,8 +1,0 @@
-{
-  "managed_by": "ctx9-agents sync",
-  "repo_id": "swan-gtm-skills",
-  "source": "skills/maxwell-nimmo/draft-creator-campaign-brief",
-  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-draft-creator-campaign-brief",
-  "type": "manual-skill",
-  "title_override": "Swan GTM Skills \u00b7 Draft campaign brief"
-}

@@ -21,7 +21,7 @@ from typing import Any
 
 PACKAGE_DIRECTORY = Path(__file__).resolve().parents[1]
 AGENTS_DIRECTORY = PACKAGE_DIRECTORY.parent
-SOURCE_FLEET_SCRIPTS = AGENTS_DIRECTORY / "skills/auto/_infrastructure/infra-sync-code-workspaces/scripts"
+SOURCE_FLEET_SCRIPTS = AGENTS_DIRECTORY / "skills/_infrastructure/infra-i-sync-code-workspaces/scripts"
 FLEET_SCRIPTS = (
     SOURCE_FLEET_SCRIPTS
     if (SOURCE_FLEET_SCRIPTS / "sync_code_workspaces.py").is_file()
@@ -253,7 +253,7 @@ def build_agent_reference_files(root: Path) -> dict[str, dict[str, str]]:
         agents / "_package/instance/dependencies/selections.json",
         agents / "_package/docs/dependencies.md",
         agents / "_package/instance/fleet/machine-secrets.json",
-        agents / "_package/instance/skills/sources.json",
+        agents / "_package/instance/skills/skill-sources.json",
         *sorted((agents / "_package/docs/dependency-references").glob("*.md")),
         *sorted((agents / "_package/docs/secrets").rglob("*.md")),
     ]
@@ -372,29 +372,44 @@ def build_skill_snapshot_bundle(
 ) -> skill_snapshots.SnapshotBundle:
     working_plan, skills = sync_skills.discover_skills(
         root,
+        home=Path.home(),
         require_repo_sources=require_repo_sources,
     )
-    replacements = {
+    generated = {
         action.target: action
         for action in working_plan.actions
-        if action.kind == "replace"
+        if action.kind in {"overlay", "snapshot"}
     }
     with tempfile.TemporaryDirectory(prefix="vault-agent-skill-preview-") as temporary:
         preview_root = Path(temporary)
         sources: dict[str, Path] = {}
+        links: dict[str, str] = {}
+        overlays: dict[str, dict[str, object]] = {}
         for skill in skills:
-            action = replacements.get(skill.path)
+            if skill.source == "repo" and skill.materialization == "direct":
+                if not skill.declared_path:
+                    raise AgentsSyncError(f"linked repository skill lacks a declared path: {skill.name}")
+                links[skill.name] = skill.declared_path
+                continue
+            if skill.source == "repo" and skill.materialization == "overlay":
+                if not skill.declared_path:
+                    raise AgentsSyncError(f"overlaid repository skill lacks a declared path: {skill.name}")
+                overlays[skill.name] = {
+                    "source": skill.declared_path,
+                    "allowed": skill.mode == "auto",
+                }
+                continue
+            action = generated.get(skill.path)
             if action is None:
                 source = skill.path
             else:
-                preview_target = preview_root / skill.name
-                sync_skills.working_repo_skills.write_projection(
-                    preview_target,
-                    action.files,
+                source = sync_skills.working_repo_skills.materialize_action(
+                    action, preview_root / "generated" / skill.name
                 )
-                source = preview_target
-            sources[skill.name] = snapshot_skill_source(skill, source, preview_root)
-        return skill_snapshots.build_bundle(sources)
+            sources[skill.name] = snapshot_skill_source(
+                skill, source, preview_root / "portable"
+            )
+        return skill_snapshots.build_bundle(sources, links=links, overlays=overlays)
 
 
 def snapshot_skill_source(
@@ -402,15 +417,11 @@ def snapshot_skill_source(
     source: Path,
     preview_root: Path,
 ) -> Path:
-    """Overlay configured GitHub invocation policy without editing publisher files."""
-    if skill.source != "gh" or skill.mode is None:
+    """Dereference linked overlays before building a portable fleet copy."""
+    if skill.materialization != "overlay":
         return source
     preview_target = preview_root / skill.name
-    shutil.copytree(source, preview_target)
-    metadata = preview_target / "agents/openai.yaml"
-    rendered = sync_skills.policy_text(metadata, skill.mode == "auto")
-    metadata.parent.mkdir(parents=True, exist_ok=True)
-    metadata.write_text(rendered, encoding="utf-8")
+    shutil.copytree(source, preview_target, symlinks=False)
     return preview_target
 
 

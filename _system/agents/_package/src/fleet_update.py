@@ -18,7 +18,7 @@ from typing import Any
 
 PACKAGE_DIRECTORY = Path(__file__).resolve().parents[1]
 AGENTS_DIRECTORY = PACKAGE_DIRECTORY.parent
-FLEET_SCRIPTS = AGENTS_DIRECTORY / "skills/auto/_infrastructure/infra-sync-code-workspaces/scripts"
+FLEET_SCRIPTS = AGENTS_DIRECTORY / "skills/_infrastructure/infra-i-sync-code-workspaces/scripts"
 COMMANDS_DIRECTORY = AGENTS_DIRECTORY.parent / "commands"
 for directory in (PACKAGE_DIRECTORY / "src", FLEET_SCRIPTS, COMMANDS_DIRECTORY):
     if str(directory) not in sys.path:
@@ -260,22 +260,18 @@ def run_vault_dependencies(root: Path, mode: str) -> int:
 
 def print_skill_source_plan(plan: dict[str, Any]) -> None:
     print("Skill sources:")
-    for item in [*plan.get("cloned", []), *plan.get("github", [])]:
+    for item in plan.get("github", []):
         detail = f"; {item['detail']}" if item.get("detail") else ""
-        before = item.get("local_commit") or item.get("version") or "unknown"
-        after = item.get("remote_commit") or before
-        print(f"  {item['id']}: {item['status']} ({str(before)[:12]} -> {str(after)[:12]}){detail}")
-    preview = str(plan.get("github_preview") or "").strip()
-    if preview:
-        print(preview)
+        print(f"  {item['id']}: {item['status']} ({item['skill_count']} skills){detail}")
+        preview = str(item.get("preview") or "").strip()
+        if preview:
+            print(preview)
 
 
 def print_applied_skill_sources(result: dict[str, Any]) -> None:
     print("Applied skill-source updates:")
-    for item in [*result.get("cloned", []), *result.get("github", [])]:
-        before = item.get("before_commit") or item.get("before_version") or item.get("local_commit") or "unknown"
-        after = item.get("local_commit") or item.get("version") or before
-        print(f"  {item['id']}: {item['status']} ({str(before)[:12]} -> {str(after)[:12]})")
+    for item in result.get("github", []):
+        print(f"  {item['id']}: {item['status']} ({item['skill_count']} skills, {item['changed_skills']} changed)")
 
 
 def write_aggregate_updates(root: Path, reports: list[dict[str, Any]]) -> None:
@@ -333,14 +329,14 @@ def update(args: argparse.Namespace) -> int:
     resolved = {"t3-code": resolved_t3} if resolved_t3 else {}
     mode = "verify" if args.verify else "dry-run" if args.dry_run else "apply"
 
-    source_records: list[dict[str, Any]] = []
+    source_config: dict[str, Any] = {}
     source_plan: dict[str, Any] | None = None
     if args.skill_source and "skills" not in parts:
         raise FleetUpdateError("--skill-source requires --skills or the default all-parts update")
     if "skills" in parts:
-        source_config = read_json(root / "_system/agents/_package/instance/skills/sources.json", "skill-source config")
-        source_records = skill_source_config.derive_repo_records(source_config)
-        source_plan = skill_source_update.plan_sources(root, source_records, args.skill_source)
+        source_config = read_json(root / "_system/agents/_package/instance/skills/skill-sources.json", "skill-source config")
+        skill_source_config.validate_config(source_config)
+        source_plan = skill_source_update.plan_sources(root, args.skill_source)
 
     print(f"Mode: {mode}")
     print(f"Parts: {', '.join(sorted(parts))}")
@@ -371,8 +367,8 @@ def update(args: argparse.Namespace) -> int:
         return sync_preview
     if args.verify:
         if "skills" in parts:
-            skill_source_update.build_lock(root, source_records, skill_snapshot_machines, source_id)
-            print("Verified current source, projection, and distributed snapshot facts; no lock was written.")
+            skill_source_update.build_lock(root, source_config, skill_snapshot_machines, source_id)
+            print("Verified current GH, local-repository, and distributed skill facts; no lock was written.")
         return 0
     if args.dry_run:
         return 0
@@ -401,9 +397,9 @@ def update(args: argparse.Namespace) -> int:
     if verified:
         write_aggregate_updates(root, verified)
     if "skills" in parts:
-        skill_lock = skill_source_update.build_lock(root, source_records, skill_snapshot_machines, source_id)
+        skill_lock = skill_source_update.build_lock(root, source_config, skill_snapshot_machines, source_id)
         skill_source_update.atomic_write_lock(root / "_system/agents/_package/generated/state/skills.lock.json", skill_lock)
-        print("Recorded verified source, projection, and distributed snapshot facts.")
+        print("Recorded verified GH, local-repository, and distributed skill facts.")
     return 0
 
 
@@ -420,7 +416,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--skill-source",
         action="append",
         default=[],
-        help="restrict skill updates to a cloned repository ID or gh:<skill-name>; repeatable",
+        help="restrict skill updates to gh:<repository-directory>; repeatable",
     )
     parser.add_argument("--workspace-deps", dest="workspace_deps", action="store_true", help="update transitional workspace-built commands")
     parser.add_argument("--vault-dependencies", dest="vault_dependencies", action="store_true", help="update the independent public Vault dependencies on this full-Vault Mac")

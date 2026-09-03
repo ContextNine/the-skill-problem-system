@@ -1,8 +1,0 @@
-{
-  "managed_by": "ctx9-agents sync",
-  "repo_id": "agent-canvas",
-  "source": "skills/agent-canvas",
-  "target": "_system/agents/skills/auto/_vault/vault-excalidraw-canvas",
-  "type": "auto-skill",
-  "title_override": "Vault \u00b7 Excalidraw Canvas"
-}

@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  printf '%s\n' "Usage: claude-provider-auth <openrouter|featherless> [--status]" >&2
+}
+
+if [[ $# -lt 1 || $# -gt 2 ]]; then
+  usage
+  exit 2
+fi
+
+provider="$1"
+action="enroll"
+if [[ $# -eq 2 ]]; then
+  if [[ "$2" != "--status" ]]; then
+    usage
+    exit 2
+  fi
+  action="status"
+fi
+
+case "$provider" in
+  openrouter|featherless)
+    ;;
+  *)
+    printf '%s\n' "claude-provider-auth: unsupported provider '$provider'" >&2
+    exit 2
+    ;;
+esac
+
+service="ctx9-claude-provider-$provider"
+account="$(id -un)"
+platform="$(uname -s)"
+
+case "$platform" in
+  Darwin)
+    security_bin="${CLAUDE_PROVIDER_SECURITY_BIN:-/usr/bin/security}"
+    if [[ ! -x "$security_bin" ]]; then
+      printf '%s\n' "claude-provider-auth: missing macOS security tool" >&2
+      exit 1
+    fi
+
+    if [[ "$action" == "status" ]]; then
+      if "$security_bin" find-generic-password -a "$account" -s "$service" >/dev/null 2>&1; then
+        printf 'Claude provider credential: provider=%s custody=macOS-Keychain status=enrolled\n' "$provider"
+        exit 0
+      fi
+      printf 'Claude provider credential: provider=%s custody=macOS-Keychain status=missing\n' "$provider" >&2
+      exit 1
+    fi
+
+    printf 'Enter the %s API key at the protected Keychain prompt.\n' "$provider" >&2
+    "$security_bin" add-generic-password \
+      -a "$account" \
+      -s "$service" \
+      -l "Claude provider: $provider" \
+      -U \
+      -w
+    ;;
+  Linux)
+    secret_tool="${CLAUDE_PROVIDER_SECRET_TOOL_BIN:-$(command -v secret-tool || true)}"
+    if [[ -z "$secret_tool" || ! -x "$secret_tool" ]]; then
+      printf '%s\n' "claude-provider-auth: missing Secret Service command: secret-tool" >&2
+      exit 1
+    fi
+
+    if [[ "$action" == "status" ]]; then
+      secret_value="$($secret_tool lookup ctx9-provider claude-route ctx9-route "$provider" 2>/dev/null || true)"
+      if [[ -n "$secret_value" ]]; then
+        unset secret_value
+        printf 'Claude provider credential: provider=%s custody=Secret-Service status=enrolled\n' "$provider"
+        exit 0
+      fi
+      unset secret_value
+      printf 'Claude provider credential: provider=%s custody=Secret-Service status=missing\n' "$provider" >&2
+      exit 1
+    fi
+
+    if [[ ! -r /dev/tty ]]; then
+      printf '%s\n' "claude-provider-auth: enrollment requires a real terminal" >&2
+      exit 1
+    fi
+    printf 'Enter the %s API key: ' "$provider" >/dev/tty
+    IFS= read -r -s credential </dev/tty
+    printf '\n' >/dev/tty
+    if [[ -z "$credential" ]]; then
+      printf '%s\n' "claude-provider-auth: empty credential refused" >&2
+      exit 1
+    fi
+    printf '%s' "$credential" | "$secret_tool" store \
+      --label="Claude provider: $provider" \
+      ctx9-provider claude-route \
+      ctx9-route "$provider"
+    unset credential
+    ;;
+  *)
+    printf '%s\n' "claude-provider-auth: unsupported platform '$platform'" >&2
+    exit 1
+    ;;
+esac
+
+exec "$0" "$provider" --status

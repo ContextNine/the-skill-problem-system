@@ -1,8 +1,0 @@
-{
-  "managed_by": "ctx9-agents sync",
-  "repo_id": "swan-gtm-skills",
-  "source": "skills/thomas-marcelle/founder-employees-or-creators",
-  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-founder-employees-or-creators",
-  "type": "manual-skill",
-  "title_override": "Swan GTM Skills \u00b7 Founder, employees, or creators"
-}

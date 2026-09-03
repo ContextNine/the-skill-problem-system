@@ -14,11 +14,14 @@ from pathlib import Path
 from typing import Any
 
 from package_layout import ConfigurationError, installed_config_root, installed_package_root, installed_state_root, load_instance
+import working_repo_skills
 
 
 INSTALL_MARKER = ".ctx9-agents-install.json"
 MANAGED_TEXT_MARKER = "ctx9-agents.managed"
-INSTALL_IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store")
+INSTALL_IGNORE = shutil.ignore_patterns(
+    "__pycache__", "*.pyc", ".DS_Store", working_repo_skills.MARKER
+)
 WORKSPACE_SYNC_HELPERS = (
     "agent_configuration_target_worker.py",
     "code_workspace_target_worker.py",
@@ -62,25 +65,60 @@ def distribution_paths(source: Path) -> list[Path]:
     return required
 
 
-def public_skill_roots(source: Path) -> list[Path]:
+def source_skill_roots(root: Path) -> list[Path]:
+    found: list[Path] = []
+    pending = [root]
+    while pending:
+        directory = pending.pop()
+        if (directory / "SKILL.md").is_file():
+            found.append(directory)
+            continue
+        pending.extend(
+            child
+            for child in directory.iterdir()
+            if child.is_dir() and not child.is_symlink()
+        )
+    return sorted(found)
+
+
+def public_skill_roots(source: Path) -> list[tuple[str, Path]]:
     agents_root = source.parent if source.name == "_package" else source
     root = agents_root / "skills"
-    return [path.parent for path in sorted(root.rglob("SKILL.md"))] if root.is_dir() else []
+    if not root.is_dir():
+        return []
+    instance_registry = source / "instance/skills/skill-sources.json"
+    if not instance_registry.is_file():
+        return [(skill.name, skill) for skill in source_skill_roots(root)]
+
+    vault_root = agents_root.parents[1]
+    owned = [
+        skill
+        for group in sorted(root.iterdir())
+        if group.is_dir() and not group.is_symlink() and group.name.startswith("_")
+        for skill in source_skill_roots(group)
+    ]
+    projected = working_repo_skills.plan(vault_root, require_sources=False)
+    if projected.actions:
+        raise InstallError("skill materializations are stale; run ctx9-agents sync --skills first")
+    github = [skill for skill in projected.skills if skill.origin == "gh"]
+    return [
+        *((skill.name, skill) for skill in owned),
+        *((skill.name, skill.path) for skill in github),
+    ]
 
 
 def stage_public_skills(source: Path, stage: Path) -> None:
     names: set[str] = set()
-    for skill in public_skill_roots(source):
-        name = skill.name
+    for name, skill in public_skill_roots(source):
         if name in names:
             raise InstallError(f"duplicate public skill name: {name}")
         names.add(name)
-        shutil.copytree(skill, stage / "skills" / name, symlinks=True, ignore=INSTALL_IGNORE)
+        shutil.copytree(skill, stage / "skills" / name, symlinks=False, ignore=INSTALL_IGNORE)
 
 
 def stage_workspace_sync_helpers(source: Path, stage: Path) -> None:
     """Bundle private-source helpers that public exports already place in src/."""
-    helper_source = source.parent / "skills/auto/_infrastructure/infra-sync-code-workspaces/scripts"
+    helper_source = source.parent / "skills/_infrastructure/infra-i-sync-code-workspaces/scripts"
     for name in WORKSPACE_SYNC_HELPERS:
         target = stage / "src" / name
         if target.is_file():

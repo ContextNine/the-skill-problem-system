@@ -1,8 +1,0 @@
-{
-  "managed_by": "ctx9-agents sync",
-  "repo_id": "swan-gtm-skills",
-  "source": "skills/rutger-katz/pricing-monetisation-ops",
-  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-pricing-monetisation-ops",
-  "type": "manual-skill",
-  "title_override": "Swan GTM Skills \u00b7 Pricing and monetisation ops"
-}

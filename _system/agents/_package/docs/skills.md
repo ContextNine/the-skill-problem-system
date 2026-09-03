@@ -1,156 +1,123 @@
 # Skill SOP
 
-## Source And Catalog Contract
+## Source and discovery contract
 
-- Implicit source: `_system/agents/skills/auto/<_group>/<skill>/SKILL.md`
-- Explicit-only source: `_system/agents/skills/manual/<_group>/<skill>/SKILL.md`
-- GitHub-managed source: `_system/agents/skills/github/<skill>/SKILL.md`
-- Selected repo projection: `_system/agents/skills/projected/<repo-id>/<projected-name>/SKILL.md`
-- Generated catalog: `_system/agents/skills/catalog/<skill>`
-- Dormant storage: `_system/agents/skills/dormant/<skill>/`
-- Repo-local skills: `.agents/skills/`
+- Vault-owned source: `_system/agents/skills/<_group>/<skill>/SKILL.md`
+- GH-managed source: `_system/agents/skills/github/<repo-name>/skills/<skill>/SKILL.md`
+- Local-checkout source: `<checkout>/.agents/skills/<repo-name>-<capability>/SKILL.md`
+- Generated policy overlay: `_system/agents/skills/overlays/<source-id>/<skill>/`
+- Generated prefixed snapshot: `_system/agents/skills/snapshots/<source-id>/<skill>/`
+- Generated catalog link: `_system/agents/skills/catalog/<skill>`
+- Dormant storage: `_system/agents/skills/dormant/`
 
-`skills/catalog/` contains symlinks only. Put new or moved skills under auto, manual, or GitHub source, then sync. Never install content into the generated catalog. Skill sync implementation lives in `_package/src/sync_skills.py`.
+`catalog` contains symlinks only. `overlays` and `snapshots` contain generated outputs only. Never author or install a skill in those locations.
 
-Use `$agents-write-a-skill` when creating or restructuring a skill; it owns the authoring method and routes back here for canonical naming, source, invocation, and projection rules.
+Use `$agents-i-write-a-skill` for skill creation or restructuring.
 
-Every new Vault-owned skill must use `skills/auto` for implicit invocation or `skills/manual` for explicit-only invocation, followed by the matching `_lower-kebab` category group. Never create a Vault-owned skill in the Vault root's `.agents/skills`. Repo-local `.agents/skills` is only for a separate owning code repository when the user explicitly requests repository-local ownership there.
+## Vault-owned naming
 
-Organizer folders must use `_lower-kebab`, may nest recursively, and never contain `SKILL.md`. Skill folder must contain `SKILL.md`; folder basename must equal frontmatter `name`. Names must be globally unique.
+Use a root `_lower-kebab` category folder. The skill folder basename must equal frontmatter `name`, use lowercase kebab-case, remain globally unique, and stay within 64 characters.
 
-## Big-Endian Naming
+- Implicit: `<category>-i-<capability>` with `allow_implicit_invocation: true`.
+- Manual: `<category>-<capability>` with `allow_implicit_invocation: false`.
+- An implicit category router may use `<category>-i`, such as `vault-i`.
 
-- Auto/manual skill: `<category>-<capability>`.
-- Large third-party packs may use an approved root pack group and distinctive pack token, such as `_claude-seo/claude-seo-<capability>` or `_corey-marketing-skills/corey-<capability>`.
-- Repository-local skill: `l-<capability>`.
-- Never encode auto/manual invocation in the name.
-- Use lowercase kebab-case and preserve the established descriptive capability slug. Do not shorten, reword, or reorder it merely to make names more compact. Keep the complete name under 64 characters.
-- Keep `SKILL.md` as the filename. For shared skills, make the first H1 mirror the hierarchy, such as `# Infra · Update Fleet Coding Tools`. For repository-local skills, use the exact lowercase slug, such as `# l-hotfix-build-push`.
-- Omit `interface.display_name` from `agents/openai.yaml`; Codex derives the user-facing label from the canonical frontmatter `name`, avoiding a second name to maintain.
-- Prefix the existing descriptive capability slug with literal lowercase `l-`; do not add repository or category tokens.
+The `-i-` marker is only for Vault-owned sources. Repository and GH names retain their ownership conventions. Shared H1s mirror the hierarchy, for example `# Infra · Sync Code Workspaces`; `vault-i` uses `# Vault`.
 
 | Folder | Token |
 |---|---|
 | `_agents` | `agents` |
 | `_blogs` | `blog` |
-| `_claude-seo` | `claude-seo` |
 | `_code` | `code` |
-| `_corey-marketing-skills` | `corey` |
 | `_creative` | `creative` |
 | `_documents` | `documents` |
 | `_finance` | `finance` |
 | `_gws` | `gws` |
 | `_infrastructure` | `infra` |
 | `_marketing` | `marketing` |
-| `_matt-p-skills` | `mp` |
 | `_spreadsheets` | `spreadsheets` |
-| `_swan-gtm-skills` | `swan-gtm` |
-| `_vibe-marketer-skills-pack` | `vibe-marketer` |
 | `_vault` | `vault` |
+| `_vibe-marketer-skills-pack` | `vibe-marketer` |
 | `_video` | `video` |
 
-Shared skill sync validates the category prefix and big-endian H1 for auto/manual sources. GitHub-managed skills retain publisher names and titles.
+## Three enrollment methods
 
-Use a dedicated pack token when a large installed collection would otherwise flood autocomplete under a broad functional token. Choose a short, distinctive publisher or repository phrase; prefix every projected skill consistently; and preserve the upstream capability slug after that prefix. Register the pack group and title in `scripts/sync_skills.py` rather than weakening category validation.
+### 1. Vault-authored
 
-A pack may expose one orchestrating root skill whose name exactly equals its pack token, such as `_claude-seo/claude-seo`. Register that exception explicitly; ordinary category skills still require `<token>-<capability>`. The canonical `_vault/vault` router is the only ordinary category root exception and uses the exact H1 `# Vault`.
+Create the canonical skill in its root category. Put repeatable utilities in `scripts/`, reusable inputs in `assets/`, focused detail in `references/`, and changing personal facts in `_system/agents/_package/instance/skills/config/<skill-name>/`.
 
-## Skill And Config Separation
+Invocation changes require the folder, frontmatter name, config folder, references, `-i-` marker, and `agents/openai.yaml` policy to agree.
 
-- Read [[_system/agents/README|Agents]], this file, and [[_system/local/README|Local Vault Data]] before adding or restructuring skill.
-- Generic instructions, validation, scripts, code snippets, and reusable assets stay in skill folder.
-- Changing domains, personal paths, machine facts, account/project IDs, repository locations, and deployment access details go in `_system/agents/_package/instance/skills/config/<skill-name>/`.
-- Use same basename as skill. Add config-folder `README.md`; use `private/` for private instance data.
-- Config format may be Markdown, JSON, TOML, YAML, or another consumer-appropriate format.
-- Skill must name required config, validate it before mutation, and explain setup when missing. Public-exported skill must remain understandable without private config.
-- Before adding secrets or variables, read [[_system/local/env/README|Env Tooling]]. Add names to the owning `.env.base` contract first; values move only through the repository's protected Secret Bindings workflow. External-repository variables remain in the owning repository contract.
+### 2. GH-managed
 
-## Invocation Policy
+Install a public repository into its own owner directory:
 
-Sync preserves other `agents/openai.yaml` fields and enforces:
-
-```yaml
-policy:
-  allow_implicit_invocation: true
+```bash
+SKILLS_ROOT="$(vault root)/_system/agents/skills"
+gh skill install owner/repo --all --dir "$SKILLS_ROOT/github/<repo-name>/skills"
 ```
 
-for auto skills, and:
+The GitHub CLI copies selected skills and injects `github-repo`, `github-path`, `github-ref`, and `github-tree-sha` metadata. Those installed directories are the local installation record. There is no separate install manifest.
 
-```yaml
-policy:
-  allow_implicit_invocation: false
+`skill-sources.json` may add only effective policy:
+
+```json
+"gh_skills": {
+  "repo-name": {
+    "prefix": "publisher",
+    "invocation": {"skill-name": true}
+  }
+}
 ```
 
-for manual skills. Missing metadata gets created. GH metadata stays publisher-controlled.
+Omitting a repository from `gh_skills` leaves every installed skill globally manual and unprefixed. A prefix creates snapshots. An invocation-only difference creates linked overlays. Do not edit publisher-owned files to apply either policy.
 
-GitHub-managed skills may opt into an explicit snapshot policy without changing publisher files. Add the installed skill name and `auto` or `manual` mode under `github_skills` in `_system/agents/_package/instance/skills/sources.json`. Sync writes the policy only into distributed point-in-time copies. Skills omitted from that map retain publisher policy.
+Use `ctx9-agents update --skills --skill-source gh:<repo-name>` to update one installed repository. It runs `gh skill update --all --dir` against that repository's `skills` directory. `gh skill list --dir` discovers installs from injected metadata.
 
-## Sync
+### 3. Existing local checkout
+
+Name repository-owned skills `<repo-name>-<capability>` and keep them in the owning checkout. Enroll the checkout independently of workspace registration:
+
+```json
+{
+  "path": "~/Code/example-repo",
+  "github": "https://github.com/owner/example-repo",
+  "all_skills": true
+}
+```
+
+The path must begin with literal `~/`. Use exactly one of `all_skills: true` or a source-only selection:
+
+```json
+"skills": [
+  {"source": ".agents/skills/example-repo-do-a-thing"}
+]
+```
+
+Optional `invocation` keys use repo-relative sources and boolean values. Optional `prefix` rewrites effective names through generated snapshots. Registration in `workspaces.json` neither enrolls nor locates skills; it only controls repository registration and reconciliation.
+
+## Materialization rules
+
+| Change needed | Result |
+|---|---|
+| None | Direct link to the local checkout |
+| Invocation policy only | Linked overlay with generated `agents/openai.yaml` |
+| Prefix, name, H1, or `$skill` reference rewrite | Generated snapshot |
+| GH install without effective changes | Publisher copy remains canonical |
+
+Local-checkout direct links and overlays are recreated against each target machine's own `~/` path. Missing enrolled checkouts fail strict sync rather than linking across machines. Fleet-distributed Vault, GH, and prefixed skills are portable copies.
+
+All external skills default to manual globally. A literal `$skill-name` reference in an invoked skill is explicit composition and may load that dependency even when the dependency is manual-only. Manual-only prevents unsolicited top-level selection, not named dependency use.
+
+## Configuration and validation
+
+`_system/agents/_package/instance/skills/skill-sources.json` is the only enrollment policy registry. It uses schema version 4 with `gh_skills` and `repos`. Unknown fields, unsafe paths, duplicate names, bad metadata, missing selected sources, and names over 64 characters fail before writes.
 
 ```bash
 ctx9-agents sync --dry-run
 ctx9-agents sync
 ```
 
-Sync performs full preflight before writes. Malformed sources, duplicate names, real content under generated catalog, or unmanaged global name collisions fail with repair instructions.
+Sync validates sources, materializes overlays and snapshots, rebuilds the symlink-only catalog, and reconciles fleet discovery. Existing tasks cache their skill catalog, so start a new task after changing skills.
 
-The default apply:
-
-- validates configured repository skill projections and rebuilds changed tracked copies before discovery links;
-- repairs dependency target/type metadata after manually moving a managed skill wrapper;
-- removes stale catalog links and rebuilds changed links;
-- installs real point-in-time copies under `~/.agents/skills` on every enabled fleet machine;
-- maintains per-skill discovery aliases under `~/.claude/skills`, `~/.kilo/skills`, and `~/.kilocode/skills` when Kilocode exists;
-- preserves unrelated global skills;
-- removes vault-owned legacy `~/.codex/skills` whole-directory link;
-- never copies discovery-target content into vault.
-
-Existing tasks cache skill catalog. Start new task or restart Codex after sync.
-
-## Dependency Skills
-
-External skill-source repos derive as `<resolved Code root>/open_source/<repo-name>` and are configured in `_system/agents/_package/instance/skills/sources.json`. Consumers obtain the Code root through `ctx9-agents config`, never a hard-coded home path.
-
-Set a repo's `enabled` field to `false` to retain its configuration and currently materialized skill projections as a discoverable snapshot while excluding that repo from dependency and auto-skill projection sync. Re-enable it to resume refreshes. See [[_system/docs/commands/Dependency Repos|Dependency Repos]].
-
-Each compact skill choice stores `source`, `group`, `name`, and optional `mode`, `kind`, `title`, or pack fields. `mode` defaults to `manual`; use `auto` for implicit invocation. Sync derives the checkout URL/path, projection target/type, managed marker, and catalog destination. The wrapper materializes upstream content for portable distribution, uses the configured local name, and optionally replaces its first H1 with `title`.
-
-```bash
-ctx9-agents update --skills --dry-run
-ctx9-agents update --skills
-ctx9-agents sync --dry-run
-```
-
-Routine source refresh belongs to `ctx9-agents update --skills`, which safely fast-forwards cloned sources, asks `gh skill` to update GitHub-managed sources, materializes repository-relative symlinks for portable snapshots, rebuilds projections, distributes snapshots, verifies targets, and records factual state. Use `--skill-source <repo-id>` or `--skill-source gh:<skill-name>` to restrict one operation. A detached, dirty, ahead, divergent, wrong-branch, wrong-upstream, or remote-mismatched checkout is preserved and blocks only when selected.
-
-Public Vault bootstrap and release do not consume agent skill sources. To move a managed wrapper, edit its `group`, `name`, or `mode` choice in `instance/skills/sources.json`, then run agent sync. Generated targets and markers are outputs and never rewrite desired configuration.
-
-## GitHub-Managed Skills
-
-```bash
-GH_SKILLS_DIR="$(vault root)/_system/agents/skills/github"
-gh skill install owner/repo packages/agent-skills/code-review --dir "$GH_SKILLS_DIR"
-ctx9-agents update --skills --skill-source gh:<skill-name>
-```
-
-Direct `gh skill install` remains the enrollment operation. Once enrolled, use the central agent update command so projection, fleet distribution, verification, and factual locking remain one transaction. GH publisher files remain untouched. Name conflict fails preflight.
-
-To make an enrolled skill explicit-only while preserving GitHub update ownership:
-
-```json
-"github_skills": {
-  "resume-builder": "manual"
-}
-```
-
-Run skill sync after changing the mode. The generated snapshot receives `policy.allow_implicit_invocation: false`; the tracked GitHub-managed source remains byte-for-byte publisher-owned.
-
-## Repo-Local Skills
-
-Repository-owned skills always begin in `.agents/skills/l-<capability>`. They stay local by default; registering a repository never projects all its skills. Repo `.claude/skills` may link to `../.agents/skills`.
-
-Selected user-owned repo skills are listed explicitly under that repo ID in `_system/agents/_package/instance/skills/sources.json`. Each entry contains a repo-relative `source` and `auto` or `manual` mode. Sync derives `<repo-id>-<capability>`, rejects global collisions and names over 64 characters, rewrites the copied frontmatter/H1 and `$l-sibling` references, copies supporting resources, enforces invocation policy, and records a managed digest marker under `_system/agents/skills/projected/<repo-id>/`. Invocation mode is metadata, not a projection subfolder.
-
-If a whole configured checkout or selected source is unavailable, ordinary sync preserves a valid tracked copy and warns. `ctx9-agents sync --dry-run --require-repo-sources` fails unless every configured checkout and selected source exists; use it for machine acceptance after Code workspace reconciliation. Missing or invalid tracked projections still fail. Only obsolete marked projections are removed; unmanaged content is never replaced. Linux targets receive the portable snapshot over SSH independently of optional Vault access and never resolve discovery through a remote mount.
-
-Reference skills portably as `$skill-name`. Relative cross-skill paths are allowed only between Vault-owned sources. Use `vault root` only when a real Vault filesystem path is necessary. Manual dependencies require explicit user invocation; capabilities that must compose automatically belong in auto skills.
+Public Vault export includes canonical Vault and GH sources when licensing permits. It excludes local-checkout links and generated overlays/snapshots.

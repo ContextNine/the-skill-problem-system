@@ -1,187 +1,193 @@
 #!/usr/bin/env python3
-"""Validate compact skill-source choices and derive runtime projection records."""
+"""Validate the compact skill-source registry."""
 
 from __future__ import annotations
 
 import re
-import sys
 from pathlib import Path, PurePosixPath
 from typing import Any
 
 
-PACKAGE_SRC = Path(__file__).resolve().parents[1] / "agents/_package/src"
-if str(PACKAGE_SRC) not in sys.path:
-    sys.path.insert(0, str(PACKAGE_SRC))
-
-from package_layout import load_instance
-
-
+SCHEMA_VERSION = 4
 ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
-GROUP_RE = re.compile(r"^_[a-z0-9]+(?:-[a-z0-9]+)*$")
-GITHUB_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
-MODES = {"auto", "manual"}
-KINDS = {"skill", "skill-pack"}
+GITHUB_URL_RE = re.compile(
+    r"^https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/?$"
+)
 
 
 class SkillSourceConfigError(ValueError):
     pass
 
 
-def _safe_relative(value: object, *, label: str) -> str:
+def safe_source(value: object, *, label: str) -> str:
     if not isinstance(value, str) or not value:
         raise SkillSourceConfigError(f"{label} needs a non-empty relative path")
     path = PurePosixPath(value)
-    if path.is_absolute() or ".." in path.parts or path.as_posix() in {"", "."}:
+    if path.is_absolute() or path.as_posix() in {"", "."} or ".." in path.parts:
         raise SkillSourceConfigError(f"{label} has an unsafe path: {value!r}")
     return path.as_posix()
 
 
-def github_skill_modes(data: dict[str, Any]) -> dict[str, str]:
-    """Return explicit invocation-mode overrides for GitHub-managed skills."""
-    if data.get("schema_version") != 3:
-        raise SkillSourceConfigError("skill source config needs schema_version 3")
-    raw = data.get("github_skills", {})
+def safe_checkout(value: object, *, label: str) -> str:
+    if not isinstance(value, str) or not value.startswith("~/"):
+        raise SkillSourceConfigError(f"{label} must start with literal '~/': {value!r}")
+    if "$" in value or "\\" in value:
+        raise SkillSourceConfigError(f"{label} contains an unsupported path expression: {value!r}")
+    relative = PurePosixPath(value[2:])
+    if relative.as_posix() in {"", "."} or ".." in relative.parts:
+        raise SkillSourceConfigError(f"{label} has an unsafe path: {value!r}")
+    return "~/" + relative.as_posix()
+
+
+def source_id(path: str) -> str:
+    value = PurePosixPath(path[2:]).name.replace("_", "-").lower()
+    if not ID_RE.fullmatch(value):
+        raise SkillSourceConfigError(f"cannot derive a source id from repository path: {path!r}")
+    return value
+
+
+def _prefix(value: object, *, label: str) -> str:
+    if not isinstance(value, str) or not ID_RE.fullmatch(value):
+        raise SkillSourceConfigError(f"{label} must be a lowercase kebab token")
+    return value
+
+
+def _invocation(value: object, *, label: str) -> dict[str, bool]:
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        raise SkillSourceConfigError(f"{label} must be an object")
+    result: dict[str, bool] = {}
+    for raw_name, allowed in value.items():
+        name = safe_source(raw_name, label=f"{label} key")
+        if not isinstance(allowed, bool):
+            raise SkillSourceConfigError(f"{label}.{name} must be true or false")
+        result[name] = allowed
+    return result
+
+
+def github_policies(data: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    if data.get("schema_version") != SCHEMA_VERSION:
+        raise SkillSourceConfigError(f"skill source config needs schema_version {SCHEMA_VERSION}")
+    raw = data.get("gh_skills", {})
     if not isinstance(raw, dict):
-        raise SkillSourceConfigError("github_skills must be an object")
-    modes: dict[str, str] = {}
-    for name, mode in raw.items():
-        if not isinstance(name, str) or not ID_RE.fullmatch(name):
-            raise SkillSourceConfigError(f"invalid GitHub-managed skill name: {name!r}")
-        if mode not in MODES:
+        raise SkillSourceConfigError("gh_skills must be an object")
+    result: dict[str, dict[str, Any]] = {}
+    for repo_id, item in raw.items():
+        if not isinstance(repo_id, str) or not ID_RE.fullmatch(repo_id):
+            raise SkillSourceConfigError(f"invalid GH skill directory: {repo_id!r}")
+        if not isinstance(item, dict):
+            raise SkillSourceConfigError(f"gh_skills.{repo_id} must be an object")
+        unknown = set(item) - {"prefix", "invocation"}
+        if unknown:
             raise SkillSourceConfigError(
-                f"GitHub-managed skill {name!r} has invalid mode {mode!r}"
+                f"gh_skills.{repo_id} has unsupported fields: {sorted(unknown)}"
             )
-        modes[name] = mode
-    return modes
-
-
-def _projection(repo_id: str, raw: object) -> dict[str, Any]:
-    if not isinstance(raw, dict):
-        raise SkillSourceConfigError(f"repository {repo_id!r} has a non-object skill choice")
-    unknown = set(raw) - {
-        "source", "mode", "kind", "group", "name", "title", "prefix", "rewrite_sources"
-    }
-    if unknown:
-        raise SkillSourceConfigError(f"repository {repo_id!r} skill has unsupported fields: {sorted(unknown)}")
-    source = _safe_relative(raw.get("source"), label=f"repository {repo_id!r} skill")
-    mode = raw.get("mode", "manual")
-    kind = raw.get("kind", "skill")
-    group = raw.get("group")
-    name = raw.get("name")
-    if mode not in MODES:
-        raise SkillSourceConfigError(f"repository {repo_id!r} skill {source!r} has invalid mode {mode!r}")
-    if kind not in KINDS:
-        raise SkillSourceConfigError(f"repository {repo_id!r} skill {source!r} has invalid kind {kind!r}")
-    if not isinstance(group, str) or not GROUP_RE.fullmatch(group):
-        raise SkillSourceConfigError(f"repository {repo_id!r} skill {source!r} has invalid group {group!r}")
-    if not isinstance(name, str) or not (
-        ID_RE.fullmatch(name) if kind == "skill" else GROUP_RE.fullmatch(name)
-    ):
-        raise SkillSourceConfigError(f"repository {repo_id!r} skill {source!r} has invalid name {name!r}")
-    if kind == "skill-pack" and mode != "manual":
-        raise SkillSourceConfigError("skill packs must use manual invocation mode")
-    projection_type = f"{mode}-skill" if kind == "skill" else "manual-skill-pack"
-    target = f"_system/agents/skills/{mode}/{group}/{name}"
-    projection: dict[str, Any] = {
-        "source": source,
-        "target": target,
-        "type": projection_type,
-        "managed": True,
-    }
-    optional = {
-        "title": "title_override",
-        "prefix": "skill_prefix",
-        "rewrite_sources": "rewrite_skill_sources",
-    }
-    for source_key, target_key in optional.items():
-        if source_key in raw:
-            projection[target_key] = raw[source_key]
-    if "rewrite_skill_sources" in projection:
-        rewrite_sources = projection["rewrite_skill_sources"]
-        if not isinstance(rewrite_sources, list):
-            raise SkillSourceConfigError(f"repository {repo_id!r} skill pack needs rewrite_sources list")
-        projection["rewrite_skill_sources"] = [
-            _safe_relative(item, label=f"repository {repo_id!r} rewrite source")
-            for item in rewrite_sources
-        ]
-    return projection
+        policy: dict[str, Any] = {
+            "invocation": _invocation(
+                item.get("invocation"), label=f"gh_skills.{repo_id}.invocation"
+            )
+        }
+        if "prefix" in item:
+            policy["prefix"] = _prefix(
+                item["prefix"], label=f"gh_skills.{repo_id}.prefix"
+            )
+        result[repo_id] = policy
+    return result
 
 
 def derive_repo_records(
-    data: dict[str, Any],
-    *,
-    code_root: str | Path | None = None,
-    github_transport: str | None = None,
+    data: dict[str, Any], *, home: str | Path | None = None
 ) -> list[dict[str, Any]]:
-    """Return the expanded records consumed by repo sync and projection workers."""
-    if data.get("schema_version") != 3:
-        raise SkillSourceConfigError("skill source config needs schema_version 3")
-    if code_root is None or github_transport is None:
-        instance = load_instance()
-        primary_id = instance["fleet"]["machines"]
-        selected = next(
-            machine for machine in primary_id.values() if machine.get("role") == "primary"
-        )
-        code_root = code_root or selected["resolved_roots"]["code"]
-        github_transport = github_transport or str(instance["profile"].get("github_transport") or "")
-    clone_root = Path(code_root) / "open_source"
-    transport = github_transport
-    repos = data.get("repos")
-    if not Path(clone_root).is_absolute():
-        raise SkillSourceConfigError("resolved Code root must be absolute")
-    if transport not in {"ssh", "https"}:
-        raise SkillSourceConfigError("github_transport must be ssh or https")
-    if not isinstance(repos, list):
+    if data.get("schema_version") != SCHEMA_VERSION:
+        raise SkillSourceConfigError(f"skill source config needs schema_version {SCHEMA_VERSION}")
+    raw_repos = data.get("repos")
+    if not isinstance(raw_repos, list):
         raise SkillSourceConfigError("skill source config needs a repos list")
+    resolved_home = Path(home or Path.home()).expanduser().resolve()
+    if not resolved_home.is_absolute():
+        raise SkillSourceConfigError("repository skill home must resolve to an absolute path")
+
     result: list[dict[str, Any]] = []
-    seen: set[str] = set()
-    for raw in repos:
+    seen_ids: set[str] = set()
+    seen_paths: set[str] = set()
+    for index, raw in enumerate(raw_repos):
+        label = f"repos[{index}]"
         if not isinstance(raw, dict):
-            raise SkillSourceConfigError("every skill source repository must be an object")
-        unknown = set(raw) - {"id", "github", "checkout", "ref", "enabled", "skills"}
+            raise SkillSourceConfigError(f"{label} must be an object")
+        unknown = set(raw) - {
+            "path", "github", "skills", "all_skills", "prefix", "invocation"
+        }
         if unknown:
-            raise SkillSourceConfigError(f"skill source repository has unsupported fields: {sorted(unknown)}")
-        repo_id = raw.get("id")
+            raise SkillSourceConfigError(f"{label} has unsupported fields: {sorted(unknown)}")
+        declared_path = safe_checkout(raw.get("path"), label=f"{label}.path")
+        repo_id = source_id(declared_path)
+        if repo_id in seen_ids:
+            raise SkillSourceConfigError(f"duplicate repository skill source id: {repo_id}")
+        if declared_path in seen_paths:
+            raise SkillSourceConfigError(f"duplicate repository skill path: {declared_path}")
+        seen_ids.add(repo_id)
+        seen_paths.add(declared_path)
+
+        has_skills = "skills" in raw
+        has_all = raw.get("all_skills") is True
+        if has_skills == has_all:
+            raise SkillSourceConfigError(
+                f"{label} needs exactly one of skills or all_skills: true"
+            )
+        if "all_skills" in raw and raw.get("all_skills") is not True:
+            raise SkillSourceConfigError(f"{label}.all_skills may only be true")
+        sources: list[str] | None = None
+        if has_skills:
+            raw_skills = raw.get("skills")
+            if not isinstance(raw_skills, list) or not raw_skills:
+                raise SkillSourceConfigError(f"{label}.skills must be a non-empty array")
+            sources = []
+            for skill_index, item in enumerate(raw_skills):
+                if not isinstance(item, dict) or set(item) != {"source"}:
+                    raise SkillSourceConfigError(
+                        f"{label}.skills[{skill_index}] must contain only source"
+                    )
+                source = safe_source(
+                    item.get("source"), label=f"{label}.skills[{skill_index}].source"
+                )
+                if source in sources:
+                    raise SkillSourceConfigError(f"{label} selects duplicate skill {source!r}")
+                sources.append(source)
+
         github = raw.get("github")
-        checkout = raw.get("checkout", repo_id)
-        if not isinstance(repo_id, str) or not ID_RE.fullmatch(repo_id):
-            raise SkillSourceConfigError(f"invalid skill source repository id: {repo_id!r}")
-        if repo_id in seen:
-            raise SkillSourceConfigError(f"duplicate skill source repository id: {repo_id}")
-        seen.add(repo_id)
-        if not isinstance(github, str) or not GITHUB_RE.fullmatch(github):
-            raise SkillSourceConfigError(f"repository {repo_id!r} needs owner/repo github identity")
-        if not isinstance(checkout, str) or not ID_RE.fullmatch(checkout):
-            raise SkillSourceConfigError(f"repository {repo_id!r} has invalid checkout directory")
-        raw_skills = raw.get("skills", [])
-        if not isinstance(raw_skills, list):
-            raise SkillSourceConfigError(f"repository {repo_id!r} needs a skills list")
-        url = (
-            f"git@github.com:{github}.git"
-            if transport == "ssh"
-            else f"https://github.com/{github}.git"
-        )
-        result.append(
-            {
-                "id": repo_id,
-                "url": url,
-                "path": str(clone_root / checkout),
-                "ref": str(raw.get("ref") or "main"),
-                "sync_enabled": bool(raw.get("enabled", True)),
-                "projections": [_projection(repo_id, item) for item in raw_skills],
-            }
-        )
+        if github is not None and (
+            not isinstance(github, str) or not GITHUB_URL_RE.fullmatch(github)
+        ):
+            raise SkillSourceConfigError(
+                f"{label}.github must be an https://github.com/owner/repo URL"
+            )
+        invocation = _invocation(raw.get("invocation"), label=f"{label}.invocation")
+        if sources is not None and not set(invocation) <= set(sources):
+            unknown_invocation = sorted(set(invocation) - set(sources))
+            raise SkillSourceConfigError(
+                f"{label}.invocation references unselected sources: {unknown_invocation}"
+            )
+        record: dict[str, Any] = {
+            "id": repo_id,
+            "declared_path": declared_path,
+            "path": str(resolved_home.joinpath(*PurePosixPath(declared_path[2:]).parts)),
+            "github": github,
+            "all_skills": has_all,
+            "skills": sources,
+            "invocation": invocation,
+        }
+        if "prefix" in raw:
+            record["prefix"] = _prefix(raw["prefix"], label=f"{label}.prefix")
+        result.append(record)
     return result
 
 
 def validate_config(data: dict[str, Any]) -> None:
-    # Validation is intentionally location-independent. Runtime expansion supplies
-    # the selected machine's Code root and profile transport separately.
-    derive_repo_records(data, code_root="/__ctx9_code__", github_transport="https")
-    workspace = data.get("repository_skills", {})
-    if not isinstance(workspace, dict):
-        raise SkillSourceConfigError("repository_skills must be an object")
-    github_skill_modes(data)
-    unknown = set(data) - {"schema_version", "repos", "repository_skills", "github_skills"}
+    unknown = set(data) - {"schema_version", "gh_skills", "repos"}
     if unknown:
-        raise SkillSourceConfigError(f"skill source config has unsupported fields: {sorted(unknown)}")
+        raise SkillSourceConfigError(
+            f"skill source config has unsupported fields: {sorted(unknown)}"
+        )
+    github_policies(data)
+    derive_repo_records(data, home="/__ctx9_home__")

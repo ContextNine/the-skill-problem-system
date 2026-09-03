@@ -12,7 +12,8 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from package_layout import AGENTS_ROOT, EXPORT_ROOT
+from package_layout import AGENTS_ROOT, EXPORT_ROOT, VAULT_ROOT
+import working_repo_skills
 
 
 MANIFEST_NAME = ".ctx9-agent-export-manifest.json"
@@ -34,7 +35,16 @@ CREDENTIAL_PATTERNS = (
         ),
     ),
 )
-FORBIDDEN_PARTS = {"private", "__pycache__", ".git", "catalog", "dormant"}
+FORBIDDEN_PARTS = {
+    "private",
+    "__pycache__",
+    ".git",
+    "catalog",
+    "dormant",
+    "overlays",
+    "snapshots",
+    working_repo_skills.MARKER,
+}
 FORBIDDEN_SUFFIXES = {".pyc", ".pyo"}
 
 
@@ -113,28 +123,9 @@ def strip_install_metadata(skill_file: Path) -> None:
     skill_file.write_text(text, encoding="utf-8")
 
 
-def declared_external_sources() -> dict[str, str]:
-    """Map projected skill source paths to their declared GitHub repository."""
-    path = AGENTS_ROOT / "_package/instance/skills/sources.json"
-    if not path.is_file():
-        return {}
-    data = json.loads(path.read_text(encoding="utf-8"))
-    mapped: dict[str, str] = {}
-    for repo in data.get("repos", []):
-        url = f"https://github.com/{repo['github']}"
-        for skill in repo.get("skills", []):
-            mode = skill.get("mode", "manual")
-            target = f"skills/{mode}/{skill['group']}/{skill['name']}"
-            mapped[target] = url
-    return mapped
-
-
 def skill_decision(
     skill_dir: Path,
-    mode: str,
-    relative: Path,
     manifest: dict[str, Any],
-    projected_sources: dict[str, str],
 ) -> tuple[bool, str, str | None, str | None]:
     skill_file = skill_dir / "SKILL.md"
     texts: list[str] = []
@@ -146,10 +137,7 @@ def skill_decision(
         except UnicodeDecodeError:
             continue
     text = "\n".join(texts)
-    source_key = f"skills/{mode}/{relative.as_posix()}"
-    repo = projected_sources.get(source_key) or github_repo(skill_file)
-    if mode == "projected":
-        return False, "repository-owned projection is not a redistributable source", repo, None
+    repo = github_repo(skill_file)
     for label, pattern in CREDENTIAL_PATTERNS:
         if pattern.search(text):
             raise ExportError(f"credential-like {label} found in active skill: {skill_file}")
@@ -162,32 +150,51 @@ def skill_decision(
     return True, "active non-repository skill", repo, license_id
 
 
+def source_skill_files(root: Path) -> list[Path]:
+    """Find top-level skills without descending into a discovered skill bundle."""
+    found: list[Path] = []
+    pending = [root]
+    while pending:
+        directory = pending.pop()
+        skill_file = directory / "SKILL.md"
+        if skill_file.is_file():
+            found.append(skill_file)
+            continue
+        pending.extend(
+            child for child in directory.iterdir()
+            if child.is_dir() and not child.is_symlink() and child.name not in FORBIDDEN_PARTS
+        )
+    return sorted(found)
+
+
 def discover_skills(stage: Path, manifest: dict[str, Any]) -> list[dict[str, Any]]:
     inventory: list[dict[str, Any]] = []
     names: dict[str, Path] = {}
-    projected_sources = declared_external_sources()
-    modes = ("auto", "manual", "github", "projected")
-    for mode in modes:
-        root = AGENTS_ROOT / "skills" / mode
+    skills_root = AGENTS_ROOT / "skills"
+    roots = [
+        child for child in sorted(skills_root.iterdir())
+        if child.is_dir()
+        and not child.is_symlink()
+        and child.name.startswith("_")
+    ]
+    for root in roots:
         if not root.is_dir():
             continue
-        for skill_file in sorted(root.rglob("SKILL.md")):
+        for skill_file in source_skill_files(root):
             skill_dir = skill_file.parent
-            relative = skill_dir.relative_to(root)
+            relative = skill_dir.relative_to(skills_root)
             if skill_file.is_symlink() or any(path.is_symlink() for path in skill_dir.rglob("*")):
                 raise ExportError(f"active skill contains a symlink: {skill_dir}")
             name = frontmatter_name(skill_file)
             if not name or not SKILL_NAME_RE.fullmatch(name) or skill_dir.name != name:
                 raise ExportError(f"invalid skill name or directory: {skill_dir} ({name!r})")
-            if name in names:
+            if name in names and relative.parts[0] != "github":
                 raise ExportError(f"duplicate active skill name {name}: {names[name]} and {skill_dir}")
             names[name] = skill_dir
-            include, reason, source_repo, license_id = skill_decision(
-                skill_dir, mode, relative, manifest, projected_sources
-            )
+            include, reason, source_repo, license_id = skill_decision(skill_dir, manifest)
             item = {
                 "name": name,
-                "source": f"_system/agents/skills/{mode}/{relative.as_posix()}",
+                "source": f"_system/agents/skills/{relative.as_posix()}",
                 "status": "included" if include else "excluded",
                 "reason": reason,
             }
@@ -197,9 +204,58 @@ def discover_skills(stage: Path, manifest: dict[str, Any]) -> list[dict[str, Any
                 item["license"] = license_id
             inventory.append(item)
             if include:
-                target = stage / "_system/agents/skills" / mode / relative
+                target = stage / "_system/agents/skills" / relative
                 copy_tree(skill_dir, target)
                 strip_install_metadata(target / "SKILL.md")
+
+    projected = working_repo_skills.plan(VAULT_ROOT, require_sources=False)
+    if projected.actions:
+        raise ExportError("skill materializations are stale; run ctx9-agents sync --skills first")
+    for skill in sorted(
+        (item for item in projected.skills if item.origin == "gh"),
+        key=lambda item: item.name,
+    ):
+        try:
+            canonical_relative = skill.canonical_path.relative_to(skills_root / "github")
+        except ValueError as exc:
+            raise ExportError(f"GH skill escapes its repository root: {skill.canonical_path}") from exc
+        if len(canonical_relative.parts) < 3 or canonical_relative.parts[1] != "skills":
+            raise ExportError(f"GH skill has an invalid repository layout: {skill.canonical_path}")
+        repository = canonical_relative.parts[0]
+        relative = Path("github") / repository / "skills" / skill.name
+        if skill.name in names:
+            raise ExportError(
+                f"duplicate active skill name {skill.name}: {names[skill.name]} and {skill.canonical_path}"
+            )
+        names[skill.name] = skill.canonical_path
+        include, reason, source_repo, license_id = skill_decision(skill.canonical_path, manifest)
+        item = {
+            "name": skill.name,
+            "source": f"_system/agents/skills/{relative.as_posix()}",
+            "status": "included" if include else "excluded",
+            "reason": reason,
+        }
+        if source_repo:
+            item["source_repository"] = source_repo
+        if license_id:
+            item["license"] = license_id
+        inventory.append(item)
+        if include:
+            target = stage / "_system/agents/skills" / relative
+            shutil.copytree(
+                skill.path,
+                target,
+                symlinks=False,
+                ignore=shutil.ignore_patterns(
+                    "__pycache__", "*.pyc", ".DS_Store", working_repo_skills.MARKER
+                ),
+            )
+            metadata = target / "agents/openai.yaml"
+            metadata.parent.mkdir(parents=True, exist_ok=True)
+            metadata.write_text(
+                working_repo_skills.policy_text(metadata, False), encoding="utf-8"
+            )
+            strip_install_metadata(target / "SKILL.md")
     return inventory
 
 
@@ -298,10 +354,26 @@ def public_skill_names(root: Path) -> set[str]:
     }
 
 
-def prevent_silent_skill_removal(destination: Path, stage: Path) -> None:
+def prevent_silent_skill_removal(
+    destination: Path, stage: Path, manifest: dict[str, Any]
+) -> None:
     if not destination.is_dir():
         return
-    silent = sorted(public_skill_names(destination) - public_skill_names(stage))
+    previous_names = public_skill_names(destination)
+    next_names = public_skill_names(stage)
+    raw_renames = manifest.get("skill_renames", {})
+    if not isinstance(raw_renames, dict) or any(
+        not isinstance(old, str) or not isinstance(new, str)
+        for old, new in raw_renames.items()
+    ):
+        raise ExportError("agent export skill_renames needs a string-to-string object")
+    invalid = sorted(
+        f"{old} -> {new}" for old, new in raw_renames.items() if new not in next_names
+    )
+    if invalid:
+        raise ExportError("agent export skill rename targets are missing: " + ", ".join(invalid))
+    renamed = {old for old, new in raw_renames.items() if new in next_names}
+    silent = sorted(previous_names - next_names - renamed)
     if silent:
         raise ExportError("previously public skills disappeared from the export: " + ", ".join(silent))
 
@@ -335,7 +407,7 @@ def export(destination: Path, *, apply: bool, manifest_path: Path | None = None)
         stage = Path(temporary)
         owned, inventory = materialize(stage, manifest)
         scan(stage)
-        prevent_silent_skill_removal(destination, stage)
+        prevent_silent_skill_removal(destination, stage, manifest)
         if apply:
             destination.mkdir(parents=True, exist_ok=True)
             replace_owned(destination, stage)

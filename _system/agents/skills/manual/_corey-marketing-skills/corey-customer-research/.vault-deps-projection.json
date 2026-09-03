@@ -1,7 +1,0 @@
-{
-  "managed_by": "ctx9-agents sync",
-  "repo_id": "marketingskills",
-  "source": "skills/customer-research",
-  "target": "_system/agents/skills/manual/_corey-marketing-skills/corey-customer-research",
-  "type": "manual-skill"
-}

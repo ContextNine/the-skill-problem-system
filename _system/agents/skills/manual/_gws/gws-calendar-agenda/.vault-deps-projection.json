@@ -1,8 +1,0 @@
-{
-  "managed_by": "ctx9-agents sync",
-  "repo_id": "googleworkspace-cli",
-  "source": "skills/gws-calendar-agenda",
-  "target": "_system/agents/skills/manual/_gws/gws-calendar-agenda",
-  "type": "manual-skill",
-  "title_override": "GWS \u00b7 Calendar Agenda"
-}

@@ -108,9 +108,9 @@ def ensure_agent_paths(root: Path, dry_run: bool) -> dict[str, object]:
     results: list[dict[str, object]] = []
     for relative in (
         "_system/agents/skills/catalog",
-        "_system/agents/skills/auto",
-        "_system/agents/skills/manual",
         "_system/agents/skills/github",
+        "_system/agents/skills/overlays",
+        "_system/agents/skills/snapshots",
         "_system/agents/skills/dormant",
         ".agents",
         ".claude",
@@ -572,7 +572,7 @@ def render_agents(
         (f"role:{machine.get('role')}", role_fragment),
         (f"machine:{machine.get('id')}", machine_fragment),
     ]
-    skill_sources = config / "skills/sources.json"
+    skill_sources = config / "skills/skill-sources.json"
     try:
         skill_config = json.loads(skill_sources.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
@@ -592,10 +592,12 @@ def render_agents(
         raise AgentConfigurationError("instruction_fragments must be a list")
     if not all(isinstance(item, dict) for item in raw_fragments):
         raise AgentConfigurationError("every instruction fragment must be an object")
+    skill_root = root / "_system/agents/skills"
     allowed_roots = [
-        (root / "_system/agents/skills/auto").resolve(),
-        (root / "_system/agents/skills/manual").resolve(),
-    ]
+        path.resolve()
+        for path in skill_root.iterdir()
+        if path.is_dir() and not path.is_symlink() and path.name.startswith("_")
+    ] if skill_root.is_dir() else []
     for raw in sorted(raw_fragments, key=lambda item: (int(item.get("order", 0)), str(item.get("id", "")))):
         if not isinstance(raw.get("id"), str) or not isinstance(raw.get("path"), str):
             raise AgentConfigurationError("every instruction fragment needs id and path")

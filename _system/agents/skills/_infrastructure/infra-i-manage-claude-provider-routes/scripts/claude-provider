@@ -1,0 +1,275 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat >&2 <<'USAGE'
+Usage:
+  claude-openrouter <model-slug> [claude arguments...]
+  claude-featherless <model-slug> [claude arguments...]
+  claude-provider <openrouter|featherless> <model-slug> [claude arguments...]
+USAGE
+}
+
+command_name="$(basename "$0")"
+case "$command_name" in
+  claude-openrouter)
+    provider="openrouter"
+    ;;
+  claude-featherless)
+    provider="featherless"
+    ;;
+  claude-provider)
+    if [[ $# -lt 1 ]]; then
+      usage
+      exit 2
+    fi
+    provider="$1"
+    shift
+    ;;
+  *)
+    printf '%s\n' "claude-provider: unsupported entrypoint '$command_name'" >&2
+    exit 2
+    ;;
+esac
+
+case "$provider" in
+  openrouter|featherless)
+    ;;
+  *)
+    printf '%s\n' "claude-provider: unsupported provider '$provider'" >&2
+    exit 2
+    ;;
+esac
+
+if [[ $# -lt 1 ]]; then
+  usage
+  exit 2
+fi
+
+model="$1"
+shift
+if [[ ! "$model" =~ ^[~A-Za-z0-9][A-Za-z0-9._:+@/~+-]{0,254}$ ]]; then
+  printf '%s\n' "claude-provider: invalid model slug '$model'" >&2
+  exit 2
+fi
+
+claude_bin="${CLAUDE_PROVIDER_CLAUDE_BIN:-$HOME/.local/bin/claude}"
+if [[ ! -x "$claude_bin" ]]; then
+  printf '%s\n' "claude-provider: missing Claude Code executable: $claude_bin" >&2
+  exit 1
+fi
+
+load_credential() {
+  local route="$1"
+  local platform account service security_bin secret_tool value
+  platform="$(uname -s)"
+  account="$(id -un)"
+  service="ctx9-claude-provider-$route"
+
+  case "$platform" in
+    Darwin)
+      security_bin="${CLAUDE_PROVIDER_SECURITY_BIN:-/usr/bin/security}"
+      if [[ ! -x "$security_bin" ]]; then
+        return 1
+      fi
+      value="$($security_bin find-generic-password -a "$account" -s "$service" -w 2>/dev/null)" || return 1
+      ;;
+    Linux)
+      secret_tool="${CLAUDE_PROVIDER_SECRET_TOOL_BIN:-$(command -v secret-tool || true)}"
+      if [[ -z "$secret_tool" || ! -x "$secret_tool" ]]; then
+        return 1
+      fi
+      value="$($secret_tool lookup ctx9-provider claude-route ctx9-route "$route" 2>/dev/null)" || return 1
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+
+  if [[ -z "$value" ]]; then
+    return 1
+  fi
+  printf '%s' "$value"
+}
+
+if ! credential="$(load_credential "$provider")"; then
+  printf '%s\n' "claude-provider: missing protected $provider credential" >&2
+  printf '%s\n' "Run: claude-provider-auth $provider" >&2
+  exit 1
+fi
+
+unset \
+  ANTHROPIC_API_KEY \
+  ANTHROPIC_AUTH_TOKEN \
+  ANTHROPIC_BASE_URL \
+  ANTHROPIC_MODEL \
+  ANTHROPIC_DEFAULT_FABLE_MODEL \
+  ANTHROPIC_DEFAULT_OPUS_MODEL \
+  ANTHROPIC_DEFAULT_SONNET_MODEL \
+  ANTHROPIC_DEFAULT_HAIKU_MODEL \
+  CLAUDE_CODE_SUBAGENT_MODEL \
+  CLAUDE_CODE_OAUTH_TOKEN \
+  CLAUDE_CODE_OAUTH_REFRESH_TOKEN \
+  CLAUDE_CODE_OAUTH_SCOPES \
+  CLAUDE_CODE_USE_BEDROCK \
+  CLAUDE_CODE_USE_VERTEX \
+  CLAUDE_CODE_USE_FOUNDRY \
+  ANTHROPIC_BEDROCK_BASE_URL \
+  ANTHROPIC_VERTEX_BASE_URL \
+  ANTHROPIC_FOUNDRY_BASE_URL \
+  CLAUDE_CODE_MAX_CONTEXT_TOKENS \
+  CLAUDE_CODE_AUTO_COMPACT_WINDOW
+
+config_root="${XDG_CONFIG_HOME:-$HOME/.config}/ctx9/claude-provider-routes"
+claude_config_dir="$config_root/claude/$provider"
+install -d -m 0700 "$claude_config_dir"
+
+for shared_name in CLAUDE.md settings.json keybindings.json skills plugins; do
+  shared_source="$HOME/.claude/$shared_name"
+  shared_target="$claude_config_dir/$shared_name"
+  if [[ -e "$shared_source" && ! -e "$shared_target" && ! -L "$shared_target" ]]; then
+    ln -s "$shared_source" "$shared_target"
+  fi
+done
+
+export CLAUDE_CONFIG_DIR="$claude_config_dir"
+export ANTHROPIC_API_KEY=""
+export ANTHROPIC_MODEL="$model"
+export ANTHROPIC_DEFAULT_FABLE_MODEL="$model"
+export ANTHROPIC_DEFAULT_OPUS_MODEL="$model"
+export ANTHROPIC_DEFAULT_SONNET_MODEL="$model"
+export ANTHROPIC_DEFAULT_HAIKU_MODEL="$model"
+export CLAUDE_CODE_SUBAGENT_MODEL="$model"
+
+if [[ "$provider" == "openrouter" ]]; then
+  export ANTHROPIC_BASE_URL="https://openrouter.ai/api"
+  export ANTHROPIC_AUTH_TOKEN="$credential"
+  unset credential
+
+  printf 'Claude route: provider=OpenRouter model=%s base=%s\n' \
+    "$model" "$ANTHROPIC_BASE_URL" >&2
+  exec "$claude_bin" \
+    --dangerously-skip-permissions \
+    --permission-mode bypassPermissions \
+    "$@"
+fi
+
+proxy_bin="${CLAUDE_PROVIDER_PROXY_BIN:-$HOME/cliproxyapi/current/cli-proxy-api}"
+if [[ ! -x "$proxy_bin" ]]; then
+  printf '%s\n' "claude-provider: Featherless requires the approved CLIProxyAPI binary: $proxy_bin" >&2
+  exit 1
+fi
+for required_command in curl jq python3; do
+  if ! command -v "$required_command" >/dev/null 2>&1; then
+    printf '%s\n' "claude-provider: Featherless requires command: $required_command" >&2
+    exit 1
+  fi
+done
+
+runtime_parent="${TMPDIR:-/tmp}"
+runtime_dir="$(mktemp -d "$runtime_parent/ctx9-claude-featherless.XXXXXX")"
+case "$runtime_dir" in
+  "$runtime_parent"/ctx9-claude-featherless.*)
+    ;;
+  *)
+    printf '%s\n' "claude-provider: refused unexpected runtime directory: $runtime_dir" >&2
+    exit 1
+    ;;
+esac
+chmod 0700 "$runtime_dir"
+install -d -m 0700 "$runtime_dir/auth"
+
+proxy_pid=""
+cleanup() {
+  local status=$?
+  trap - EXIT HUP INT TERM
+  if [[ -n "$proxy_pid" ]]; then
+    kill "$proxy_pid" 2>/dev/null || true
+    wait "$proxy_pid" 2>/dev/null || true
+  fi
+  case "$runtime_dir" in
+    "$runtime_parent"/ctx9-claude-featherless.*)
+      rm -rf -- "$runtime_dir"
+      ;;
+  esac
+  exit "$status"
+}
+trap cleanup EXIT HUP INT TERM
+
+read -r proxy_port client_token < <(python3 - <<'PY'
+import secrets
+import socket
+
+with socket.socket() as listener:
+    listener.bind(("127.0.0.1", 0))
+    port = listener.getsockname()[1]
+print(port, secrets.token_hex(24))
+PY
+)
+
+config_file="$runtime_dir/config.json"
+printf '%s' "$credential" | jq -Rn \
+  --arg auth_dir "$runtime_dir/auth" \
+  --argjson port "$proxy_port" \
+  --arg client_token "$client_token" \
+  --arg model "$model" \
+  'input as $upstream_key | {
+    host: "127.0.0.1",
+    port: $port,
+    "auth-dir": $auth_dir,
+    "api-keys": [$client_token],
+    "remote-management": {
+      "allow-remote": false,
+      "secret-key": ""
+    },
+    "openai-compatibility": [{
+      name: "featherless",
+      disabled: false,
+      "base-url": "https://api.featherless.ai/v1",
+      "api-key-entries": [{"api-key": $upstream_key}],
+      models: [{name: $model, alias: $model}]
+    }]
+  }' >"$config_file"
+chmod 0600 "$config_file"
+unset credential
+
+proxy_log="$runtime_dir/proxy.log"
+"$proxy_bin" -config "$config_file" >"$proxy_log" 2>&1 &
+proxy_pid=$!
+
+proxy_ready=false
+for _attempt in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+  if curl -fsS \
+    -H "Authorization: Bearer $client_token" \
+    "http://127.0.0.1:$proxy_port/v1/models" \
+    2>/dev/null \
+    | jq -e --arg model "$model" 'any(.data[]?.id; . == $model)' >/dev/null; then
+    proxy_ready=true
+    break
+  fi
+  if ! kill -0 "$proxy_pid" 2>/dev/null; then
+    break
+  fi
+  sleep 0.1
+done
+
+if [[ "$proxy_ready" != true ]]; then
+  printf '%s\n' "claude-provider: isolated Featherless translator failed to start" >&2
+  sed -n '1,80p' "$proxy_log" >&2
+  exit 1
+fi
+
+export ANTHROPIC_BASE_URL="http://127.0.0.1:$proxy_port"
+export ANTHROPIC_AUTH_TOKEN="$client_token"
+
+printf 'Claude route: provider=Featherless model=%s base=%s upstream=%s\n' \
+  "$model" "$ANTHROPIC_BASE_URL" "https://api.featherless.ai/v1" >&2
+
+set +e
+"$claude_bin" \
+  --dangerously-skip-permissions \
+  --permission-mode bypassPermissions \
+  "$@"
+claude_status=$?
+set -e
+exit "$claude_status"

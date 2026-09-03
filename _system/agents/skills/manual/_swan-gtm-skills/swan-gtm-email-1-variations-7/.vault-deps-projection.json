@@ -1,8 +1,0 @@
-{
-  "managed_by": "ctx9-agents sync",
-  "repo_id": "swan-gtm-skills",
-  "source": "skills/alex-vacca/email-1-variations-7",
-  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-email-1-variations-7",
-  "type": "manual-skill",
-  "title_override": "Swan GTM Skills \u00b7 Email 1 variations"
-}

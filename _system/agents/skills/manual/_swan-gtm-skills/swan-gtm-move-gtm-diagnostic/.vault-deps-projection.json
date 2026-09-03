@@ -1,8 +1,0 @@
-{
-  "managed_by": "ctx9-agents sync",
-  "repo_id": "swan-gtm-skills",
-  "source": "skills/sangram-vajre/move-gtm-diagnostic",
-  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-move-gtm-diagnostic",
-  "type": "manual-skill",
-  "title_override": "Swan GTM Skills \u00b7 MOVE GTM diagnostic"
-}

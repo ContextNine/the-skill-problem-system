@@ -1,5 +1,0 @@
-interface:
-  short_description: "Sync fleet Code workspaces and agent settings"
-  default_prompt: "Use $infra-sync-code-workspaces to preview synchronizing my registered Code workspaces and agent settings to another machine."
-policy:
-  allow_implicit_invocation: true

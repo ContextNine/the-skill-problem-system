@@ -19,11 +19,11 @@ import tempfile
 from typing import Any
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 STATE_RELATIVE = Path(".agents/.vault-agent-skill-snapshot.json")
 SKILLS_RELATIVE = Path(".agents/skills")
 SKILL_NAME = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
-IGNORED_NAMES = {".DS_Store", "__pycache__"}
+IGNORED_NAMES = {".DS_Store", "__pycache__", ".ctx9-skill-materialization.json"}
 MAX_FILES = 100_000
 MAX_EXPANDED_BYTES = 512 * 1024 * 1024
 
@@ -38,6 +38,8 @@ class SnapshotBundle:
     archive: bytes
     file_count: int
     logical_bytes: int
+    links: dict[str, str]
+    overlays: dict[str, dict[str, object]]
 
 
 def lexists(path: Path) -> bool:
@@ -110,8 +112,24 @@ def tar_info(path: Path, archive_name: str) -> tarfile.TarInfo:
     return info
 
 
-def build_bundle(sources: dict[str, Path]) -> SnapshotBundle:
+def build_bundle(
+    sources: dict[str, Path],
+    *,
+    links: dict[str, str] | None = None,
+    overlays: dict[str, dict[str, object]] | None = None,
+) -> SnapshotBundle:
     sources = validate_sources(sources)
+    links = dict(sorted((links or {}).items()))
+    overlays = dict(sorted((overlays or {}).items()))
+    names = set(sources) | set(links) | set(overlays)
+    if len(names) != len(sources) + len(links) + len(overlays):
+        raise SnapshotError("skill distribution names overlap between copies, links, and overlays")
+    for name, declared in links.items():
+        validate_declared_source(name, declared)
+    for name, config in overlays.items():
+        validate_declared_source(name, config.get("source"))
+        if not isinstance(config.get("allowed"), bool):
+            raise SnapshotError(f"skill overlay needs a boolean invocation policy: {name}")
     manifest = {name: digest_skill(source) for name, source in sources.items()}
     buffer = io.BytesIO()
     file_count = 0
@@ -130,7 +148,34 @@ def build_bundle(sources: dict[str, Path]) -> SnapshotBundle:
                         archive.addfile(info, handle)
                 else:
                     archive.addfile(info)
-    return SnapshotBundle(manifest, buffer.getvalue(), file_count, logical_bytes)
+    return SnapshotBundle(manifest, buffer.getvalue(), file_count, logical_bytes, links, overlays)
+
+
+def validate_declared_source(name: str, value: object) -> str:
+    if not SKILL_NAME.fullmatch(name):
+        raise SnapshotError(f"invalid linked skill name: {name!r}")
+    if not isinstance(value, str) or not value.startswith("~/") or ".." in PurePosixPath(value).parts:
+        raise SnapshotError(f"linked skill source must use a safe literal ~/ path: {name}")
+    return value
+
+
+def resolved_declared_source(home: Path, value: str) -> Path:
+    return home / value.removeprefix("~/")
+
+
+def desired_state(
+    manifest: dict[str, str],
+    links: dict[str, str],
+    overlays: dict[str, dict[str, object]],
+) -> dict[str, dict[str, object]]:
+    return {
+        **{name: {"kind": "copy", "sha256": digest} for name, digest in manifest.items()},
+        **{name: {"kind": "link", "source": source} for name, source in links.items()},
+        **{
+            name: {"kind": "overlay", "source": item["source"], "allowed": item["allowed"]}
+            for name, item in overlays.items()
+        },
+    }
 
 
 def safe_home(raw: object) -> Path:
@@ -148,6 +193,14 @@ def load_state(home: Path) -> dict[str, Any]:
         state = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise SnapshotError(f"skill snapshot state is invalid: {path}: {exc}") from exc
+    if state.get("schema_version") == 1 and isinstance(state.get("skills"), dict):
+        state = {
+            "schema_version": SCHEMA_VERSION,
+            "skills": {
+                str(name): {"kind": "copy", "sha256": str(digest)}
+                for name, digest in state["skills"].items()
+            },
+        }
     if state.get("schema_version") != SCHEMA_VERSION or not isinstance(state.get("skills"), dict):
         raise SnapshotError(f"skill snapshot state has an unsupported schema: {path}")
     return state
@@ -176,15 +229,44 @@ def discovery_roots(home: Path) -> list[Path]:
     return roots
 
 
+def overlay_marker(source: str, allowed: bool) -> str:
+    return json.dumps(
+        {
+            "managed_by": "ctx9-agents sync",
+            "materialization": "overlay",
+            "source": source,
+            "allow_implicit_invocation": allowed,
+        },
+        indent=2,
+        sort_keys=True,
+    ) + "\n"
+
+
+def policy_text(path: Path, allowed: bool) -> str:
+    value = "true" if allowed else "false"
+    text = path.read_text(encoding="utf-8") if path.is_file() else ""
+    pattern = re.compile(r"(?m)^(\s*allow_implicit_invocation:\s*)(?:true|false)(\s*(?:#.*)?)$")
+    if pattern.search(text):
+        return pattern.sub(rf"\g<1>{value}\g<2>", text, count=1)
+    policy = re.search(r"(?m)^policy:\s*(?:#.*)?$", text)
+    if policy:
+        return text[: policy.end()] + f"\n  allow_implicit_invocation: {value}" + text[policy.end() :]
+    suffix = "" if not text or text.endswith("\n") else "\n"
+    return text + suffix + f"policy:\n  allow_implicit_invocation: {value}\n"
+
+
 def inspect_snapshot(
     home: Path,
     manifest: dict[str, str],
     *,
+    links: dict[str, str],
+    overlays: dict[str, dict[str, object]],
     legacy_catalog: Path | None,
 ) -> dict[str, object]:
     state = load_state(home)
-    prior = {str(name): str(value) for name, value in state["skills"].items()}
+    prior = {str(name): value for name, value in state["skills"].items()}
     managed = set(prior)
+    desired = desired_state(manifest, links, overlays)
     canonical_root = home / SKILLS_RELATIVE
     changes: list[dict[str, str]] = []
     collisions: list[str] = []
@@ -194,29 +276,54 @@ def inspect_snapshot(
         if not (target and legacy_catalog and target == legacy_catalog.resolve(strict=False)):
             collisions.append(str(canonical_root))
 
-    for name, expected in sorted(manifest.items()):
+    for name, config in sorted(desired.items()):
         target = canonical_root / name
         if not lexists(target):
-            changes.append({"status": "missing", "path": str(target), "detail": "skill snapshot would be installed"})
+            changes.append({"status": "missing", "path": str(target), "detail": f"skill {config['kind']} would be installed"})
             continue
-        if target.is_dir() and not target.is_symlink():
+        kind = config["kind"]
+        if kind == "copy" and target.is_dir() and not target.is_symlink():
             try:
                 actual = digest_skill(target)
             except SnapshotError:
                 actual = ""
-            if actual == expected:
-                if name not in managed or prior.get(name) != expected:
+            if actual == config["sha256"]:
+                if prior.get(name) != config:
                     changes.append({"status": "adopt", "path": str(target), "detail": "matching snapshot would be recorded as managed"})
                 continue
             if name in managed:
                 changes.append({"status": "different", "path": str(target), "detail": "managed skill snapshot would be replaced"})
                 continue
-        elif name in managed or legacy_owned_link(target, name, legacy_catalog):
-            changes.append({"status": "different", "path": str(target), "detail": "managed skill entry would be replaced with a snapshot"})
+        elif kind == "link":
+            source = resolved_declared_source(home, str(config["source"]))
+            if not (source / "SKILL.md").is_file():
+                raise SnapshotError(f"linked repository skill is unavailable: {config['source']}")
+            if target.is_symlink() and resolved_link(target) == source.resolve(strict=False):
+                if prior.get(name) != config:
+                    changes.append({"status": "adopt", "path": str(target), "detail": "matching repository link would be recorded as managed"})
+                continue
+            if name in managed:
+                changes.append({"status": "different", "path": str(target), "detail": "managed skill would become a repository link"})
+                continue
+        elif kind == "overlay":
+            source = resolved_declared_source(home, str(config["source"]))
+            if not (source / "SKILL.md").is_file():
+                raise SnapshotError(f"overlaid repository skill is unavailable: {config['source']}")
+            marker = target / ".ctx9-skill-materialization.json"
+            expected = overlay_marker(str(config["source"]), bool(config["allowed"]))
+            if target.is_dir() and not target.is_symlink() and marker.is_file() and marker.read_text(encoding="utf-8") == expected:
+                if prior.get(name) != config:
+                    changes.append({"status": "adopt", "path": str(target), "detail": "matching repository overlay would be recorded as managed"})
+                continue
+            if name in managed:
+                changes.append({"status": "different", "path": str(target), "detail": "managed repository overlay would be rebuilt"})
+                continue
+        if name in managed or legacy_owned_link(target, name, legacy_catalog):
+            changes.append({"status": "different", "path": str(target), "detail": f"managed skill entry would become {kind}"})
             continue
         collisions.append(str(target))
 
-    for name in sorted(managed - set(manifest)):
+    for name in sorted(managed - set(desired)):
         target = canonical_root / name
         if lexists(target):
             changes.append({"status": "stale", "path": str(target), "detail": "stale managed skill would be removed"})
@@ -237,7 +344,7 @@ def inspect_snapshot(
             existing = {entry.name: entry for entry in directory.iterdir()} if directory.is_dir() else {}
             if not directory.exists():
                 changes.append({"status": "missing", "path": str(directory), "detail": "discovery directory would be created"})
-        for name in sorted(manifest):
+        for name in sorted(desired):
             path = directory / name
             canonical = canonical_root / name
             entry = existing.get(name)
@@ -249,7 +356,7 @@ def inspect_snapshot(
                 changes.append({"status": "different", "path": str(path), "detail": "managed discovery entry would be replaced"})
             else:
                 collisions.append(str(path))
-        for name in sorted(managed - set(manifest)):
+        for name in sorted(managed - set(desired)):
             path = directory / name
             if lexists(path):
                 changes.append({"status": "stale", "path": str(path), "detail": "stale managed discovery entry would be removed"})
@@ -264,7 +371,7 @@ def inspect_snapshot(
         "ok": True,
         "ready": not changes,
         "changes": changes,
-        "skill_count": len(manifest),
+        "skill_count": len(desired),
     }
 
 
@@ -346,14 +453,14 @@ def replace_directory(target: Path, source: Path, suffix: str) -> None:
     remove_path(previous)
 
 
-def write_state(home: Path, manifest: dict[str, str]) -> None:
+def write_state(home: Path, skills: dict[str, dict[str, object]]) -> None:
     path = home / STATE_RELATIVE
     path.parent.mkdir(parents=True, exist_ok=True)
     path.parent.chmod(0o700)
     payload = {
         "schema_version": SCHEMA_VERSION,
         "managed_by": "ctx9-agents sync",
-        "skills": dict(sorted(manifest.items())),
+        "skills": dict(sorted(skills.items())),
     }
     descriptor, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
     temporary = Path(temporary_name)
@@ -390,17 +497,71 @@ def install_alias(path: Path, canonical: Path) -> None:
     os.replace(temporary, path)
 
 
+def install_repo_link(target: Path, source: Path) -> None:
+    if not (source / "SKILL.md").is_file():
+        raise SnapshotError(f"linked repository skill is unavailable: {source}")
+    if target.is_symlink() and resolved_link(target) == source.resolve(strict=False):
+        return
+    remove_path(target)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = target.parent / f".{target.name}.sync-link-{os.getpid()}"
+    remove_path(temporary)
+    temporary.symlink_to(desired_alias(temporary, source), target_is_directory=True)
+    os.replace(temporary, target)
+
+
+def install_repo_overlay(target: Path, source: Path, declared: str, allowed: bool, suffix: str) -> None:
+    if not (source / "SKILL.md").is_file():
+        raise SnapshotError(f"overlaid repository skill is unavailable: {source}")
+    staging = Path(tempfile.mkdtemp(prefix=f".{target.name}.overlay-", dir=target.parent))
+    incoming = staging / "skill"
+    incoming.mkdir()
+    try:
+        for child in source.iterdir():
+            if child.name in IGNORED_NAMES:
+                continue
+            if child.name != "agents":
+                (incoming / child.name).symlink_to(
+                    desired_alias(target / child.name, child),
+                    target_is_directory=child.is_dir(),
+                )
+                continue
+            agents = incoming / "agents"
+            agents.mkdir()
+            for metadata in child.iterdir():
+                if metadata.name == "openai.yaml":
+                    continue
+                (agents / metadata.name).symlink_to(
+                    desired_alias(target / "agents" / metadata.name, metadata),
+                    target_is_directory=metadata.is_dir(),
+                )
+        metadata = incoming / "agents/openai.yaml"
+        metadata.parent.mkdir(parents=True, exist_ok=True)
+        metadata.write_text(policy_text(source / "agents/openai.yaml", allowed), encoding="utf-8")
+        (incoming / ".ctx9-skill-materialization.json").write_text(
+            overlay_marker(declared, allowed), encoding="utf-8"
+        )
+        replace_directory(target, incoming, suffix)
+    finally:
+        remove_path(staging)
+
+
 def apply_snapshot(
     home: Path,
     manifest: dict[str, str],
     archive: str,
     *,
+    links: dict[str, str],
+    overlays: dict[str, dict[str, object]],
     legacy_catalog: Path | None,
     suffix: str,
 ) -> dict[str, object]:
-    preview = inspect_snapshot(home, manifest, legacy_catalog=legacy_catalog)
+    preview = inspect_snapshot(
+        home, manifest, links=links, overlays=overlays, legacy_catalog=legacy_catalog
+    )
     state = load_state(home)
     managed = {str(name) for name in state["skills"]}
+    desired = desired_state(manifest, links, overlays)
     canonical_root = home / SKILLS_RELATIVE
     if canonical_root.is_symlink():
         canonical_root.unlink()
@@ -415,22 +576,33 @@ def apply_snapshot(
             if target.is_dir() and not target.is_symlink() and digest_skill(target) == expected:
                 continue
             replace_directory(target, extracted / name, suffix)
-        for name in sorted(managed - set(manifest)):
+        for name, declared in sorted(links.items()):
+            install_repo_link(canonical_root / name, resolved_declared_source(home, declared))
+        for name, config in sorted(overlays.items()):
+            declared = str(config["source"])
+            install_repo_overlay(
+                canonical_root / name,
+                resolved_declared_source(home, declared),
+                declared,
+                bool(config["allowed"]),
+                suffix,
+            )
+        for name in sorted(managed - set(desired)):
             remove_path(canonical_root / name)
 
         for directory in discovery_roots(home):
             if directory.is_symlink():
                 directory.unlink()
             ensure_directory(directory)
-            for name in sorted(manifest):
+            for name in sorted(desired):
                 install_alias(directory / name, canonical_root / name)
-            for name in sorted(managed - set(manifest)):
+            for name in sorted(managed - set(desired)):
                 remove_path(directory / name)
 
         legacy_codex = home / ".codex/skills"
         if legacy_catalog and legacy_codex.is_symlink() and resolved_link(legacy_codex) == legacy_catalog.resolve(strict=False):
             legacy_codex.unlink()
-        write_state(home, manifest)
+        write_state(home, desired)
     finally:
         shutil.rmtree(staging, ignore_errors=True)
     return {
@@ -438,7 +610,7 @@ def apply_snapshot(
         "ready": True,
         "applied": True,
         "changes": preview["changes"],
-        "skill_count": len(manifest),
+        "skill_count": len(desired),
     }
 
 
@@ -451,10 +623,26 @@ def reconcile_payload(payload: dict[str, object]) -> dict[str, object]:
     for name, digest in manifest.items():
         if not SKILL_NAME.fullmatch(name) or not re.fullmatch(r"[0-9a-f]{64}", digest):
             raise SnapshotError(f"invalid skill snapshot manifest entry: {name!r}")
+    raw_links = payload.get("links", {})
+    raw_overlays = payload.get("overlays", {})
+    if not isinstance(raw_links, dict) or not isinstance(raw_overlays, dict):
+        raise SnapshotError("skill links and overlays must be objects")
+    links = {str(name): validate_declared_source(str(name), value) for name, value in raw_links.items()}
+    overlays: dict[str, dict[str, object]] = {}
+    for name, config in raw_overlays.items():
+        if not isinstance(config, dict) or not isinstance(config.get("allowed"), bool):
+            raise SnapshotError(f"invalid skill overlay: {name}")
+        overlays[str(name)] = {
+            "source": validate_declared_source(str(name), config.get("source")),
+            "allowed": config["allowed"],
+        }
+    desired_state(manifest, links, overlays)
     legacy_raw = payload.get("legacy_catalog")
     legacy_catalog = Path(str(legacy_raw)).expanduser().resolve() if legacy_raw else None
     apply = bool(payload.get("apply"))
-    preview = inspect_snapshot(home, manifest, legacy_catalog=legacy_catalog)
+    preview = inspect_snapshot(
+        home, manifest, links=links, overlays=overlays, legacy_catalog=legacy_catalog
+    )
     if apply:
         archive = payload.get("archive")
         if not isinstance(archive, str) or not archive:
@@ -463,6 +651,8 @@ def reconcile_payload(payload: dict[str, object]) -> dict[str, object]:
             home,
             manifest,
             archive,
+            links=links,
+            overlays=overlays,
             legacy_catalog=legacy_catalog,
             suffix=str(payload.get("backup_suffix") or "unknown"),
         )
@@ -481,6 +671,8 @@ def payload_for(
     return {
         "home": str(home),
         "manifest": bundle.manifest,
+        "links": bundle.links,
+        "overlays": bundle.overlays,
         "archive": base64.b64encode(bundle.archive).decode() if apply else None,
         "apply": apply,
         "verify": verify,
@@ -499,12 +691,20 @@ def reconcile_local(
     legacy_catalog: Path | None,
 ) -> dict[str, object]:
     resolved_home = home.expanduser().resolve()
-    preview = inspect_snapshot(resolved_home, bundle.manifest, legacy_catalog=legacy_catalog)
+    preview = inspect_snapshot(
+        resolved_home,
+        bundle.manifest,
+        links=bundle.links,
+        overlays=bundle.overlays,
+        legacy_catalog=legacy_catalog,
+    )
     if apply:
         return apply_snapshot(
             resolved_home,
             bundle.manifest,
             base64.b64encode(bundle.archive).decode(),
+            links=bundle.links,
+            overlays=bundle.overlays,
             legacy_catalog=legacy_catalog,
             suffix=backup_suffix,
         )

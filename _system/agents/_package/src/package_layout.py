@@ -15,10 +15,9 @@ SYSTEM_ROOT = AGENTS_ROOT.parent
 VAULT_ROOT = SYSTEM_ROOT.parent
 
 SKILLS_ROOT = AGENTS_ROOT / "skills"
-AUTO_SKILLS_ROOT = SKILLS_ROOT / "auto"
-MANUAL_SKILLS_ROOT = SKILLS_ROOT / "manual"
 GITHUB_SKILLS_ROOT = SKILLS_ROOT / "github"
-PROJECTED_SKILLS_ROOT = SKILLS_ROOT / "projected"
+OVERLAY_SKILLS_ROOT = SKILLS_ROOT / "overlays"
+SNAPSHOT_SKILLS_ROOT = SKILLS_ROOT / "snapshots"
 CATALOG_ROOT = SKILLS_ROOT / "catalog"
 DORMANT_SKILLS_ROOT = SKILLS_ROOT / "dormant"
 
@@ -35,7 +34,7 @@ MACHINES_PATH = SOURCE_INSTANCE_ROOT / "fleet/machines.json"
 WORKSPACES_PATH = SOURCE_INSTANCE_ROOT / "fleet/workspaces.json"
 MACHINE_SECRETS_PATH = SOURCE_INSTANCE_ROOT / "fleet/machine-secrets.json"
 STARTUP_PATH = SOURCE_INSTANCE_ROOT / "fleet/startup.json"
-SKILL_SOURCES_PATH = SOURCE_INSTANCE_ROOT / "skills/sources.json"
+SKILL_SOURCES_PATH = SOURCE_INSTANCE_ROOT / "skills/skill-sources.json"
 INSTRUCTION_FRAGMENTS_PATH = SOURCE_INSTANCE_ROOT / "instructions/fragments.json"
 BASE_INSTRUCTIONS_PATH = SOURCE_INSTANCE_ROOT / "instructions/AGENTS.md"
 LANGFUSE_PATH = SOURCE_INSTANCE_ROOT / "integrations/langfuse.json"
@@ -282,9 +281,13 @@ def load_instance(root: Path | None = None) -> dict[str, Any]:
     workspaces_raw = read_json(instance / "fleet/workspaces.json", "workspace registry")
     machines = validate_machines(machines_raw)
     workspaces = validate_workspaces(workspaces_raw, machines)
-    sources = read_json(instance / "skills/sources.json", "skill sources")
-    if sources.get("schema_version") != 3 or not isinstance(sources.get("repos"), list) or not isinstance(sources.get("repository_skills"), dict):
-        raise ConfigurationError("skill sources need schema_version 3, repos, and repository_skills")
+    sources = read_json(instance / "skills/skill-sources.json", "skill sources")
+    if (
+        sources.get("schema_version") != 4
+        or not isinstance(sources.get("repos"), list)
+        or not isinstance(sources.get("gh_skills", {}), dict)
+    ):
+        raise ConfigurationError("skill sources need schema_version 4, repos, and optional gh_skills")
     forbidden_source_keys = {"clone_root", "github_transport", "instruction_fragments", "workspace_projections"}
     if forbidden_source_keys & set(sources):
         raise ConfigurationError("skill sources contain retired derived or instruction fields")

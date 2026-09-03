@@ -1,8 +1,0 @@
-{
-  "managed_by": "ctx9-agents sync",
-  "repo_id": "swan-gtm-skills",
-  "source": "skills/kevin-kd-dorsey/sales-playbook-foundations",
-  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-sales-playbook-foundations",
-  "type": "manual-skill",
-  "title_override": "Swan GTM Skills \u00b7 Sales playbook foundations"
-}

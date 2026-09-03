@@ -1,7 +1,0 @@
-{
-  "managed_by": "ctx9-agents sync",
-  "repo_id": "marketingskills",
-  "source": "skills/directory-submissions",
-  "target": "_system/agents/skills/manual/_corey-marketing-skills/corey-directory-submissions",
-  "type": "manual-skill"
-}

@@ -1,6 +1,0 @@
-interface:
-  short_description: "Find machines, connections, and code locations"
-  default_prompt: "Use $infra-code-folder-and-computer-topology to identify this machine and locate the requested code or connection route."
-
-policy:
-  allow_implicit_invocation: true

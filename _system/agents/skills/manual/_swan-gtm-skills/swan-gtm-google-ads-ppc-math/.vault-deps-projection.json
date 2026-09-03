@@ -1,8 +1,0 @@
-{
-  "managed_by": "ctx9-agents sync",
-  "repo_id": "swan-gtm-skills",
-  "source": "skills/john-williams/google-ads-ppc-math",
-  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-google-ads-ppc-math",
-  "type": "manual-skill",
-  "title_override": "Swan GTM Skills \u00b7 PPC forecasting and unit-economics math"
-}

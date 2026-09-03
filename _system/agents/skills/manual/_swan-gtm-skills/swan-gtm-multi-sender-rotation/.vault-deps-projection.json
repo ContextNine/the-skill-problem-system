@@ -1,8 +1,0 @@
-{
-  "managed_by": "ctx9-agents sync",
-  "repo_id": "swan-gtm-skills",
-  "source": "skills/imad-badreddine/multi-sender-rotation",
-  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-multi-sender-rotation",
-  "type": "manual-skill",
-  "title_override": "Swan GTM Skills \u00b7 Multi-sender rotation"
-}

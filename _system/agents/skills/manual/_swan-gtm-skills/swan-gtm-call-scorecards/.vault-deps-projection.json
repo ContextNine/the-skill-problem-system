@@ -1,8 +1,0 @@
-{
-  "managed_by": "ctx9-agents sync",
-  "repo_id": "swan-gtm-skills",
-  "source": "skills/kevin-kd-dorsey/call-scorecards",
-  "target": "_system/agents/skills/manual/_swan-gtm-skills/swan-gtm-call-scorecards",
-  "type": "manual-skill",
-  "title_override": "Swan GTM Skills \u00b7 Call scorecards"
-}

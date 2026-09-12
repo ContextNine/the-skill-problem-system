@@ -292,7 +292,7 @@ def print_reports(reports: list[dict[str, Any]]) -> None:
 
 def sync_arguments(args: argparse.Namespace, parts: set[str], mode: str) -> list[str]:
     selected: list[str] = []
-    if parts & {"dependencies", "coding-tools"}:
+    if "dependencies" in parts:
         selected.append("--dependencies")
     for dependency_id in args.dependency:
         selected.extend(["--dependency", dependency_id])

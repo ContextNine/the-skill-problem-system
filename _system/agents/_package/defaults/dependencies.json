@@ -673,23 +673,23 @@
         "recipes": {
           "macos": {
             "manager": "github-python-installer",
-            "version": "0.3.4",
+            "version": "0.3.5",
             "archive": {
-              "url": "https://github.com/MDerman/ctx9/releases/download/v0.3.4/ctx9-0.3.4.tar.gz",
-              "sha256": "80a3eb612b3d82716f67225495397ff843cfc26bc8c39f1ef7a9e852c5abed80"
+              "url": "https://github.com/MDerman/ctx9/releases/download/v0.3.5/ctx9-0.3.5.tar.gz",
+              "sha256": "150ef0f1a6adda6617d4eecca457491244c779a10b3c2b01b3edf2d02184fe84"
             },
-            "archive_root": "ctx9-0.3.4",
+            "archive_root": "ctx9-0.3.5",
             "installer": "scripts/install.py",
             "arguments": []
           },
           "linux": {
             "manager": "github-python-installer",
-            "version": "0.3.4",
+            "version": "0.3.5",
             "archive": {
-              "url": "https://github.com/MDerman/ctx9/releases/download/v0.3.4/ctx9-0.3.4.tar.gz",
-              "sha256": "80a3eb612b3d82716f67225495397ff843cfc26bc8c39f1ef7a9e852c5abed80"
+              "url": "https://github.com/MDerman/ctx9/releases/download/v0.3.5/ctx9-0.3.5.tar.gz",
+              "sha256": "150ef0f1a6adda6617d4eecca457491244c779a10b3c2b01b3edf2d02184fe84"
             },
-            "archive_root": "ctx9-0.3.4",
+            "archive_root": "ctx9-0.3.5",
             "installer": "scripts/install.py",
             "arguments": []
           }
@@ -699,7 +699,93 @@
           "args": [
             "--version"
           ],
-          "exact": "0.3.4"
+          "exact": "0.3.5"
+        }
+      }
+    },
+    {
+      "id": "fleet-cli",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline",
+        "ctx9-tools"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "infra-i-onboard-machine",
+        "infra-i-update-fleet-dependencies",
+        "fleet-sync"
+      ],
+      "lifecycle_doc": "dependency-references/ctx9.md",
+      "requires": [
+        "ctx9-launcher"
+      ],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "ctx9-component",
+            "package": "fleet"
+          },
+          "linux": {
+            "manager": "ctx9-component",
+            "package": "fleet"
+          }
+        },
+        "verify": {
+          "command": "ctx9",
+          "args": [
+            "doctor",
+            "fleet",
+            "--json"
+          ],
+          "exact": "0.2.4"
+        }
+      }
+    },
+    {
+      "id": "vault-cli",
+      "kind": "package",
+      "platforms": [
+        "macos"
+      ],
+      "groups": [
+        "ctx9-tools"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "infra-i-onboard-machine",
+        "infra-i-update-fleet-dependencies",
+        "fleet-sync"
+      ],
+      "lifecycle_doc": "dependency-references/ctx9.md",
+      "requires": [
+        "ctx9-launcher"
+      ],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "ctx9-component",
+            "package": "vault"
+          }
+        },
+        "verify": {
+          "command": "ctx9",
+          "args": [
+            "doctor",
+            "vault",
+            "--json"
+          ],
+          "exact": "0.2.14"
         }
       }
     },

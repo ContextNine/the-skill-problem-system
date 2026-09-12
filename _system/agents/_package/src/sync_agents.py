@@ -331,7 +331,52 @@ def invoke_workspace_sync(
     return report
 
 
-def write_aggregate_lock(root: Path, reports: dict[str, dict[str, Any]]) -> None:
+def merge_report_items(previous: Any, current: Any, valid_ids: set[str] | None = None) -> Any:
+    if not isinstance(previous, list) or not isinstance(current, list):
+        return current
+    current_by_id = {
+        item["id"]: item
+        for item in current
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+    if len(current_by_id) != len(current):
+        return current
+    merged = [
+        current_by_id.pop(item.get("id"), item)
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+        else item
+        for item in previous
+    ]
+    merged.extend(current_by_id.values())
+    if valid_ids is not None:
+        merged = [
+            item
+            for item in merged
+            if not isinstance(item, dict) or item.get("id") in valid_ids
+        ]
+    return merged
+
+
+def merge_selected_dependency_report(
+    previous: dict[str, Any],
+    current: dict[str, Any],
+    valid_ids: set[str] | None,
+) -> dict[str, Any]:
+    merged = dict(previous)
+    merged.update(current)
+    for key in ("packages", "preflight"):
+        if key in current:
+            merged[key] = merge_report_items(previous.get(key), current[key], valid_ids)
+    return merged
+
+
+def write_aggregate_lock(
+    root: Path,
+    reports: dict[str, dict[str, Any]],
+    *,
+    preserve_unreported_direct: bool = False,
+    valid_direct_ids: set[str] | None = None,
+) -> None:
     path = root / "_system/agents/_package/generated/state/dependencies.lock.json"
     try:
         existing = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
@@ -345,7 +390,20 @@ def write_aggregate_lock(root: Path, reports: dict[str, dict[str, Any]]) -> None
         if not isinstance(previous, dict):
             raise AgentsSyncError(f"aggregate dependency lock entry is invalid: {machine_id}")
         merged = dict(previous)
-        merged.update({key: value for key, value in report.items() if value is not None})
+        for key, value in report.items():
+            if value is None:
+                continue
+            if (
+                key == "direct"
+                and preserve_unreported_direct
+                and isinstance(previous.get(key), dict)
+                and isinstance(value, dict)
+            ):
+                merged[key] = merge_selected_dependency_report(
+                    previous[key], value, valid_direct_ids
+                )
+            else:
+                merged[key] = value
         machines[machine_id] = merged
     value = {
         "schema_version": 1,
@@ -662,6 +720,7 @@ def sync(args: argparse.Namespace) -> int:
 
     dependency_preview: list[dict[str, Any]] = []
     dependency_manifest: dict[str, Any] | None = None
+    valid_direct_ids: set[str] | None = None
     reference_files: dict[str, dict[str, str]] = {}
     if "dependencies" in parts:
         manifest_path = args.dependency_manifest or (
@@ -670,6 +729,10 @@ def sync(args: argparse.Namespace) -> int:
         complete_dependency_manifest = load_json_yaml(
             manifest_path.expanduser().resolve(), "agent dependency registry"
         )
+        valid_direct_ids = {
+            str(dependency["id"])
+            for dependency in complete_dependency_manifest["dependencies"]
+        }
         validate_dependency_lifecycle_routes(root, complete_dependency_manifest)
         dependency_manifest = (
             select_dependencies(complete_dependency_manifest, args.dependency)
@@ -903,6 +966,8 @@ def sync(args: argparse.Namespace) -> int:
                 }
                 for machine in selected_machines
             },
+            preserve_unreported_direct=bool(args.dependency),
+            valid_direct_ids=valid_direct_ids,
         )
 
     if "skills" in parts:

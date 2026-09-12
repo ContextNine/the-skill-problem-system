@@ -19,7 +19,7 @@ import working_repo_skills
 
 INSTALL_MARKER = ".fleet-install.json"
 MANAGED_TEXT_MARKER = "fleet.managed"
-PACKAGE_VERSION = "0.2.2"
+PACKAGE_VERSION = "0.2.3"
 INSTALL_IGNORE = shutil.ignore_patterns(
     "__pycache__", "*.pyc", ".DS_Store", working_repo_skills.MARKER
 )

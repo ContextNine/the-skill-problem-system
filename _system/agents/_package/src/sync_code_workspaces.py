@@ -959,7 +959,7 @@ def add_selection_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--skip-personal-configuration",
         action="store_true",
-        help="reconcile workspaces only; agent configuration is owned by ctx9-agents sync",
+        help="reconcile workspaces only; agent configuration is owned by fleet sync",
     )
 
 

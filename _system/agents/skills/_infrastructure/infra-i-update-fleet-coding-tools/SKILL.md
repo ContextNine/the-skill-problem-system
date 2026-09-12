@@ -10,8 +10,8 @@ description: Updates installed T3 Code nightly CLI/server or macOS desktop, Code
 This skill is the coding-tool specialist used by [[_system/agents/skills/_infrastructure/infra-i-update-fleet-dependencies/SKILL|Update Fleet Dependencies]]. Execute through the shared implementation:
 
 ```bash
-ctx9-agents update --coding-tools --dry-run
-ctx9-agents update --coding-tools
+fleet update --coding-tools --dry-run
+fleet update --coding-tools
 ```
 
 The command owns the immutable cross-machine plan, default apply, sync, final verification, and factual lock. The rules below remain authoritative for its coding-tool adapter and for resolving any reported manual checkpoint.
@@ -20,7 +20,7 @@ The command owns the immutable cross-machine plan, default apply, sync, final ve
 
 Read [[_system/agents/skills/_infrastructure/infra-i-code-folder-and-computer-topology/SKILL|Code Folder and Computer Topology]] and every prerequisite it requires before connecting to or changing a machine.
 
-- Resolve and validate `fleet/machines.json` with `ctx9-agents config`; never hardcode the private Vault source path. If it is absent or invalid, keep fleet updates inactive and show setup guidance from the topology skill.
+- Resolve and validate `fleet/machines.json` with `fleet config`; never hardcode the private Vault source path. If it is absent or invalid, keep fleet updates inactive and show setup guidance from the topology skill.
 - Resolve the current machine from clone-local `vault.machine-id` on Git checkouts or `~/.config/vault/machine-id` on a Gitless iCloud worker; never infer it from hostname.
 - When the user names machines, operate only on those enabled registry entries.
 - Otherwise, target enabled machines whose `vault_sync.enabled` is `true`. Use `transport: local` locally and the registry's `ssh_alias` for SSH targets. Do not hardcode machine IDs, aliases, homes, or paths.

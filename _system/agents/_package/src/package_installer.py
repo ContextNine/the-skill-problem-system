@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Managed standalone installation for ctx9-agents."""
+"""Managed standalone installation for fleet."""
 
 from __future__ import annotations
 
@@ -17,8 +17,9 @@ from package_layout import ConfigurationError, installed_config_root, installed_
 import working_repo_skills
 
 
-INSTALL_MARKER = ".ctx9-agents-install.json"
-MANAGED_TEXT_MARKER = "ctx9-agents.managed"
+INSTALL_MARKER = ".fleet-install.json"
+MANAGED_TEXT_MARKER = "fleet.managed"
+PACKAGE_VERSION = "0.2.0"
 INSTALL_IGNORE = shutil.ignore_patterns(
     "__pycache__", "*.pyc", ".DS_Store", working_repo_skills.MARKER
 )
@@ -99,7 +100,7 @@ def public_skill_roots(source: Path) -> list[tuple[str, Path]]:
     ]
     projected = working_repo_skills.plan(vault_root, require_sources=False)
     if projected.actions:
-        raise InstallError("skill materializations are stale; run ctx9-agents sync --skills first")
+        raise InstallError("skill materializations are stale; run fleet sync --skills first")
     github = [skill for skill in projected.skills if skill.origin == "gh"]
     return [
         *((skill.name, skill) for skill in owned),
@@ -148,6 +149,20 @@ def render_global(config_root: Path, package_root: Path, machine_id: str | None 
         for peer_id, peer in machines.items()
         if peer_id != selected_id and peer.get("enabled")
     ]
+    primary_id = next(key for key, value in machines.items() if value.get("role") == "primary")
+    primary = machines[primary_id]
+    preview_values = {
+        "primary_ssh_alias": primary.get("ssh_alias") or primary_id,
+        "primary_loopback": "127.0.0.1",
+        "primary_port": "<primary-port>",
+        "worker_loopback": "127.0.0.1",
+        "worker_port": "<worker-port>",
+    }
+    development_previews = (
+        (templates / "development-previews.md").read_text(encoding="utf-8").format_map(preview_values).strip()
+        if peers
+        else ""
+    )
     values = {
         "display_name": machine["display_name"],
         "machine_id": selected_id,
@@ -163,10 +178,10 @@ def render_global(config_root: Path, package_root: Path, machine_id: str | None 
         "machine_access_provider": "configured registry route",
         "mesh_address": "see installed machine configuration",
         "peers": "\n".join(peers) if peers else "- No other enabled machines are registered.",
-        "preview_guidance": "Bind development servers to loopback and use a registered connection route for remote previews.",
+        "development_previews": development_previews,
         "access_guidance": "",
-        "primary_display_name": machines[next(key for key, value in machines.items() if value.get("role") == "primary")]["display_name"],
-        "primary_id": next(key for key, value in machines.items() if value.get("role") == "primary"),
+        "primary_display_name": primary["display_name"],
+        "primary_id": primary_id,
         "primary_machine_access_provider": "registered route",
         "primary_mesh_address": "see installed machine configuration",
     }
@@ -226,7 +241,7 @@ def install(
     staged_root: Path | None = None
     if apply:
         state_target.mkdir(parents=True, exist_ok=True, mode=0o700)
-        staged_root = Path(tempfile.mkdtemp(prefix="ctx9-agents-install-", dir=state_target))
+        staged_root = Path(tempfile.mkdtemp(prefix="fleet-install-", dir=state_target))
         for path in parts:
             shutil.copytree(path, staged_root / path.name, symlinks=True, ignore=INSTALL_IGNORE)
         stage_public_skills(source, staged_root)
@@ -283,8 +298,8 @@ def install(
     else:
         actions.append({"path": str(config_target), "status": "preserved"})
 
-    launcher = home / ".local/bin/ctx9-agents"
-    launcher_content = f"#!/bin/sh\n# {MANAGED_TEXT_MARKER}\nexec python3 {json.dumps(str(package_target / 'src/agents.py'))} \"$@\"\n"
+    launcher = home / ".local/bin/fleet"
+    launcher_content = f"#!/bin/sh\n# {MANAGED_TEXT_MARKER}\nexec python3 {json.dumps(str(package_target / 'src/fleet.py'))} \"$@\"\n"
     actions.append({"path": str(launcher), "status": ensure_managed_text(launcher, launcher_content, apply=apply)})
     if apply:
         launcher.chmod(0o755)
@@ -307,7 +322,7 @@ def install(
             actions.append({"path": str(alias), "status": ensure_managed_symlink(alias, str(skill), apply=apply)})
             owned.append(str(alias))
     manifest = state_target / "installed.json"
-    value = {"schema_version": 1, "package_version": "0.1.0", "owned_paths": sorted(set(owned))}
+    value = {"schema_version": 1, "package_version": PACKAGE_VERSION, "owned_paths": sorted(set(owned))}
     manifest_status = "would-write"
     if apply:
         manifest.parent.mkdir(parents=True, exist_ok=True)
@@ -318,7 +333,7 @@ def install(
             manifest.write_text(content, encoding="utf-8")
             manifest_status = "written"
     actions.append({"path": str(manifest), "status": manifest_status})
-    return {"ok": True, "applied": apply, "actions": actions}
+    return {"ok": True, "ready": True, "applied": apply, "version": PACKAGE_VERSION, "actions": actions}
 
 
 def verify(home: Path) -> dict[str, Any]:
@@ -339,7 +354,14 @@ def verify(home: Path) -> dict[str, Any]:
             problems.append(str(exc))
     if not manifest.is_file():
         problems.append(f"installed ownership manifest is missing: {manifest}")
-    return {"ok": not problems, "problems": problems, "package": str(package), "config": str(config)}
+    return {
+        "ok": not problems,
+        "ready": not problems,
+        "version": PACKAGE_VERSION,
+        "problems": problems,
+        "package": str(package),
+        "config": str(config),
+    }
 
 
 def uninstall(home: Path, *, apply: bool) -> dict[str, Any]:
@@ -375,4 +397,4 @@ def uninstall(home: Path, *, apply: bool) -> dict[str, Any]:
         actions.append({"path": str(path), "status": "removed" if apply else "would-remove"})
     if apply:
         manifest_path.unlink()
-    return {"ok": True, "applied": apply, "actions": actions}
+    return {"ok": True, "ready": True, "applied": apply, "version": PACKAGE_VERSION, "actions": actions}

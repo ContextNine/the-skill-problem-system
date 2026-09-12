@@ -24,18 +24,20 @@ if [[ $# -eq 1 ]]; then
   scp \
     "$script_dir/claude-codex" \
     "$script_dir/claude-kimi" \
+    "$script_dir/claude-kimi-proxy" \
     "$script_dir/claude-provider" \
     "$script_dir/claude-provider-auth" \
     "$script_dir/install-claude-provider-launchers.sh" \
     "$ssh_alias:$remote_dir/"
   ssh "$ssh_alias" \
-    "chmod 0700 '$remote_dir/claude-codex' '$remote_dir/claude-kimi' '$remote_dir/claude-provider' '$remote_dir/claude-provider-auth' '$remote_dir/install-claude-provider-launchers.sh'; '$remote_dir/install-claude-provider-launchers.sh'; rm -r -- '$remote_dir'"
+    "chmod 0700 '$remote_dir/claude-codex' '$remote_dir/claude-kimi' '$remote_dir/claude-kimi-proxy' '$remote_dir/claude-provider' '$remote_dir/claude-provider-auth' '$remote_dir/install-claude-provider-launchers.sh'; '$remote_dir/install-claude-provider-launchers.sh'; rm -r -- '$remote_dir'"
   exit
 fi
 
 install -d -m 0700 "$target_dir"
 install -m 0700 "$script_dir/claude-codex" "$target_dir/claude-codex"
 install -m 0700 "$script_dir/claude-kimi" "$target_dir/claude-kimi"
+install -m 0700 "$script_dir/claude-kimi-proxy" "$target_dir/claude-kimi-proxy"
 install -m 0700 "$script_dir/claude-provider" "$target_dir/claude-provider"
 install -m 0700 "$script_dir/claude-provider-auth" "$target_dir/claude-provider-auth"
 ln -sfn claude-codex "$target_dir/claude-codex-high"
@@ -48,6 +50,7 @@ for command_name in \
   claude-codex-high \
   claude-codex-xhigh \
   claude-kimi \
+  claude-kimi-proxy \
   claude-provider \
   claude-provider-auth \
   claude-openrouter \

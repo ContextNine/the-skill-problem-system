@@ -177,7 +177,7 @@ launcher_installer="$(vault root)/_system/agents/skills/_infrastructure/infra-i-
 Open new SSH session, then verify login shell and T3-style non-interactive shell:
 
 ```bash
-for command_name in codex claude claude-codex claude-codex-high claude-codex-xhigh claude-kimi claude-provider claude-provider-auth claude-openrouter claude-featherless kimi opencode gh git git-lfs node npm t3 jq btop rg fd fzf curl wg bun uv gws gcloud rclone; do
+for command_name in codex claude claude-codex claude-codex-high claude-codex-xhigh claude-kimi claude-kimi-proxy claude-provider claude-provider-auth claude-openrouter claude-featherless kimi opencode gh git git-lfs node npm t3 jq btop rg fd fzf curl wg bun uv gws gcloud rclone; do
   command -v "$command_name" || printf 'MISSING: %s\n' "$command_name"
 done
 ```
@@ -185,7 +185,7 @@ done
 From Primary machine:
 
 ```bash
-ssh ctx9@BONJOUR_HOST 'sh -lc "command -v codex claude claude-codex claude-codex-high claude-codex-xhigh claude-kimi claude-provider claude-provider-auth claude-openrouter claude-featherless kimi opencode gh node t3 btop rg bun uv gws gcloud"'
+ssh ctx9@BONJOUR_HOST 'sh -lc "command -v codex claude claude-codex claude-codex-high claude-codex-xhigh claude-kimi claude-kimi-proxy claude-provider claude-provider-auth claude-openrouter claude-featherless kimi opencode gh node t3 btop rg bun uv gws gcloud"'
 ```
 
 Stop on any missing command. Install `project_optional` tools only when owning repository docs require them.
@@ -386,7 +386,7 @@ After host returns:
 ssh SSH_ALIAS 'bash -s' <<'REMOTE'
 set -eu
 hostnamectl --static
-for command_name in codex claude claude-codex claude-codex-high claude-codex-xhigh claude-kimi claude-provider claude-provider-auth claude-openrouter claude-featherless kimi opencode gh git node npm t3 jq btop rg curl bun uv gws gcloud; do command -v "$command_name"; done
+for command_name in codex claude claude-codex claude-codex-high claude-codex-xhigh claude-kimi claude-kimi-proxy claude-provider claude-provider-auth claude-openrouter claude-featherless kimi opencode gh git node npm t3 jq btop rg curl bun uv gws gcloud; do command -v "$command_name"; done
 codex login status
 gh auth status --hostname github.com
 systemctl is-active ssh.service avahi-daemon.service
@@ -402,7 +402,7 @@ Then:
 2. Reconnect T3 environment and start Codex thread.
 3. Test `SSH_ALIAS-lan`, `SSH_ALIAS-mesh`, and automatic alias, then repeat the canonical reverse-forward proof from the rebooted worker to `PRIMARY_ID`.
 4. Confirm no background direct T3 listener: `ssh SSH_ALIAS 'ss -lnt | rg ":3773" || true'`.
-5. For an enrolled `remote-sshfs` client, repeat the mount, exact-source, full-tree, Gitless-pointer, read-write receipt, and automatic reconnect checks in [[linux-remote-vault-access|Linux Remote Vault Access]]. For a code-only worker, confirm no Vault root or mount exists.
+5. For an enrolled `remote-sshfs` client, repeat the mount, exact-source, full-tree, Gitless-pointer, read-write, status, and automatic reconnect checks in [[linux-remote-vault-access|Linux Remote Vault Access]]. For a code-only worker, confirm no Vault root or mount exists.
 
 ## Optional daemons and watchdogs
 
@@ -448,8 +448,8 @@ Update [[machine-requirements-and-topology|Machine Requirements and Topology]] w
 Run:
 
 ```bash
-ctx9-agents sync --dry-run
-ctx9-agents sync
+fleet sync --dry-run
+fleet sync
 ```
 
 Register the machine disabled in the private registry, run the explicit onboarding Code-workspace reconciliation, and require Code workspace doctor to verify both repositories and agent configuration before enablement.

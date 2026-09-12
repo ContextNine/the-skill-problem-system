@@ -53,18 +53,85 @@ cat >"$fake_claude" <<'SH'
 set -euo pipefail
 test -n "${CLAUDE_PROVIDER_TEST_OUTPUT:-}"
 {
-  printf 'base=%s\n' "$ANTHROPIC_BASE_URL"
-  printf 'model=%s\n' "$ANTHROPIC_MODEL"
-  printf 'opus=%s\n' "$ANTHROPIC_DEFAULT_OPUS_MODEL"
-  printf 'subagent=%s\n' "$CLAUDE_CODE_SUBAGENT_MODEL"
-  printf 'config=%s\n' "$CLAUDE_CONFIG_DIR"
-  printf 'api_key=%s\n' "$ANTHROPIC_API_KEY"
+  printf 'base=%s\n' "${ANTHROPIC_BASE_URL-<unset>}"
+  printf 'model=%s\n' "${ANTHROPIC_MODEL-<unset>}"
+  printf 'opus=%s\n' "${ANTHROPIC_DEFAULT_OPUS_MODEL-<unset>}"
+  printf 'haiku=%s\n' "${ANTHROPIC_DEFAULT_HAIKU_MODEL-<unset>}"
+  printf 'subagent=%s\n' "${CLAUDE_CODE_SUBAGENT_MODEL-<unset>}"
+  printf 'config=%s\n' "${CLAUDE_CONFIG_DIR-<unset>}"
+  printf 'api_key=%s\n' "${ANTHROPIC_API_KEY-<unset>}"
+  if [[ -n "${ANTHROPIC_AUTH_TOKEN-}" ]]; then
+    printf '%s\n' 'auth_token=present'
+  else
+    printf '%s\n' 'auth_token=missing'
+  fi
+  printf 'auto_compact=%s\n' "${CLAUDE_CODE_AUTO_COMPACT_WINDOW-<unset>}"
+  printf 'effort=%s\n' "${CLAUDE_CODE_EFFORT_LEVEL-<unset>}"
   printf 'args='
   printf '<%s>' "$@"
   printf '\n'
 } >"$CLAUDE_PROVIDER_TEST_OUTPUT"
 SH
 chmod 0700 "$fake_claude"
+
+kimi_output="$test_root/kimi.out"
+HOME="$fake_home" \
+CLAUDE_PROVIDER_SECURITY_BIN="$fake_security" \
+CLAUDE_PROVIDER_CLAUDE_BIN="$fake_claude" \
+CLAUDE_PROVIDER_TEST_OUTPUT="$kimi_output" \
+ANTHROPIC_BASE_URL="https://stale.example" \
+ANTHROPIC_API_KEY="stale-api-key" \
+ANTHROPIC_MODEL="stale-model" \
+  "$script_dir/claude-kimi" -p test-prompt
+
+rg -Fx 'base=https://api.moonshot.ai/anthropic' "$kimi_output" >/dev/null
+rg -Fx 'model=kimi-k3[1m]' "$kimi_output" >/dev/null
+rg -Fx 'opus=kimi-k3[1m]' "$kimi_output" >/dev/null
+rg -Fx 'haiku=kimi-k2.7-code' "$kimi_output" >/dev/null
+rg -Fx 'subagent=kimi-k3[1m]' "$kimi_output" >/dev/null
+rg -Fx 'config=<unset>' "$kimi_output" >/dev/null
+rg -Fx 'api_key=' "$kimi_output" >/dev/null
+rg -Fx 'auth_token=present' "$kimi_output" >/dev/null
+rg -Fx 'auto_compact=1000000' "$kimi_output" >/dev/null
+rg -Fx 'effort=max' "$kimi_output" >/dev/null
+rg -Fx 'args=<--dangerously-skip-permissions><--permission-mode><bypassPermissions><-p><test-prompt>' "$kimi_output" >/dev/null
+
+missing_kimi_output="$test_root/missing-kimi.out"
+if HOME="$fake_home" \
+  CLAUDE_PROVIDER_TEST_CREDENTIAL_STATE=missing \
+  CLAUDE_PROVIDER_SECURITY_BIN="$fake_security" \
+  CLAUDE_PROVIDER_CLAUDE_BIN="$fake_claude" \
+  CLAUDE_PROVIDER_TEST_OUTPUT="$missing_kimi_output" \
+    "$script_dir/claude-kimi" >"$test_root/missing-kimi.stdout" 2>"$test_root/missing-kimi.stderr"; then
+  printf '%s\n' 'Expected missing Kimi credential to fail' >&2
+  exit 1
+fi
+test ! -e "$missing_kimi_output"
+
+fake_curl="$test_root/fake-curl"
+cat >"$fake_curl" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' '{"data":[{"id":"kimi-k3"}]}'
+SH
+chmod 0700 "$fake_curl"
+
+install -d -m 0700 "$fake_home/cliproxyapi"
+printf '%s' 'test-proxy-token' >"$fake_home/cliproxyapi/client-token"
+chmod 0600 "$fake_home/cliproxyapi/client-token"
+
+kimi_proxy_output="$test_root/kimi-proxy.out"
+HOME="$fake_home" \
+CLAUDE_PROVIDER_CLAUDE_BIN="$fake_claude" \
+CLAUDE_KIMI_PROXY_CURL_BIN="$fake_curl" \
+CLAUDE_PROVIDER_TEST_OUTPUT="$kimi_proxy_output" \
+  "$script_dir/claude-kimi-proxy" -p test-prompt
+
+rg -Fx 'base=http://127.0.0.1:8317' "$kimi_proxy_output" >/dev/null
+rg -Fx 'model=kimi-k3(max)' "$kimi_proxy_output" >/dev/null
+rg -Fx 'auth_token=present' "$kimi_proxy_output" >/dev/null
+rg -Fx 'auto_compact=262144' "$kimi_proxy_output" >/dev/null
+rg -Fx 'args=<--dangerously-skip-permissions><--permission-mode><bypassPermissions><--effort><max><-p><test-prompt>' "$kimi_proxy_output" >/dev/null
 
 ln -s "$script_dir/claude-provider" "$fake_bin/claude-openrouter"
 ln -s "$script_dir/claude-provider" "$fake_bin/claude-featherless"
@@ -120,8 +187,8 @@ rg -Fx 'args=<--dangerously-skip-permissions><--permission-mode><bypassPermissio
 auth_output="$test_root/auth.out"
 HOME="$fake_home" \
 CLAUDE_PROVIDER_SECURITY_BIN="$fake_security" \
-  "$script_dir/claude-provider-auth" openrouter --status >"$auth_output"
-rg -F 'provider=openrouter' "$auth_output" >/dev/null
+  "$script_dir/claude-provider-auth" kimi --status >"$auth_output"
+rg -F 'provider=kimi' "$auth_output" >/dev/null
 
 installer_home="$test_root/installer-home"
 HOME="$installer_home" "$script_dir/install-claude-provider-launchers.sh" >/dev/null
@@ -130,6 +197,7 @@ for command_name in \
   claude-codex-high \
   claude-codex-xhigh \
   claude-kimi \
+  claude-kimi-proxy \
   claude-provider \
   claude-provider-auth \
   claude-openrouter \
@@ -138,5 +206,7 @@ for command_name in \
 done
 test "$(readlink "$installer_home/.local/bin/claude-openrouter")" = "claude-provider"
 test "$(readlink "$installer_home/.local/bin/claude-featherless")" = "claude-provider"
+cmp "$installer_home/.local/bin/claude-kimi" "$script_dir/claude-kimi"
+cmp "$installer_home/.local/bin/claude-kimi-proxy" "$script_dir/claude-kimi-proxy"
 
 printf '%s\n' 'Claude provider route tests passed'

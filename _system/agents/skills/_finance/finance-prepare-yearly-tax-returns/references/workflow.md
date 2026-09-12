@@ -2,9 +2,9 @@
 
 ## Standard
 
-Every top-level context with `_finance/` is a tax-reporting workspace. Its local `AGENTS.md` owns the taxpayer mapping. Each relevant tax year has one `0_Yearly_Returns/YYYY.md` control note.
+Every finance and tax-reporting workspace follows the ownership and location map in [[Finance & Biz]]. Each relevant tax year has one control note in the location named there.
 
-The local finance `AGENTS.md` also owns the legal year-end. Never assume a company uses the individual 1 March to February period. Allocate transactions by legal period and transaction date even when historical folder labels are wrong.
+[[Finance & Biz]] also owns each taxpayer's legal year-end. Never assume a company uses the individual 1 March to February period. Allocate transactions by legal period and transaction date even when historical folder labels are wrong.
 
 The control note must record:
 
@@ -15,6 +15,7 @@ The control note must record:
 - excluded funding, transfers, refunds, loans, and gifts;
 - supported deductions or costs requiring tax classification;
 - IRP6 working capture and payment calculation when relevant;
+- personal retirement-fund contributions used in IRP6 estimates, split between paid and planned, plus the annual IT3(f) reconciliation;
 - annual-return working figures, unresolved decisions, and completion checklist;
 - exact proof used for filed, paid, and assessed claims.
 
@@ -31,6 +32,7 @@ Never promote a lower-level source into a higher-confidence status. A note sayin
 
 - One ITR12 covers all personal income sources and the net result of personally conducted trades.
 - Personal IRP6 estimates total personal taxable income for the full year, not just one client or bank account.
+- Include expected deductible retirement-fund contributions in the full-year IRP6 estimate. Keep paid and planned amounts separate, apply the current section 11F limit, and reconcile the paid total to the provider's IT3(f) before finalising the ITR12.
 - Do not include Friday Studios company revenue or expenses.
 - Do not deduct private spending. Confirm business purpose, supporting evidence, and any apportionment.
 

@@ -23,7 +23,7 @@ Current upstream references:
 
 ### Instance metadata
 
-The selected agent configuration owns `integrations/langfuse.json` beneath `ctx9-agents config path`. Agent configuration sync installs it at `~/.config/ctx9/agents/integrations/langfuse.json` on eligible machines. It contains only instance ID, enabled state, HTTPS base URL when enabled, credential-registry ID, and capture defaults.
+The selected agent configuration owns `integrations/langfuse.json` beneath `fleet config path`. Agent configuration sync installs it at `~/.config/ctx9/fleet/integrations/langfuse.json` on eligible machines. It contains only instance ID, enabled state, HTTPS base URL when enabled, credential-registry ID, and capture defaults.
 
 The scaffold may create `~/.codex/langfuse.json` only when absent, with `enabled: false`, the base URL, environment, tags, and bounds. It must not add `public_key` or `secret_key`. If that file already exists, the scaffold does not read, replace, merge, or verify its contents.
 

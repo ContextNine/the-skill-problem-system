@@ -13,7 +13,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/package-managers.md",
       "requires": [],
@@ -51,7 +51,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/package-managers.md",
       "requires": [],
@@ -90,7 +90,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/package-managers.md",
       "requires": [],
@@ -128,7 +128,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/package-managers.md",
       "requires": [],
@@ -167,7 +167,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/package-managers.md",
       "requires": [],
@@ -205,7 +205,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/package-managers.md",
       "requires": [],
@@ -232,6 +232,82 @@
       }
     },
     {
+      "id": "ffmpeg",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "skill-runtime"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "impression-resize-or-create-media-for-linkedin"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew",
+            "package": "ffmpeg"
+          },
+          "linux": {
+            "manager": "apt",
+            "package": "ffmpeg"
+          }
+        },
+        "verify": {
+          "command": "ffmpeg",
+          "args": [
+            "-version"
+          ]
+        }
+      }
+    },
+    {
+      "id": "poppler",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "skill-runtime"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "creative-i-render-markdown-pdf"
+      ],
+      "lifecycle_doc": "dependency-references/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew",
+            "package": "poppler"
+          },
+          "linux": {
+            "manager": "apt",
+            "package": "poppler-utils"
+          }
+        },
+        "verify": {
+          "command": "pdftoppm",
+          "args": [
+            "-v"
+          ]
+        }
+      }
+    },
+    {
       "id": "compiler",
       "kind": "package",
       "platforms": [
@@ -243,7 +319,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/package-managers.md",
       "requires": [],
@@ -281,7 +357,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/package-managers.md",
       "requires": [],
@@ -332,7 +408,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/package-managers.md",
       "requires": [
@@ -374,7 +450,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/package-managers.md",
       "requires": [],
@@ -412,7 +488,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/package-managers.md",
       "requires": [],
@@ -449,7 +525,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/package-managers.md",
       "requires": [],
@@ -481,7 +557,8 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "ctx9-agents-sync"
+        "fleet-sync",
+        "creative-i-render-markdown-pdf"
       ],
       "lifecycle_doc": "dependency-references/package-managers.md",
       "requires": [],
@@ -539,7 +616,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/package-managers.md",
       "requires": [
@@ -583,7 +660,7 @@
       "required_by": [
         "infra-i-onboard-machine",
         "infra-i-update-fleet-dependencies",
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/ctx9.md",
       "requires": [
@@ -641,7 +718,7 @@
       "required_by": [
         "infra-i-onboard-machine",
         "infra-i-sync-code-workspaces",
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/ctx9.md",
       "requires": [
@@ -686,7 +763,7 @@
       "required_by": [
         "infra-i-onboard-machine",
         "infra-i-sync-code-workspaces",
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/ctx9.md",
       "requires": [
@@ -734,7 +811,7 @@
         "infra-i-file-upload",
         "infra-i-md-html-publisher",
         "infra-i-onboard-machine",
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/publisher.md",
       "requires": [
@@ -778,7 +855,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/package-managers.md",
       "requires": [
@@ -819,7 +896,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/package-managers.md",
       "requires": [
@@ -860,7 +937,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/package-managers.md",
       "requires": [],
@@ -898,7 +975,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/package-managers.md",
       "requires": [],
@@ -936,7 +1013,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/package-managers.md",
       "requires": [],
@@ -973,7 +1050,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/package-managers.md",
       "requires": [],
@@ -1006,7 +1083,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/package-managers.md",
       "requires": [],
@@ -1022,6 +1099,41 @@
         },
         "verify": {
           "command": "gcloud",
+          "args": [
+            "--version"
+          ]
+        }
+      }
+    },
+    {
+      "id": "bitwarden-cli",
+      "kind": "package",
+      "platforms": [
+        "macos"
+      ],
+      "groups": [
+        "storage-tools"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "nedgroup-sftp-state-backup"
+      ],
+      "lifecycle_doc": "dependency-references/bitwarden.md",
+      "requires": [
+        "jq"
+      ],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew",
+            "package": "bitwarden-cli"
+          }
+        },
+        "verify": {
+          "command": "bw",
           "args": [
             "--version"
           ]
@@ -1326,7 +1438,7 @@
       "eligibility": "enabled-agent-machines",
       "required_by": [
         "infra-i-onboard-machine",
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/macos-prerequisites.md",
       "requires": [],
@@ -1478,6 +1590,7 @@
           "claude-codex-high",
           "claude-codex-xhigh",
           "claude-kimi",
+          "claude-kimi-proxy",
           "claude-provider",
           "claude-provider-auth",
           "claude-openrouter",
@@ -1548,7 +1661,7 @@
       "eligibility": "enabled-agent-machines",
       "required_by": [
         "infra-i-onboard-machine",
-        "ctx9-agents-sync"
+        "fleet-sync"
       ],
       "lifecycle_doc": "dependency-references/secret-bindings.md",
       "requires": [
@@ -1562,13 +1675,13 @@
           "macos": {
             "manager": "ctx9-component",
             "package": "secret-bindings",
-            "private_catalog_url": "https://gitlab.com/api/v4/projects/85404252/packages/generic/secret-bindings-machine/1.1.31/components.json",
+        "private_catalog_url": "https://gitlab.com/api/v4/projects/85404252/packages/generic/secret-bindings-machine/1.2.4/components.json",
             "credential_binding": "ctx9-gitlab-group-read"
           },
           "linux": {
             "manager": "ctx9-component",
             "package": "secret-bindings",
-            "private_catalog_url": "https://gitlab.com/api/v4/projects/85404252/packages/generic/secret-bindings-machine/1.1.31/components.json",
+        "private_catalog_url": "https://gitlab.com/api/v4/projects/85404252/packages/generic/secret-bindings-machine/1.2.4/components.json",
             "credential_binding": "ctx9-gitlab-group-read"
           }
         },
@@ -1578,7 +1691,7 @@
             "--version",
             "--json"
           ],
-          "exact": "1.1.31"
+      "exact": "1.2.4"
         }
       }
     },
@@ -1802,6 +1915,7 @@
           "claude-codex-high",
           "claude-codex-xhigh",
           "claude-kimi",
+          "claude-kimi-proxy",
           "claude-provider",
           "claude-provider-auth",
           "claude-openrouter",

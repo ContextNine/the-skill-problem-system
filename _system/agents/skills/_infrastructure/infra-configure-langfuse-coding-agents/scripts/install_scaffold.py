@@ -18,7 +18,7 @@ CODEX_PLUGIN_ID = "tracing@codex-observability-plugin"
 CODEX_MARKETPLACE = "langfuse/codex-observability-plugin"
 CLAUDE_PLUGIN_ID = "langfuse-observability@langfuse-observability"
 CLAUDE_MARKETPLACE = "langfuse/Claude-Observability-Plugin"
-TARGET_METADATA = Path.home() / ".config/ctx9/agents/integrations/langfuse.json"
+TARGET_METADATA = Path.home() / ".config/ctx9/fleet/integrations/langfuse.json"
 CODEX_STUB = Path.home() / ".codex/langfuse.json"
 
 

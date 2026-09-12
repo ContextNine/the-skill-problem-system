@@ -7,7 +7,7 @@ description: Coordinates complete approved dependency, coding-tool, skill-source
 
 ## Route the operation
 
-Read [[_system/agents/skills/_infrastructure/infra-i-code-folder-and-computer-topology/SKILL|Code Folder and Computer Topology]], the package's `defaults/dependencies.json`, and [[_system/docs/commands/Agent Update|Agent Update]]. Resolve installed configuration with `ctx9-agents config`; never construct a private Vault path. This skill is the human-facing umbrella; `ctx9-agents update` is the sole fleet update CLI.
+Read [[_system/agents/skills/_infrastructure/infra-i-code-folder-and-computer-topology/SKILL|Code Folder and Computer Topology]], the package's `defaults/dependencies.json`, and [[_system/docs/commands/Agent Update|Agent Update]]. Resolve installed configuration with `fleet config`; never construct a private Vault path. This skill is the human-facing umbrella; `fleet update` is the sole fleet update CLI.
 
 - Use the default command for every approved update class on every enabled, agent-eligible machine.
 - Use selectors or repeatable `--target` only when the request narrows the operation.
@@ -20,13 +20,13 @@ Read [[_system/agents/skills/_infrastructure/infra-i-code-folder-and-computer-to
 Start with one immutable preview:
 
 ```bash
-ctx9-agents update --dry-run
+fleet update --dry-run
 ```
 
 Resolve blockers without resetting, stashing, overwriting, installing undeclared software, or changing credentials. Apply only after the preview can be accepted:
 
 ```bash
-ctx9-agents update
+fleet update
 ```
 
 For a new adapter or risky channel, preview and verify fixtures first, then roll out to one named non-primary machine before the enabled fleet. A failed or manual item remains visible and prevents an aligned-fleet claim.

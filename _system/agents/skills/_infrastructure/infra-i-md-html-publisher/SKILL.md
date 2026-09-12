@@ -19,8 +19,8 @@ Use `publish` with `kind=document`, `presentation=rendered`, and the supplied do
 Run `publish doctor --json`, then publish Markdown or safe static HTML:
 
 ```bash
-publish publish path/to/source.md --kind document --visibility unlisted --purpose document --collection project --owner-domain project --owner-type document --owner-reference stable-name
-publish publish path/to/source.html --kind document --visibility unlisted --purpose document --collection project --owner-reference stable-name
+publish publish path/to/source.md --kind document --namespace public --visibility unlisted --owner-domain project --owner-type document --owner-reference stable-name
+publish publish path/to/source.html --kind document --namespace public --visibility unlisted --owner-domain project --owner-type document --owner-reference stable-name
 ```
 
 For generated HTML, start from `assets/dark-monochrome.html`. Require a doctype, non-empty title, semantic responsive markup, and static inline CSS/SVG. Reject scripts, handlers, forms, frames, embeds, objects, meta refresh, and `javascript:` URLs.
@@ -30,7 +30,7 @@ For generated HTML, start from `assets/dark-monochrome.html`. Require a doctype,
 Use the same publication ID and current ETag to preserve the stable URL:
 
 ```bash
-publish new-version <id> path/to/source.md --etag '<etag>' --kind document --visibility unlisted --purpose document --owner-reference stable-name
+publish new-version <id> path/to/source.md --etag '<etag>' --kind document --namespace public --visibility unlisted --owner-reference stable-name
 ```
 
 Keep existing source files. Remove generated temporary source only after successful publication. If publication fails, retain it for diagnosis.

@@ -18,7 +18,7 @@ This is the only source of truth for distributing personal Codex and Claude Code
 | tmux, workmux, Warp, cmux, and terminal profiles | `$infra-i-manage-fleet-terminal-workspaces` |
 | Approved recipes and private dependency choices | package `defaults/dependencies.json` plus config `dependencies/selections.json` |
 | Versioned global instructions and fleet projection | config `instructions/`, package templates and agent sync |
-| Repo-owned skill selection and portable fleet snapshots | `ctx9-agents sync --skills` |
+| Repo-owned skill selection and portable fleet snapshots | `fleet sync --skills` |
 
 Other repositories own their local `.agents/skills` sources. `skill-sources.json` independently chooses which are globally enrolled and owns their fleet-distribution policy; `workspaces.json` only registers and reconciles repositories.
 
@@ -28,14 +28,14 @@ The Vault source and primary home settings are authoritative:
 
 | Source | Target | Behavior |
 |---|---|---|
-| config `instance/` | `~/.config/ctx9/agents/` | Atomically projects the authoritative value-free fleet, workspace, dependency-selection, skill-source, integration, and instruction configuration |
+| config `instance/` | `~/.config/ctx9/fleet/` | Atomically projects the authoritative value-free fleet, workspace, dependency-selection, skill-source, integration, and instruction configuration |
 | config `instructions/AGENTS.md` + package platform/role/machine templates and approved fragments | `~/.codex/AGENTS.md` | Deterministic managed instructions with exact machine identity plus absolute Code and Vault roots |
-| config `integrations/langfuse.json` | `~/.config/ctx9/agents/integrations/langfuse.json` | Non-secret Langfuse instance metadata and disabled-integration intent; no keys or authorization header |
+| config `integrations/langfuse.json` | `~/.config/ctx9/fleet/integrations/langfuse.json` | Non-secret Langfuse instance metadata and disabled-integration intent; no keys or authorization header |
 | `~/.codex/config.toml` | `~/.codex/config.toml` | Primary settings and raw `[mcp_servers.*]`, with the primary home path rebased; target-local `[plugins.*]` and `[marketplaces.*]` are preserved |
 | Rendered `~/.codex/AGENTS.md` | `~/.claude/CLAUDE.md` | Relative symlink, so personal instructions have one output |
 | `~/.claude/settings.json` | `~/.claude/settings.json` | All user settings, with the primary home path rebased to the target home |
 
-Machine sections identify the selected machine, platform, role, enabled peers, connection route, exact resolved Code root, exact resolved Vault root or disabled state, and configured GUI access. Worker preview guidance binds on worker loopback and reverse-forwards to the registered primary loopback. No machine identity or home path is embedded in this reusable skill.
+Machine sections identify the selected machine, platform, role, enabled peers, connection route, exact resolved Code root, exact resolved Vault root or disabled state, and configured GUI access. When another enabled fleet machine exists, the renderer adds development-preview guidance that binds on worker loopback and reverse-forwards to the registered primary's loopback through its configured SSH alias. Single-machine registries omit that guidance. No machine identity or home path is embedded in this reusable skill.
 
 For a macOS worker, the rendered Codex config enforces `approval_policy = "never"`, `sandbox_mode = "danger-full-access"`, and `[mcp_servers.computer-use] enabled = true`. All other primary settings remain intact. These are target-role overlays, not a second configuration source.
 
@@ -47,7 +47,7 @@ Plugin tables are not ordinary configuration. The Codex CLI owns them on each ho
 
 `bootstrap`, `reconcile`, and `refresh` preview or apply agent configuration for every selected eligible target. `doctor` verifies it. The explicit onboarding form accepts one disabled reviewed target with `--provision-disabled`; ordinary runs require enabled targets with `global_agents_eligible: true`.
 
-This is convergence on each normal sync run, not a background daemon. `ctx9-agents sync` applies approved dependencies, workspaces, workspace-built commands, skills, settings, and instructions to every enabled target by default. Changes made in generated home files are backed up and replaced by the versioned source on the next apply. Each changed target path receives an adjacent UTC-stamped backup before atomic replacement.
+This is convergence on each normal sync run, not a background daemon. `fleet sync` applies approved dependencies, workspaces, workspace-built commands, skills, settings, and instructions to every enabled target by default. Changes made in generated home files are backed up and replaced by the versioned source on the next apply. Each changed target path receives an adjacent UTC-stamped backup before atomic replacement.
 
 ### Commands
 
@@ -68,7 +68,7 @@ python3 "$SKILL_DIR/scripts/sync_agent_configuration.py" --target MACHINE --appl
 python3 "$SKILL_DIR/scripts/sync_agent_configuration.py" --target MACHINE --verify
 ```
 
-During onboarding, add `--provision-disabled` to the explicit target command. After Code reconciliation, run `ctx9-agents sync`; for acceptance, require `ctx9-agents sync --dry-run --require-repo-sources` first. Linux workers receive point-in-time global skill copies over SSH independently of Vault access. A code-only worker requires no Vault; a registered remote client never follows skill links into its mount.
+During onboarding, add `--provision-disabled` to the explicit target command. After Code reconciliation, run `fleet sync`; for acceptance, require `fleet sync --dry-run --require-repo-sources` first. Linux workers receive point-in-time global skill copies over SSH independently of Vault access. A code-only worker requires no Vault; a registered remote client never follows skill links into its mount.
 
 ### Compatibility and rollback
 

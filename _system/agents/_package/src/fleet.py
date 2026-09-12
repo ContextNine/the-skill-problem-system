@@ -14,6 +14,7 @@ from package_export import ExportError, export as export_package, read_manifest,
 from package_layout import ConfigurationError, PACKAGE_ROOT, active_instance_root, load_instance, resolve_dotted
 
 
+VERSION = "0.2.0"
 SCRIPT_DIRECTORY = Path(__file__).resolve().parent
 FLEET_COMMANDS = {
     "sync": SCRIPT_DIRECTORY / "sync_agents.py",
@@ -22,7 +23,8 @@ FLEET_COMMANDS = {
 
 
 def parser() -> argparse.ArgumentParser:
-    root = argparse.ArgumentParser(prog="ctx9-agents", description=__doc__)
+    root = argparse.ArgumentParser(prog="fleet", description=__doc__)
+    root.add_argument("--version", action="version", version=f"fleet {VERSION}")
     commands = root.add_subparsers(dest="command", required=True)
     config = commands.add_parser("config", help="inspect or validate installed instance configuration")
     config_commands = config.add_subparsers(dest="config_command", required=True)
@@ -45,11 +47,14 @@ def parser() -> argparse.ArgumentParser:
     install_parser.add_argument("--machine-id")
     install_parser.add_argument("--code-root")
     install_parser.add_argument("--vault-root")
+    install_parser.add_argument("--json", action="store_true", help=argparse.SUPPRESS)
     verify_parser = commands.add_parser("verify")
     verify_parser.add_argument("--home", type=Path, default=Path.home())
+    verify_parser.add_argument("--json", action="store_true", help=argparse.SUPPRESS)
     uninstall_parser = commands.add_parser("uninstall")
     uninstall_parser.add_argument("--home", type=Path, default=Path.home())
     uninstall_parser.add_argument("--apply", action="store_true")
+    uninstall_parser.add_argument("--json", action="store_true", help=argparse.SUPPRESS)
     export_parser = commands.add_parser("export")
     export_parser.add_argument("--destination", type=Path)
     export_parser.add_argument("--apply", action="store_true")
@@ -108,7 +113,7 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(report, indent=2))
         return 0 if report.get("ok") else 1
     except (ConfigurationError, ExportError, InstallError, OSError, ValueError) as exc:
-        print(f"ctx9-agents: {exc}", file=sys.stderr)
+        print(f"fleet: {exc}", file=sys.stderr)
         return 1
 
 

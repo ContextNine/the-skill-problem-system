@@ -20,7 +20,7 @@ if "__file__" in globals():
     if str(COMMANDS_DIR) not in sys.path:
         sys.path.insert(0, str(COMMANDS_DIR))
 
-MANAGED_MARKER = "ctx9-agents.managed"
+MANAGED_MARKER = "fleet.managed"
 CONFIG_RELATIVE = Path("_system/agents/_package/instance")
 REGISTRY_RELATIVE = Path(
     "_system/agents/_package/instance/fleet/machines.json"
@@ -400,6 +400,13 @@ def peer_lines(registry: dict[str, Any], machine_id: str) -> str:
     return "\n".join(lines) if lines else "- No other enabled fleet machines are registered."
 
 
+def has_enabled_peer(registry: dict[str, Any], machine_id: str) -> bool:
+    return any(
+        isinstance(peer, dict) and peer.get("enabled") and peer.get("id") != machine_id
+        for peer in registry["machines"]
+    )
+
+
 def recorded_novnc_url(source_home: Path, machine: dict[str, Any]) -> str | None:
     runtime = source_home / ".cache/vault-machine"
     path = runtime / f"{machine.get('id')}-vnc.json"
@@ -478,10 +485,9 @@ def vault_guidance(
         return (
             f"This is a registered full read-write remote Vault client. `{vault_root}` mounts the complete "
             f"iCloud worktree from {source.get('display_name')} (`{source.get('id')}`) through the stable "
-            f"SSH alias `{source.get('ssh_alias')}` at `{source_root}`. Run `vault access status` before "
-            "Vault reads. Before writes, close unmanaged Vault editors and run `vault access begin`; finish "
-            "with `vault access finish`, which releases the lease after host filesystem durability without "
-            "waiting for iCloud upload. An absent, "
+            f"SSH alias `{source.get('ssh_alias')}` at `{source_root}`. Before reading or editing the Vault, "
+            "run `vault access status`. Continue only when it succeeds and reports `\"ok\": true`; otherwise "
+            "do not edit. An absent, "
             "read-only, wrong-source, or unhealthy mount is a hard stop, never a reason to recreate a clone "
             "or sparse checkout. Vault Git, refresh, release, agents sync, bootstrap publication, and "
             "Git-backed media maintenance are prohibited here. Git remains fully available in ordinary Code "
@@ -490,22 +496,19 @@ def vault_guidance(
     if mode == "icloud-gitless":
         host_enabled = vault.get("remote_access", {}).get("host_enabled") is True
         host_text = (
-            " It is the registered iCloud worktree host for remote clients; its host helper and writer lease "
-            "live outside iCloud."
+            " It is the registered iCloud worktree host for remote clients."
             if host_enabled
             else ""
         )
         return (
             "This is a full, Keep Downloaded iCloud worktree with deliberately unresolved Git metadata. "
-            "Run `vault access status` before reads and acquire the shared writer lease with "
-            "`vault access begin` before managed writes. Never run Vault Git, refresh, release, agents sync, "
+            "Edit the local Vault normally. Never run Vault Git, refresh, release, agents sync, "
             f"or Git-backed media maintenance here.{host_text}"
         )
     if mode == "primary-external-git":
         return (
-            "This machine is the sole Vault Git and fleet owner. Consult `vault access status` before primary "
-            "maintenance and never proceed while another machine holds the writer lease. Commit and push the "
-            "complete worktree currently visible here without waiting for an iCloud upload receipt."
+            "This machine is the sole Vault Git and fleet owner. Edit the local Vault normally. Commit and push "
+            "the complete worktree currently visible here without waiting for iCloud upload."
         )
     raise AgentConfigurationError(f"machine {machine.get('id')} has unsupported Vault mode {mode!r}")
 
@@ -527,7 +530,14 @@ def render_agents(
     platform_fragment = templates / "platform" / f"{machine.get('platform')}.md"
     role_fragment = templates / "role" / f"{machine.get('role')}.md"
     machine_fragment = templates / "machine.md"
-    if not source.is_file() or not platform_fragment.is_file() or not role_fragment.is_file() or not machine_fragment.is_file():
+    previews_fragment = templates / "development-previews.md"
+    if (
+        not source.is_file()
+        or not platform_fragment.is_file()
+        or not role_fragment.is_file()
+        or not machine_fragment.is_file()
+        or not previews_fragment.is_file()
+    ):
         raise AgentConfigurationError(f"global agent configuration is incomplete under {config}")
     primary = machine_by_id(registry, str(registry.get("primary_machine_id") or ""))
     provider, address = selected_machine_access(machine)
@@ -543,13 +553,21 @@ def render_agents(
         raise AgentConfigurationError(f"machine {machine.get('id')} has no normalized roots or Vault policy")
     code_root = expand_registered_path(roots.get("code"), machine.get("home"))
     vault_root = expand_registered_path(roots.get("vault"), machine.get("home"), optional=not bool(vault.get("enabled")))
-    preview_guidance = (
-        "Bind local development servers to `127.0.0.1`. For worker access, prefer SSH forwarding through canonical fleet aliases and return exact reachable URLs."
-        if machine.get("role") == "primary"
-        else "Bind development servers to `127.0.0.1`. Reverse-forward useful previews to the registered primary and return the exact primary-loopback URL."
+    machine_id = str(machine.get("id") or "")
+    preview_values = {
+        "primary_ssh_alias": primary.get("ssh_alias") or primary.get("id"),
+        "primary_loopback": "127.0.0.1",
+        "primary_port": "<primary-port>",
+        "worker_loopback": "127.0.0.1",
+        "worker_port": "<worker-port>",
+    }
+    development_previews = (
+        previews_fragment.read_text(encoding="utf-8").format_map(preview_values).strip()
+        if has_enabled_peer(registry, machine_id)
+        else ""
     )
     values = {
-            "machine_id": machine.get("id"),
+            "machine_id": machine_id,
             "display_name": machine.get("display_name"),
             "platform_name": "macOS" if machine.get("platform") == "macos" else "Linux",
             "code_root": code_root,
@@ -563,8 +581,8 @@ def render_agents(
             "primary_display_name": primary.get("display_name"),
             "primary_machine_access_provider": primary_provider,
             "primary_mesh_address": primary_address,
-            "peers": peer_lines(registry, str(machine.get("id"))),
-            "preview_guidance": preview_guidance,
+            "peers": peer_lines(registry, machine_id),
+            "development_previews": development_previews,
             "access_guidance": access_guidance(machine, source_home, primary),
     }
     selected: list[tuple[str, Path]] = [
@@ -611,7 +629,7 @@ def render_agents(
             raise AgentConfigurationError(f"instruction fragment is missing: {raw['path']}")
         seen.add(fragment_id)
         selected.append((fragment_id, candidate))
-    metadata = "<!-- ctx9-agents.managed instruction-fragments: base," + ",".join(item[0] for item in selected) + " -->"
+    metadata = "<!-- fleet.managed instruction-fragments: base," + ",".join(item[0] for item in selected) + " -->"
     rendered = [source.read_text(encoding="utf-8").rstrip(), metadata]
     rendered.extend(path.read_text(encoding="utf-8").format_map(values).strip() for _, path in selected)
     return "\n\n***\n\n".join(rendered) + "\n"

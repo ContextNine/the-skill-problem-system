@@ -48,24 +48,24 @@ class ConfigurationError(ValueError):
 
 
 def installed_package_root(home: Path | None = None) -> Path:
-    override = os.environ.get("CTX9_AGENTS_PACKAGE_HOME")
-    return Path(override).expanduser().resolve() if override else (home or Path.home()) / ".local/share/ctx9-agents"
+    override = os.environ.get("CTX9_FLEET_PACKAGE_HOME")
+    return Path(override).expanduser().resolve() if override else (home or Path.home()) / ".local/share/fleet"
 
 
 def installed_config_root(home: Path | None = None) -> Path:
-    override = os.environ.get("CTX9_AGENTS_CONFIG_HOME")
-    return Path(override).expanduser().resolve() if override else (home or Path.home()) / ".config/ctx9/agents"
+    override = os.environ.get("CTX9_FLEET_CONFIG_HOME")
+    return Path(override).expanduser().resolve() if override else (home or Path.home()) / ".config/ctx9/fleet"
 
 
 def installed_state_root(home: Path | None = None) -> Path:
-    override = os.environ.get("CTX9_AGENTS_STATE_HOME")
-    return Path(override).expanduser().resolve() if override else (home or Path.home()) / ".local/state/ctx9-agents"
+    override = os.environ.get("CTX9_FLEET_STATE_HOME")
+    return Path(override).expanduser().resolve() if override else (home or Path.home()) / ".local/state/fleet"
 
 
 def active_instance_root(explicit: Path | None = None) -> Path:
     if explicit is not None:
         return explicit.expanduser().resolve()
-    override = os.environ.get("CTX9_AGENTS_CONFIG_HOME")
+    override = os.environ.get("CTX9_FLEET_CONFIG_HOME")
     if override:
         return Path(override).expanduser().resolve()
     if SOURCE_INSTANCE_ROOT.is_dir():

@@ -22,5 +22,5 @@ Then tell your agent:
 
 - I use one naming and folder standard for automatic, manual, and imported skills.
 - I keep public defaults and schemas in Git while private instance data stays outside the public export.
-- I project validated skills into each agent's discovery folder with `ctx9-agents sync`.
+- I project validated skills into each agent's discovery folder with `fleet sync`.
 - I publish every active non-repository skill while keeping repository-owned projections private.

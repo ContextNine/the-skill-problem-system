@@ -1,0 +1,5 @@
+interface:
+  short_description: "Manage Matt's personal finance records and tax routine"
+  default_prompt: "Use $finance-personal to update my personal finance records, RA contribution tracking, or South African personal tax preparation."
+policy:
+  allow_implicit_invocation: false

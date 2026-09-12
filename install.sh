@@ -43,7 +43,7 @@ if [[ -r /dev/tty && "${CTX9_NON_INTERACTIVE:-0}" != "1" ]]; then
 fi
 
 args=(
-  "${package_root}/src/agents.py" install
+  "${package_root}/src/fleet.py" install
   --source "${package_root}"
   --home "${home_dir}"
   --machine-id "${machine_id}"
@@ -56,9 +56,9 @@ args=(
 [[ "${claude_alias}" == "1" ]] && args+=(--claude-alias)
 
 python3 "${args[@]}"
-python3 "${package_root}/src/agents.py" config validate --config-root "${home_dir}/.config/ctx9/agents"
-python3 "${package_root}/src/agents.py" verify --home "${home_dir}"
+python3 "${package_root}/src/fleet.py" config validate --config-root "${home_dir}/.config/ctx9/fleet"
+python3 "${package_root}/src/fleet.py" verify --home "${home_dir}"
 
-printf '\nInstalled ctx9-agents and all public skills.\n'
+printf '\nInstalled fleet and all public skills.\n'
 printf 'Repository: %s\n' "${repo_root}"
 printf 'This repository has no user remote until you add one.\n'

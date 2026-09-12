@@ -240,11 +240,11 @@ source = "/target/local/marketplace"
             self.assertEqual(stat.S_IMODE((target / ".codex/config.toml").stat().st_mode), 0o600)
             self.assertEqual(stat.S_IMODE((target / ".codex/AGENTS.md").stat().st_mode), 0o644)
             self.assertEqual(
-                stat.S_IMODE((target / ".config/ctx9/agents/integrations/langfuse.json").stat().st_mode),
+                stat.S_IMODE((target / ".config/ctx9/fleet/integrations/langfuse.json").stat().st_mode),
                 0o600,
             )
             self.assertEqual(
-                json.loads((target / ".config/ctx9/agents/integrations/langfuse.json").read_text()),
+                json.loads((target / ".config/ctx9/fleet/integrations/langfuse.json").read_text()),
                 {
                     "schema_version": 2,
                     "instance_id": "test",
@@ -292,10 +292,10 @@ source = "/target/local/marketplace"
                 {
                     ".codex/config.toml",
                     ".claude/settings.json",
-                    ".config/ctx9/agents/instructions/AGENTS.md",
-                    ".config/ctx9/agents/instructions/fragments.json",
-                    ".config/ctx9/agents/integrations/langfuse.json",
-                    ".config/ctx9/agents/skills/skill-sources.json",
+                    ".config/ctx9/fleet/instructions/AGENTS.md",
+                    ".config/ctx9/fleet/instructions/fragments.json",
+                    ".config/ctx9/fleet/integrations/langfuse.json",
+                    ".config/ctx9/fleet/skills/skill-sources.json",
                 },
             )
             self.assertEqual(
@@ -320,7 +320,7 @@ source = "/target/local/marketplace"
                     components={"config"},
                 )
             self.assertTrue(report["ready"])
-            metadata = source / ".config/ctx9/agents/integrations/langfuse.json"
+            metadata = source / ".config/ctx9/fleet/integrations/langfuse.json"
             self.assertEqual(stat.S_IMODE(metadata.stat().st_mode), 0o600)
             self.assertFalse((source / ".codex/AGENTS.md").exists())
 
@@ -341,7 +341,7 @@ source = "/target/local/marketplace"
                 + "\n",
                 encoding="utf-8",
             )
-            installed = source / ".config/ctx9/agents/fleet/workspaces.json"
+            installed = source / ".config/ctx9/fleet/fleet/workspaces.json"
             installed.parent.mkdir(parents=True)
             installed.write_text(
                 '{"schema_version":2,"default_profile":"core","entries":{}}\n',

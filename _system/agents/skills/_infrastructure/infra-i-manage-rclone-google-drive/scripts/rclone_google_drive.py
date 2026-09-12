@@ -48,7 +48,7 @@ def load_json(path: Path, label: str) -> dict[str, Any]:
 
 def default_desired_path() -> Path:
     completed = subprocess.run(
-        ["ctx9-agents", "config", "path"], check=False, capture_output=True, text=True
+        ["fleet", "config", "path"], check=False, capture_output=True, text=True
     )
     root = completed.stdout.strip()
     if completed.returncode != 0 or not root:

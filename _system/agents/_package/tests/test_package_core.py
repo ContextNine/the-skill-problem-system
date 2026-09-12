@@ -123,7 +123,7 @@ class StandaloneInstallTests(unittest.TestCase):
             self.assertTrue(first["ok"])
             self.assertTrue(verify(home)["ok"])
             machines = json.loads(
-                (home / ".config/ctx9/agents/fleet/machines.json").read_text(encoding="utf-8")
+                (home / ".config/ctx9/fleet/fleet/machines.json").read_text(encoding="utf-8")
             )
             self.assertEqual(machines["primary_machine_id"], "test-mac")
             self.assertEqual(machines["machines"][0]["roots"]["code"], "~/Developer")
@@ -142,7 +142,7 @@ class StandaloneInstallTests(unittest.TestCase):
             self.assertNotIn("backup", {action["status"] for action in second["actions"]})
             removed = uninstall(home, apply=True)
             self.assertTrue(removed["ok"])
-            self.assertFalse((home / ".local/share/ctx9-agents").exists())
+            self.assertFalse((home / ".local/share/fleet").exists())
 
     def test_global_instruction_install_refuses_an_unmanaged_file(self) -> None:
         package = Path(__file__).resolve().parents[1]

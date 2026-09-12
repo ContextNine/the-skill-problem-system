@@ -28,8 +28,8 @@ def resolve_agent_scripts_directory() -> Path:
     if (vault_source / "global_agent_configuration.py").is_file():
         return vault_source
 
-    commands = [["ctx9-agents", "verify"]]
-    local_launcher = Path.home() / ".local/bin/ctx9-agents"
+    commands = [["fleet", "verify"]]
+    local_launcher = Path.home() / ".local/bin/fleet"
     if local_launcher.is_file():
         commands.append([str(local_launcher), "verify"])
     for command in commands:
@@ -49,7 +49,7 @@ def resolve_agent_scripts_directory() -> Path:
         if installed_source and (installed_source / "global_agent_configuration.py").is_file():
             return installed_source
 
-    raise RuntimeError("cannot resolve the ctx9-agents package runtime; install and verify ctx9-agents first")
+    raise RuntimeError("cannot resolve the fleet package runtime; install and verify fleet first")
 
 
 AGENT_SCRIPTS_DIRECTORY = resolve_agent_scripts_directory()
@@ -278,7 +278,7 @@ def load_instance_files(root: Path) -> list[dict[str, object]]:
         relative = path.relative_to(source).as_posix()
         files.append(
             {
-                "path": f".config/ctx9/agents/{relative}",
+                "path": f".config/ctx9/fleet/{relative}",
                 "kind": "file",
                 "mode": 0o600,
                 "content": base64.b64encode(path.read_bytes()).decode(),

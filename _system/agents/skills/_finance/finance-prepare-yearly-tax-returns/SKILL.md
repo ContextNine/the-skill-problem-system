@@ -9,10 +9,11 @@ Use this skill for preparation and recordkeeping. Never submit, amend, or pay a 
 
 ## Required reading
 
-1. Read the root `AGENTS.md`, `personal/_finance/AGENTS.md`, and `outsource-think/_finance/AGENTS.md` completely.
-2. Read [workflow](references/workflow.md) completely.
-3. Read the existing `0_Yearly_Returns/YYYY.md` files for the requested year and the immediately preceding year.
-4. Use current official SARS sources for deadlines, rates, forms, and penalty rules. Tax rules and filing dates are time-sensitive.
+1. Use `$vault-i` to enter the Vault and complete its host checks.
+2. Read [[Finance & Biz]] for taxpayer ownership and record locations, then the applicable personal or company steps in [[Finance SOPs]].
+3. Read [workflow](references/workflow.md) completely.
+4. Resolve and read the requested year's control note and the immediately preceding control note from the locations owned by [[Finance & Biz]].
+5. Use current official SARS sources for deadlines, rates, forms, and penalty rules. Tax rules and filing dates are time-sensitive.
 
 ## Create a new year
 
@@ -33,7 +34,7 @@ Use `--dry-run` first. Add a new context only after its `_finance/AGENTS.md` def
 4. Reconcile invoices, receipts, statements, refunds, funding, transfers, and practitioner correspondence. Never use total bank credits as gross income.
 5. Separate evidence totals from return-ready figures. Label unknowns and assumptions.
 6. Calculate IRP6 gross income, taxable income, tax, credits, and payment from current official rates. Compare with the eFiling basic amount.
-7. For ITR12, include all personal income sources once and only supported sole-proprietor deductions.
+7. For a personal IRP6, include the expected deductible retirement-fund contribution in estimated taxable income and distinguish paid contributions from planned contributions. For ITR12, reconcile the paid total to the provider's IT3(f), include all personal income sources once, and claim only supported deductions.
 8. For ITR14, distinguish revenue, operating deductions, capital items, shareholder transactions, pre-trade expenditure, and assessed losses.
 9. Update the existing year file in place. Preserve submitted values and add dated reconciliation/amendment notes rather than silently replacing history.
 10. Store proof references. Correspondence is supporting evidence; only the submitted return, assessment, statement of account, or payment confirmation proves filing/payment.

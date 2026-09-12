@@ -1,0 +1,5 @@
+interface:
+  short_description: "Render Markdown as a dark vector PDF"
+  default_prompt: "Use $creative-i-render-markdown-pdf to render this Markdown note as a polished black-background PDF."
+policy:
+  allow_implicit_invocation: true

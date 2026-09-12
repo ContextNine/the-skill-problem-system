@@ -2,7 +2,7 @@
 set -euo pipefail
 
 usage() {
-  printf '%s\n' "Usage: claude-provider-auth <openrouter|featherless> [--status]" >&2
+  printf '%s\n' "Usage: claude-provider-auth <kimi|openrouter|featherless> [--status]" >&2
 }
 
 if [[ $# -lt 1 || $# -gt 2 ]]; then
@@ -21,7 +21,7 @@ if [[ $# -eq 2 ]]; then
 fi
 
 case "$provider" in
-  openrouter|featherless)
+  kimi|openrouter|featherless)
     ;;
   *)
     printf '%s\n' "claude-provider-auth: unsupported provider '$provider'" >&2

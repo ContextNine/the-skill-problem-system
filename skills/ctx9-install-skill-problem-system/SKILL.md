@@ -1,6 +1,6 @@
 ---
 name: ctx9-install-skill-problem-system
-description: Create a user-owned Skill Problem System repository, run its setup wizard, install ctx9-agents, and make every public skill discoverable. Use when someone asks to install or set up the CTX9 skill system.
+description: Create a user-owned Skill Problem System repository, run its setup wizard, install fleet, and make every public skill discoverable. Use when someone asks to install or set up the CTX9 skill system.
 license: MIT
 ---
 
@@ -20,7 +20,7 @@ python3 /path/to/skill/scripts/prepare_repository.py '/absolute/destination'
 ```
 
 5. Run `./install.sh` from a real TTY. Let the setup wizard collect the machine name, code root, optional Vault root, and agent integrations.
-6. Run `ctx9-agents config validate` and `ctx9-agents verify`.
+6. Run `fleet config validate` and `fleet verify`.
 7. Confirm every public skill in `_system/agents/skills/` is installed into the user's global discovery directory.
 8. Tell the user the final path and that the fresh repository has no remote. Offer to add a remote only after they provide one.
 

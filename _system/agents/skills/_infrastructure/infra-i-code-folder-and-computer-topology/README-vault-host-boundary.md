@@ -10,14 +10,14 @@ A host in mode `none`, an arbitrary path, retired clone, sparse checkout, missin
 
 ### Remote client gate
 
-On a registered `remote-sshfs` machine, the installed launcher works while the mount is absent. Before any task-specific read:
+On a registered `remote-sshfs` machine, the installed launcher works while the mount is absent. Before any task-specific read or edit:
 
 ```sh
 vault access status
 cd "$(vault root)"
 ```
 
-Status must prove SSH, exact `fuse.sshfs` source, read-write mount, sentinel, registered host identity, Keep Downloaded and recursive materialization, current downloaded state, and no conflict or pause. Pending outbound upload and a container that is not caught up do not block access. Before managed writes, close unmanaged Vault writers and run `vault access begin`; finish with `vault access finish`.
+Continue only when status succeeds and reports `"ok": true`. It must prove SSH, exact `fuse.sshfs` source, read-write mount, sentinel, registered host identity, Keep Downloaded and recursive materialization, current downloaded state, and no conflict or pause. Pending outbound upload and a container that is not caught up do not block access.
 
 Never use mount failure as permission to create a clone, sparse checkout, copied publication tree, or broader home mount. Setup and recovery belong to [[linux-remote-vault-access|Linux Remote Vault Access]] through `$infra-i-onboard-machine`.
 

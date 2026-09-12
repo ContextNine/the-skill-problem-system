@@ -9,7 +9,7 @@ Read `$infra-i-code-folder-and-computer-topology` and every prerequisite it requ
 
 Read [[README-github-fleet-authentication|GitHub Fleet Authentication]] before changing GitHub remotes or diagnosing GitHub authentication.
 
-1. Run `ctx9-agents config validate`, then load `fleet/machines.json` and schema-v2 `fleet/workspaces.json` below the resolved config path. Workspace paths are relative to each selected machine's registered Code root. Keep missing or invalid configuration inactive.
+1. Run `fleet config validate`, then load `fleet/machines.json` and schema-v2 `fleet/workspaces.json` below the resolved config path. Workspace paths are relative to each selected machine's registered Code root. Keep missing or invalid configuration inactive.
 2. Read [[workspace-sync-commands|Workspace Sync Commands]] for modes, command syntax, safety gates, and post-sync checks.
 3. Read [[catalog-schema|Catalog Schema]] before changing catalog entries, profiles, machine filters, or clone policy.
 4. Read [[state-and-reconciliation|State and Reconciliation]] before adopting source moves, relocating target checkouts, or inspecting run history.
@@ -17,7 +17,7 @@ Read [[README-github-fleet-authentication|GitHub Fleet Authentication]] before c
 6. Read [[plugin-reconciliation|Fleet Codex Plugin Reconciliation]] before changing plugin inventory, marketplace handling, ownership state, or readiness reporting.
 7. The scripts preflight every selected target before any apply. Use their explicit preview modes when the user asks for a dry run.
 
-Private base instructions live below the resolved config path at `instructions/AGENTS.md`; generic platform, role and machine templates ship with the package. `ctx9-agents sync` is the sole default-apply entrypoint. It resolves configuration through the installed package and renders exact absolute Code and Vault roots for the selected machine.
+Private base instructions live below the resolved config path at `instructions/AGENTS.md`; generic platform, role and machine templates ship with the package. `fleet sync` is the sole default-apply entrypoint. It resolves configuration through the installed package and renders exact absolute Code and Vault roots for the selected machine.
 
 Use `reconcile` for normal repeat synchronization and during onboarding. `bootstrap` remains available for first-run clone behavior; `refresh` updates existing clean workspaces; `doctor` verifies without mutation. Use `migrate-github-remotes` only after every selected machine passes dedicated GitHub SSH verification; it changes same-identity transport on the source and targets with rollback and history.
 

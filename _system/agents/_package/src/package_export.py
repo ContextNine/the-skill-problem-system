@@ -210,7 +210,7 @@ def discover_skills(stage: Path, manifest: dict[str, Any]) -> list[dict[str, Any
 
     projected = working_repo_skills.plan(VAULT_ROOT, require_sources=False)
     if projected.actions:
-        raise ExportError("skill materializations are stale; run ctx9-agents sync --skills first")
+        raise ExportError("skill materializations are stale; run fleet sync --skills first")
     for skill in sorted(
         (item for item in projected.skills if item.origin == "gh"),
         key=lambda item: item.name,
@@ -372,8 +372,14 @@ def prevent_silent_skill_removal(
     )
     if invalid:
         raise ExportError("agent export skill rename targets are missing: " + ", ".join(invalid))
+    raw_removals = manifest.get("skill_removals", [])
+    if not isinstance(raw_removals, list) or any(
+        not isinstance(name, str) for name in raw_removals
+    ):
+        raise ExportError("agent export skill_removals needs a string list")
     renamed = {old for old, new in raw_renames.items() if new in next_names}
-    silent = sorted(previous_names - next_names - renamed)
+    removed = set(raw_removals)
+    silent = sorted(previous_names - next_names - renamed - removed)
     if silent:
         raise ExportError("previously public skills disappeared from the export: " + ", ".join(silent))
 

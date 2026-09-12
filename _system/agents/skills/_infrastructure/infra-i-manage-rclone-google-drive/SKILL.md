@@ -9,7 +9,7 @@ Read [[references/authentication-and-custody|Authentication and Custody]] before
 
 ## Workflow
 
-1. Load the installed instance configuration with `ctx9-agents config path`; never infer provider IDs or machine eligibility.
+1. Load the installed instance configuration with `fleet config path`; never infer provider IDs or machine eligibility.
 2. Preview the local machine without reading secrets:
 
 ```bash

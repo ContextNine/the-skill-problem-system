@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+effort="max"
+model="kimi-k3"
+context_tokens="262144"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --normal)
+      effort="high"
+      shift
+      ;;
+    --max)
+      effort="max"
+      shift
+      ;;
+    --effort)
+      if [[ $# -lt 2 ]]; then
+        printf '%s\n' "claude-kimi-proxy: --effort requires low, high, or max" >&2
+        exit 2
+      fi
+      effort="$2"
+      shift 2
+      ;;
+    --effort=*)
+      effort="${1#--effort=}"
+      shift
+      ;;
+    --1m)
+      model="kimi-k3[1m]"
+      context_tokens="1048576"
+      shift
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+case "$effort" in
+  low|high|max)
+    ;;
+  *)
+    printf '%s\n' "claude-kimi-proxy: unsupported effort '$effort'; use low, high, or max" >&2
+    exit 2
+    ;;
+esac
+
+claude_bin="${CLAUDE_PROVIDER_CLAUDE_BIN:-$HOME/.local/bin/claude}"
+if [[ ! -x "$claude_bin" ]]; then
+  printf '%s\n' "claude-kimi-proxy: missing Claude Code executable: $claude_bin" >&2
+  exit 1
+fi
+
+token_file="${CLAUDE_KIMI_PROXY_TOKEN_FILE:-$HOME/cliproxyapi/client-token}"
+if [[ ! -r "$token_file" ]]; then
+  printf '%s\n' "claude-kimi-proxy: missing readable CLIProxyAPI token file: $token_file" >&2
+  exit 1
+fi
+
+unset \
+  ANTHROPIC_API_KEY \
+  CLAUDE_CODE_OAUTH_TOKEN \
+  CLAUDE_CODE_OAUTH_REFRESH_TOKEN \
+  CLAUDE_CODE_OAUTH_SCOPES \
+  CLAUDE_CODE_USE_BEDROCK \
+  CLAUDE_CODE_USE_VERTEX \
+  CLAUDE_CODE_USE_FOUNDRY \
+  ANTHROPIC_BEDROCK_BASE_URL \
+  ANTHROPIC_VERTEX_BASE_URL \
+  ANTHROPIC_FOUNDRY_BASE_URL
+
+proxy_base_url="${CLAUDE_KIMI_PROXY_BASE_URL:-http://127.0.0.1:8317}"
+requested_model="$model($effort)"
+curl_bin="${CLAUDE_KIMI_PROXY_CURL_BIN:-$(command -v curl || true)}"
+if [[ -z "$curl_bin" || ! -x "$curl_bin" ]]; then
+  printf '%s\n' "claude-kimi-proxy: missing curl" >&2
+  exit 1
+fi
+
+if ! "$curl_bin" -fsS \
+  -H "Authorization: Bearer $(<"$token_file")" \
+  "$proxy_base_url/v1/models" \
+  | jq -e 'any(.data[]?.id; . == "kimi-k3")' >/dev/null; then
+  printf '%s\n' "claude-kimi-proxy: CLIProxyAPI is unavailable or Kimi OAuth model kimi-k3 is missing" >&2
+  printf '%s\n' "Authenticate this machine with CLIProxyAPI --kimi-login, restart service, then retry" >&2
+  exit 1
+fi
+
+export ANTHROPIC_BASE_URL="$proxy_base_url"
+export ANTHROPIC_AUTH_TOKEN="$(<"$token_file")"
+export ANTHROPIC_MODEL="$requested_model"
+export ANTHROPIC_DEFAULT_FABLE_MODEL="$requested_model"
+export ANTHROPIC_DEFAULT_OPUS_MODEL="$requested_model"
+export ANTHROPIC_DEFAULT_SONNET_MODEL="$requested_model"
+export ANTHROPIC_DEFAULT_HAIKU_MODEL="$requested_model"
+export CLAUDE_CODE_SUBAGENT_MODEL="$requested_model"
+export CLAUDE_CODE_AUTO_COMPACT_WINDOW="$context_tokens"
+export CLAUDE_CODE_MAX_CONTEXT_TOKENS="$context_tokens"
+
+printf 'Claude route: provider=Kimi-OAuth-Proxy model=%s effort=%s base=%s context=%s\n' \
+  "$requested_model" "$effort" "$ANTHROPIC_BASE_URL" "$context_tokens" >&2
+
+exec "$claude_bin" \
+  --dangerously-skip-permissions \
+  --permission-mode bypassPermissions \
+  --effort "$effort" \
+  "$@"

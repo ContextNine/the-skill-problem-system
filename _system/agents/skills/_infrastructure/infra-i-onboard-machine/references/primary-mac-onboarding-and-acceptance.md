@@ -26,7 +26,7 @@ The primary is the only Mac that owns Vault Git, commits and pushes the Vault, p
 
 - `vault.machine-id` equals `primary_machine_id`, and the registry contains exactly one primary role.
 - The full iCloud Vault is materialized and its `.git` pointer resolves to the expected machine-local external Git directory.
-- `vault git-preflight`, `vault git-media verify --ref HEAD`, `ctx9-agents sync --dry-run`, fetch, and push verification pass.
+- `vault git-preflight`, `vault git-media verify --ref HEAD`, `fleet sync --dry-run`, fetch, and push verification pass.
 - Required local LFS bodies are present; no Git LFS upload is attempted for the private pointer-only Vault.
 - Refresh scheduling is primary-eligible and installed exactly once.
 - Code workspace and agent configuration source files validate, while authentication and session state remain local.

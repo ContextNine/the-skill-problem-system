@@ -5,9 +5,9 @@ description: Locate and use Matt Derman's personal Workspace vault containing ta
 
 # Vault
 
-## Host Gate — Do This First
+## Host gate
 
-Before reading any task-specific Vault file, resolve machine identity and the schema-v7 Vault mode. Valid modes are the registered primary's full iCloud worktree with external Git, a registered Gitless iCloud Mac worktree, or a registered full `remote-sshfs` client whose status proves the exact source, read-write mount, sentinel, and iCloud health. A code-only host, retired clone, sparse checkout, arbitrary Linux path, missing mount, wrong source, read-only mount, degraded iCloud state, or unresolved identity follows [[README-vault-host-boundary|Vault Host Boundary]] and stops.
+On Linux, run `vault access status` before reading or editing the Vault. Continue only when it succeeds and reports `"ok": true`; otherwise stop. Macs need no access ceremony. Read [[README-primary-worker-vault-sync|Primary and Worker Vault Coordination]] for the full host, iCloud, SSHFS, and Git model.
 
 ## Enter the Installed Vault
 
@@ -15,25 +15,9 @@ Resolve the installation through the dispatcher; never hard-code an iCloud or `~
 
 ```bash
 cd "$(vault root)"
-git config --local --get vault.machine-id 2>/dev/null || cat "$HOME/.config/vault/machine-id"
-vault access status
 ```
 
-Read root `AGENTS.md` before task-specific Vault access. On a remote client, status is mandatory before reads. Before any remote or managed direct-Mac write, close unmanaged Vault writers and acquire the shared lease:
-
-```bash
-vault access begin --task-id TASK_OR_THREAD_ID
-```
-
-Finish every leased edit session:
-
-```bash
-vault access finish
-```
-
-`vault access finish` returns after host filesystem durability and lease release. It never waits for iCloud upload; receipts and upload state are diagnostic only. A remote client never runs Vault Git, refresh, release, agents sync, bootstrap publication, or Git-backed media maintenance, and it never claims `git-pushed`. Normal Git remains allowed in its ordinary Code repositories. A Gitless iCloud worker has the same Vault Git prohibition. The registered Git owner commits and pushes the complete worktree currently visible to it without waiting for a receipt.
-
-Then run `vault inventory` as the live routing source. It prints periods, default capture, context/source paths, task state, epics, and projects. Add `--json` when machine parsing helps.
+Read root `AGENTS.md`, then run `vault inventory` as the live routing source. It prints periods, default capture, context/source paths, task state, epics, and projects. Add `--json` when machine parsing helps.
 
 ## Low-Context Lookups
 
@@ -81,13 +65,13 @@ Use `$gws-i-custom-calendar` for Google Workspace authentication, calendar reads
 Vault-owned skills live under grouped `_system/agents/skills/<_group>` folders; implicit skills use `-i-` after the category token and manual skills omit it. GitHub-managed installs live under `_system/agents/skills/github/<repo-name>/skills`.
 `_system/agents/skills/catalog` is the generated flat symlink-only catalog. Never install content there.
 Organizer folders use `_lower-kebab` and may nest. Skill folder basename must match `SKILL.md` frontmatter name. Names must be globally unique.
-Run `ctx9-agents sync --dry-run`, then `ctx9-agents sync`. Sync validates invocation naming, builds required overlays or prefixed snapshots, rebuilds the Vault-local catalog, and distributes skills without importing discovery-target content.
-GH source updates are owned by `ctx9-agents update --skills`; local checkout enrollment is independently owned by `skill-sources.json`. Public Vault dependencies remain under `_system/deps`.
+Run `fleet sync --dry-run`, then `fleet sync`. Sync validates invocation naming, builds required overlays or prefixed snapshots, rebuilds the Vault-local catalog, and distributes skills without importing discovery-target content.
+GH source updates are owned by `fleet update --skills`; local checkout enrollment is independently owned by `skill-sources.json`. Public Vault dependencies remain under `_system/deps`.
 Restart Codex or open new task after sync because current task caches catalog.
 
 Repo-local `.agents/skills` folders are real directories reserved for repo-scoped skills and should not be symlinked. Repo `.claude/skills` may symlink to `../.agents/skills` so Claude reads those same repo-scoped skills.
 
-If the user asks to create or update a skill, use the appropriate root `_group` and follow `$agents-i-write-a-skill`.
+If the user asks to create or update a skill, use the appropriate root `_group` and follow `$agents-i-write-or-edit-a-skill`.
 
 If user asks to store a skill but not make it discoverable, use `_system/agents/skills/dormant`.
 

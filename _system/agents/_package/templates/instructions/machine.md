@@ -14,6 +14,6 @@ Connected fleet:
 
 {peers}
 
-{preview_guidance}
+{development_previews}
 
 {access_guidance}

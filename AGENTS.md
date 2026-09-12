@@ -9,6 +9,6 @@ The Skill Problem System keeps agent skills as ordinary Git-backed files and pro
 - Put user-specific configuration under `_system/agents/_package/instance/`. Put skill-specific private configuration under `_system/agents/_package/instance/skills/config/<skill>/private/`.
 - Never store credential values in this repository.
 - Read `_system/agents/_package/docs/skills.md` before creating or reorganizing a skill.
-- Validate changes with `ctx9-agents config validate`, then run `ctx9-agents sync --dry-run` before `ctx9-agents sync`.
+- Validate changes with `fleet config validate`, then run `fleet sync --dry-run` before `fleet sync`.
 
 Preserve provenance and license notices when importing a skill. Keep generated catalogs and machine state out of source control.

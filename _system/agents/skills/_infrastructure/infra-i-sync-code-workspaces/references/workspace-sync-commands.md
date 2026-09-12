@@ -9,7 +9,7 @@ Run from the skill directory:
 
 ```bash
 python3 scripts/sync_code_workspaces.py discover
-python3 scripts/sync_code_workspaces.py discover --path "$(ctx9-agents config get fleet.machines.MACHINE_ID.roots.code)/group"
+python3 scripts/sync_code_workspaces.py discover --path "$(fleet config get fleet.machines.MACHINE_ID.roots.code)/group"
 python3 scripts/sync_code_workspaces.py reconcile --target linux-worker
 python3 scripts/sync_code_workspaces.py reconcile --target linux-worker --apply
 python3 scripts/sync_code_workspaces.py reconcile --target NEW_MACHINE --provision-disabled --apply
@@ -19,7 +19,7 @@ python3 scripts/sync_code_workspaces.py doctor --target linux-worker
 python3 scripts/sync_code_workspaces.py migrate-github-remotes --target linux-worker
 python3 scripts/sync_code_workspaces.py migrate-github-remotes --target linux-worker --apply
 python3 scripts/sync_agent_configuration.py --target linux-worker --verify
-tail -n 20 "$(ctx9-agents config get fleet.machines.MACHINE_ID.roots.code)/.workspace-sync/history.jsonl"
+tail -n 20 "$(fleet config get fleet.machines.MACHINE_ID.roots.code)/.workspace-sync/history.jsonl"
 ```
 
 - `discover`: resolve the selected catalog profile or recursively scan each repeated `--path`; never contact targets.

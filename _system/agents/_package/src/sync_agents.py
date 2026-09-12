@@ -246,10 +246,14 @@ def invoke_dependency_targets(
     ]
 
 
-def build_agent_reference_files(root: Path) -> dict[str, dict[str, str]]:
+def build_agent_reference_files(
+    root: Path,
+    dependency_manifest: dict[str, Any] | None = None,
+) -> dict[str, dict[str, str]]:
     agents = root / "_system/agents"
+    dependency_path = agents / "_package/defaults/dependencies.json"
     files = [
-        agents / "_package/defaults/dependencies.json",
+        dependency_path,
         agents / "_package/instance/dependencies/selections.json",
         agents / "_package/docs/dependencies.md",
         agents / "_package/instance/fleet/machine-secrets.json",
@@ -261,7 +265,11 @@ def build_agent_reference_files(root: Path) -> dict[str, dict[str, str]]:
     for path in files:
         if not path.is_file() or path.is_symlink():
             raise AgentsSyncError(f"agent reference source must be a real file: {path}")
-        content = path.read_text(encoding="utf-8")
+        content = (
+            json.dumps(dependency_manifest, indent=2) + "\n"
+            if path == dependency_path and dependency_manifest is not None
+            else path.read_text(encoding="utf-8")
+        )
         relative = path.relative_to(agents).as_posix()
         result[relative] = {
             "content": content,
@@ -350,6 +358,8 @@ def write_aggregate_lock(root: Path, reports: dict[str, dict[str, Any]]) -> None
 
 
 def selected_parts(args: argparse.Namespace) -> set[str]:
+    if getattr(args, "dependency", []):
+        return {"dependencies"}
     selected = {
         name
         for name, enabled in (
@@ -363,6 +373,31 @@ def selected_parts(args: argparse.Namespace) -> set[str]:
         if enabled
     }
     return selected or {"dependencies", "workspaces", "workspace-deps", "skills", "config", "instructions"}
+
+
+def select_dependencies(manifest: dict[str, Any], requested: list[str]) -> dict[str, Any]:
+    """Return requested dependencies plus their transitive requirements."""
+    dependency_worker.validate_manifest(manifest)
+    raw = manifest.get("dependencies", [])
+    by_id = {str(item["id"]): item for item in raw if isinstance(item, dict) and isinstance(item.get("id"), str)}
+    unknown = sorted(set(requested) - set(by_id))
+    if unknown:
+        raise AgentsSyncError(f"unknown dependencies: {', '.join(unknown)}")
+    selected: set[str] = set()
+
+    def include(dependency_id: str) -> None:
+        if dependency_id in selected:
+            return
+        selected.add(dependency_id)
+        for requirement in by_id[dependency_id].get("requires", []):
+            include(str(requirement))
+
+    for dependency_id in requested:
+        include(dependency_id)
+    return {
+        "schema_version": manifest["schema_version"],
+        "dependencies": [item for item in raw if item.get("id") in selected],
+    }
 
 
 def build_skill_snapshot_bundle(
@@ -599,6 +634,11 @@ def sync(args: argparse.Namespace) -> int:
     )
     registry = agent_configuration.load_registry(registry_path.expanduser().resolve())
     parts = selected_parts(args)
+    if args.dependency and any(
+        getattr(args, field)
+        for field in ("workspaces", "workspace_deps", "skills", "config", "instructions")
+    ):
+        raise AgentsSyncError("--dependency cannot be combined with non-dependency selectors")
     primary_id = str(registry.get("primary_machine_id") or "")
     if source_id != primary_id:
         if not (args.local_only and parts == {"skills"}):
@@ -624,11 +664,19 @@ def sync(args: argparse.Namespace) -> int:
     dependency_manifest: dict[str, Any] | None = None
     reference_files: dict[str, dict[str, str]] = {}
     if "dependencies" in parts:
-        dependency_manifest = load_json_yaml(
-            root / "_system/agents/_package/defaults/dependencies.json", "agent dependency registry"
+        manifest_path = args.dependency_manifest or (
+            root / "_system/agents/_package/defaults/dependencies.json"
         )
-        validate_dependency_lifecycle_routes(root, dependency_manifest)
-        reference_files = build_agent_reference_files(root)
+        complete_dependency_manifest = load_json_yaml(
+            manifest_path.expanduser().resolve(), "agent dependency registry"
+        )
+        validate_dependency_lifecycle_routes(root, complete_dependency_manifest)
+        dependency_manifest = (
+            select_dependencies(complete_dependency_manifest, args.dependency)
+            if args.dependency
+            else complete_dependency_manifest
+        )
+        reference_files = build_agent_reference_files(root, complete_dependency_manifest)
         dependency_preview = invoke_dependency_targets(
             selected_machines,
             dependency_manifest,
@@ -933,6 +981,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     mode.add_argument("--dry-run", action="store_true", help="preview without changing files")
     mode.add_argument("--verify", action="store_true", help="verify selected parts without changing files")
     parser.add_argument("--dependencies", action="store_true", help="sync only approved direct agent dependencies")
+    parser.add_argument(
+        "--dependency",
+        action="append",
+        default=[],
+        help="sync one approved dependency and its requirements; repeatable",
+    )
     parser.add_argument("--workspaces", action="store_true", help="sync only managed Code workspaces")
     parser.add_argument("--workspace-deps", dest="workspace_deps", action="store_true", help="sync only approved workspace-built commands")
     parser.add_argument("--skills", action="store_true", help="sync only global skill snapshots")
@@ -948,6 +1002,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--local-only", action="store_true", help="sync only the current primary machine")
     parser.add_argument("--require-repo-sources", action="store_true")
     parser.add_argument("--machine-registry", type=Path)
+    parser.add_argument("--dependency-manifest", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--root", type=Path)
     parser.add_argument("--home", type=Path)
     return parser.parse_args(argv)

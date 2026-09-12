@@ -267,7 +267,7 @@ def apply_reference_files(home: Path, files: dict[str, dict[str, str]]) -> None:
         home / PACKAGE_STATE,
         {
             "schema_version": 1,
-            "managed_by": "ctx9-agents sync",
+            "managed_by": "fleet sync",
             "files": {relative: entry["sha256"] for relative, entry in sorted(files.items())},
         },
     )
@@ -736,11 +736,9 @@ def install_package(package: dict[str, Any], recipe: dict[str, Any]) -> None:
             raise DependencyError(f"ctx9 is missing for {package['id']}")
         private_catalog_url = recipe.get("private_catalog_url")
         if private_catalog_url:
-            helper = shutil.which("ctx9-gitlab-read", path=environment()["PATH"])
-            if helper is None:
-                raise DependencyError(f"ctx9-gitlab-read is missing for {package['id']}")
             command = [
-                helper,
+                executable,
+                "auth",
                 "exec",
                 "--",
                 executable,
@@ -827,13 +825,13 @@ def install_preflight(package: dict[str, Any], recipe: dict[str, Any], eligible_
             or "ctx9-launcher" in eligible_ids
         )
         if recipe.get("private_catalog_url"):
-            helper_available = shutil.which("ctx9-gitlab-read", path=environment()["PATH"]) is not None
+            helper_available = (Path.home() / ".local/libexec/ctx9/private-read.py").is_file()
             available = launcher_available and helper_available
             return (
                 available,
                 "authenticated ctx9 private catalog"
                 if available
-                else "ctx9 launcher or narrow GitLab reader is missing",
+                else "ctx9 launcher or private component enrollment is missing",
             )
         return launcher_available, "ctx9 component catalog" if launcher_available else "ctx9 launcher is missing"
     if manager in {"brew", "brew-cask"}:

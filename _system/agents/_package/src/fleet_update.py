@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 from datetime import datetime, timezone
 import json
 import os
@@ -57,6 +58,8 @@ def read_json(path: Path, label: str) -> dict[str, Any]:
 
 
 def selected_parts(args: argparse.Namespace) -> set[str]:
+    if getattr(args, "dependency", []):
+        return {"dependencies"}
     selected = {
         name
         for name, enabled in (
@@ -71,9 +74,19 @@ def selected_parts(args: argparse.Namespace) -> set[str]:
     return selected or set(SELECTOR_NAMES)
 
 
-def dependency_ids(manifest: dict[str, Any], parts: set[str]) -> list[str]:
+def dependency_ids(
+    manifest: dict[str, Any],
+    parts: set[str],
+    requested: list[str],
+) -> list[str]:
     dependency_worker.validate_manifest(manifest)
     dependencies = manifest.get("dependencies", [])
+    known = {str(dependency["id"]) for dependency in dependencies}
+    unknown = sorted(set(requested) - known)
+    if unknown:
+        raise FleetUpdateError(f"unknown dependencies: {', '.join(unknown)}")
+    if requested:
+        return list(dict.fromkeys(requested))
     selected: list[str] = []
     for dependency in dependencies:
         kind = dependency.get("kind")
@@ -84,6 +97,64 @@ def dependency_ids(manifest: dict[str, Any], parts: set[str]) -> list[str]:
         elif kind != "coding-tool" and "dependencies" in parts:
             selected.append(str(dependency["id"]))
     return selected
+
+
+def exact_component_manifest(
+    manifest: dict[str, Any],
+    dependency_id: str,
+    version: str,
+) -> dict[str, Any]:
+    if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version):
+        raise FleetUpdateError(f"invalid exact semantic version: {version!r}")
+    candidate = copy.deepcopy(manifest)
+    dependencies = candidate.get("dependencies", [])
+    dependency = next(
+        (item for item in dependencies if isinstance(item, dict) and item.get("id") == dependency_id),
+        None,
+    )
+    if not isinstance(dependency, dict):
+        raise FleetUpdateError(f"unknown dependency: {dependency_id}")
+    contract = dependency.get("contract")
+    if not isinstance(contract, dict) or contract.get("adapter") != "package":
+        raise FleetUpdateError(f"{dependency_id} is not an exact component dependency")
+    recipes = contract.get("recipes")
+    verify = contract.get("verify")
+    if not isinstance(recipes, dict) or not isinstance(verify, dict):
+        raise FleetUpdateError(f"{dependency_id} has no exact component recipe")
+    for platform, recipe in recipes.items():
+        if not isinstance(recipe, dict) or recipe.get("manager") != "ctx9-component":
+            raise FleetUpdateError(f"{dependency_id} has no promotable {platform} component recipe")
+        current_url = recipe.get("private_catalog_url")
+        if not isinstance(current_url, str):
+            raise FleetUpdateError(f"{dependency_id} is not an immutable private component")
+        next_url, replacements = re.subn(
+            r"/[0-9]+\.[0-9]+\.[0-9]+/components\.json$",
+            f"/{version}/components.json",
+            current_url,
+        )
+        if replacements != 1:
+            raise FleetUpdateError(f"{dependency_id} has an unsupported private catalog URL")
+        recipe["private_catalog_url"] = next_url
+    verify["exact"] = version
+    dependency_worker.validate_manifest(candidate)
+    return candidate
+
+
+def write_manifest(path: Path, manifest: dict[str, Any]) -> bool:
+    content = json.dumps(manifest, indent=2) + "\n"
+    if path.read_text(encoding="utf-8") == content:
+        return False
+    descriptor, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+    return True
 
 
 def exact_t3_version(args: argparse.Namespace, parts: set[str]) -> str | None:
@@ -223,6 +294,8 @@ def sync_arguments(args: argparse.Namespace, parts: set[str], mode: str) -> list
     selected: list[str] = []
     if parts & {"dependencies", "coding-tools"}:
         selected.append("--dependencies")
+    for dependency_id in args.dependency:
+        selected.extend(["--dependency", dependency_id])
     if "workspace-deps" in parts:
         selected.extend(["--workspaces", "--workspace-deps"])
     if "skills" in parts:
@@ -245,11 +318,50 @@ def sync_arguments(args: argparse.Namespace, parts: set[str], mode: str) -> list
     return command
 
 
-def run_sync(args: argparse.Namespace, parts: set[str], mode: str) -> int:
+def run_sync(
+    args: argparse.Namespace,
+    parts: set[str],
+    mode: str,
+    dependency_manifest: dict[str, Any] | None = None,
+) -> int:
     arguments = sync_arguments(args, parts, mode)
     if not arguments:
         return 0
-    return subprocess.run([sys.executable, str(PACKAGE_DIRECTORY / "src/sync_agents.py"), *arguments]).returncode
+    if dependency_manifest is None:
+        return subprocess.run([sys.executable, str(PACKAGE_DIRECTORY / "src/sync_agents.py"), *arguments]).returncode
+    with tempfile.TemporaryDirectory(prefix="fleet-dependency-manifest-") as directory:
+        path = Path(directory) / "dependencies.json"
+        path.write_text(json.dumps(dependency_manifest, indent=2) + "\n", encoding="utf-8")
+        return subprocess.run(
+            [
+                sys.executable,
+                str(PACKAGE_DIRECTORY / "src/sync_agents.py"),
+                *arguments,
+                "--dependency-manifest",
+                str(path),
+            ]
+        ).returncode
+
+
+def update_exact_component(
+    args: argparse.Namespace,
+    parts: set[str],
+    manifest_path: Path,
+    manifest: dict[str, Any],
+) -> int:
+    if len(args.dependency) != 1:
+        raise FleetUpdateError("--version requires exactly one --dependency")
+    candidate = exact_component_manifest(manifest, args.dependency[0], args.version)
+    mode = "verify" if args.verify else "dry-run" if args.dry_run else "apply"
+    print(f"Mode: {mode}")
+    print(f"Dependency: {args.dependency[0]}")
+    print(f"Exact version: {args.version}")
+    result = run_sync(args, parts, mode, candidate)
+    if result != 0 or mode != "apply":
+        return result
+    changed = write_manifest(manifest_path, candidate)
+    print("Recorded exact fleet desired state." if changed else "Exact fleet desired state was already recorded.")
+    return run_sync(args, parts, "verify")
 
 
 def run_vault_dependencies(root: Path, mode: str) -> int:
@@ -317,14 +429,22 @@ def update(args: argparse.Namespace) -> int:
     source_id = agent_configuration.current_machine_id(root)
     agent_configuration.require_primary(registry, source_id)
     parts = selected_parts(args)
-    manifest = read_json(root / "_system/agents/_package/defaults/dependencies.json", "agent dependency registry")
-    ids = dependency_ids(manifest, parts)
+    if args.dependency and any(
+        getattr(args, field)
+        for field in ("coding_tools", "skills", "workspace_deps", "vault_dependencies")
+    ):
+        raise FleetUpdateError("--dependency cannot be combined with non-dependency selectors")
+    manifest_path = root / "_system/agents/_package/defaults/dependencies.json"
+    manifest = read_json(manifest_path, "agent dependency registry")
+    ids = dependency_ids(manifest, parts, args.dependency)
     source = next((item for item in registry["machines"] if item.get("id") == source_id), None)
     if not isinstance(source, dict) or source.get("enabled") is not True:
         raise FleetUpdateError("current primary machine is not an enabled registry target")
     targets = [] if args.local_only else agent_configuration.resolve_targets(registry, source_id, args.target)
     machines = [source] if args.local_only else targets if args.target else [source, *targets]
     skill_snapshot_machines = [source, *targets]
+    if args.version is not None:
+        return update_exact_component(args, parts, manifest_path, manifest)
     resolved_t3 = exact_t3_version(args, parts)
     resolved = {"t3-code": resolved_t3} if resolved_t3 else {}
     mode = "verify" if args.verify else "dry-run" if args.dry_run else "apply"
@@ -410,6 +530,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     mode.add_argument("--dry-run", action="store_true", help="resolve and preview without changing machines")
     mode.add_argument("--verify", action="store_true", help="verify selected dependencies without resolving or changing them")
     parser.add_argument("--dependencies", action="store_true", help="update approved packages, applications, providers, and capabilities")
+    parser.add_argument(
+        "--dependency",
+        action="append",
+        default=[],
+        help="update one approved dependency; repeatable",
+    )
+    parser.add_argument(
+        "--version",
+        help="adopt one exact immutable version; requires exactly one --dependency",
+    )
     parser.add_argument("--coding-tools", dest="coding_tools", action="store_true", help="update installed Codex, T3, Claude Code, OpenCode, and related coding tools")
     parser.add_argument("--skills", action="store_true", help="update approved skill sources and distribute snapshots")
     parser.add_argument(

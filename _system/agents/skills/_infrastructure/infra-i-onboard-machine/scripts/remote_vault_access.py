@@ -9,8 +9,7 @@ not contain machine names, homes, aliases, or Vault paths.
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timedelta, timezone
-import hashlib
+from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -18,7 +17,6 @@ import plistlib
 import re
 import shlex
 import shutil
-import signal
 import subprocess
 import sys
 import tempfile
@@ -35,11 +33,7 @@ INSTALL_ROOT = Path.home() / ".local/share/vault-access"
 INSTALLED_SCRIPT = INSTALL_ROOT / "remote_vault_access.py"
 LAUNCHER = Path.home() / ".local/bin/vault"
 SYSTEMD_UNIT = Path.home() / ".config/systemd/user/vault-remote.service"
-LOCAL_STATE = Path.home() / ".local/state/vault-remote"
-LEASE_SECONDS = 180
-HEARTBEAT_SECONDS = 30
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
-SESSION_RE = re.compile(r"^[a-z0-9][a-z0-9-]{7,80}$")
 
 
 class AccessError(RuntimeError):
@@ -48,19 +42,6 @@ class AccessError(RuntimeError):
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
-
-
-def utc_stamp(value: datetime | None = None) -> str:
-    return (value or utc_now()).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-
-
-def parse_stamp(value: object) -> datetime | None:
-    if not isinstance(value, str):
-        return None
-    try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
-        return None
 
 
 def read_json(path: Path, label: str) -> dict[str, Any]:
@@ -166,7 +147,7 @@ def expand_root(home: str, value: object) -> str:
 
 
 def find_registry() -> Path:
-    configured = os.environ.get("CTX9_AGENTS_CONFIG_HOME")
+    configured = os.environ.get("CTX9_FLEET_CONFIG_HOME")
     if configured:
         candidate = Path(configured).expanduser() / "fleet/machines.json"
         if candidate.is_file():
@@ -175,7 +156,7 @@ def find_registry() -> Path:
         candidate = parent / "_system/agents/_package/instance/fleet/machines.json"
         if candidate.is_file():
             return candidate
-    installed = Path.home() / ".config/ctx9/agents/fleet/machines.json"
+    installed = Path.home() / ".config/ctx9/fleet/fleet/machines.json"
     if installed.is_file():
         return installed
     raise AccessError("machine registry not found; pass --registry")
@@ -372,24 +353,9 @@ def icloud_health(root: Path, paths: Iterable[Path] = ()) -> dict[str, Any]:
     }
 
 
-def wait_for_icloud(root: Path, paths: list[Path], timeout: int) -> dict[str, Any]:
-    deadline = time.monotonic() + timeout
-    last: dict[str, Any] | None = None
-    while time.monotonic() < deadline:
-        last = icloud_health(root, paths)
-        if last["healthy"]:
-            return last
-        time.sleep(2)
-    state = last or {"state": "unknown", "pending_paths": []}
-    raise AccessError(
-        f"iCloud barrier timed out after {timeout}s: {state.get('state')}; "
-        f"pending paths={len(state.get('pending_paths', []))}"
-    )
-
-
 def host_config(path: Path | None = None) -> dict[str, Any]:
     config = read_json(path or HOST_CONFIG, "remote Vault host configuration")
-    required = {"schema_version", "role", "machine_id", "vault_root", "state_root", "receipt_root", "allowed_clients"}
+    required = {"schema_version", "role", "machine_id", "vault_root"}
     if config.get("schema_version") != 1 or config.get("role") != "host" or not required <= set(config):
         raise AccessError("remote Vault host configuration is incomplete")
     return config
@@ -414,299 +380,14 @@ def client_config(path: Path | None = None) -> dict[str, Any]:
     return config
 
 
-def host_paths(config: dict[str, Any]) -> dict[str, Path]:
-    state = Path(str(config["state_root"])).expanduser()
-    return {
-        "root": Path(str(config["vault_root"])).expanduser(),
-        "state": state,
-        "lease": state / "lease",
-        "lease_file": state / "lease/lease.json",
-        "sessions": state / "sessions",
-        "events": state / "recovery-events.jsonl",
-        "receipts": Path(str(config["receipt_root"])).expanduser(),
-    }
-
-
-def read_optional_json(path: Path) -> dict[str, Any] | None:
-    try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-    except (FileNotFoundError, OSError, json.JSONDecodeError):
-        return None
-    return value if isinstance(value, dict) else None
-
-
-def lease_status(paths: dict[str, Path]) -> dict[str, Any] | None:
-    lease = read_optional_json(paths["lease_file"])
-    if not lease:
-        return None
-    heartbeat = parse_stamp(lease.get("heartbeat_at"))
-    expires = parse_stamp(lease.get("expires_at"))
-    now = utc_now()
-    rendered = dict(lease)
-    rendered["heartbeat_age_seconds"] = max(0, int((now - heartbeat).total_seconds())) if heartbeat else None
-    rendered["expired"] = expires is None or expires <= now
-    return rendered
-
-
-def require_allowed(config: dict[str, Any], client_id: str) -> None:
-    allowed = config.get("allowed_clients")
-    if not isinstance(allowed, list) or client_id not in allowed:
-        raise AccessError(f"machine is not allowed to use this Vault host: {client_id}")
-
-
-def update_lease(paths: dict[str, Path], lease: dict[str, Any]) -> dict[str, Any]:
-    now = utc_now()
-    lease["heartbeat_at"] = utc_stamp(now)
-    lease["expires_at"] = utc_stamp(now + timedelta(seconds=LEASE_SECONDS))
-    atomic_write(paths["lease_file"], lease)
-    return lease
-
-
-def acquire_lease(config: dict[str, Any], client_id: str, session_id: str, owner_pid: int | None) -> dict[str, Any]:
-    require_allowed(config, client_id)
-    if not SESSION_RE.fullmatch(session_id):
-        raise AccessError("unsafe session ID")
-    paths = host_paths(config)
-    paths["state"].mkdir(parents=True, exist_ok=True, mode=0o700)
-    paths["state"].chmod(0o700)
-    try:
-        paths["lease"].mkdir(mode=0o700)
-    except FileExistsError as exc:
-        current = lease_status(paths)
-        owner = current.get("machine_id") if current else "unknown"
-        session = current.get("session_id") if current else "unknown"
-        expired = current.get("expired") if current else "unknown"
-        raise AccessError(f"Vault writer lease is held by {owner} session {session}; expired={expired}") from exc
-    now = utc_now()
-    lease = {
-        "schema_version": 1,
-        "machine_id": client_id,
-        "session_id": session_id,
-        "owner_pid": owner_pid,
-        "started_at": utc_stamp(now),
-        "heartbeat_at": utc_stamp(now),
-        "expires_at": utc_stamp(now + timedelta(seconds=LEASE_SECONDS)),
-        "changed_path_count": 0,
-    }
-    try:
-        atomic_write(paths["lease_file"], lease)
-    except Exception:
-        paths["lease"].rmdir()
-        raise
-    return lease
-
-
-def require_lease(paths: dict[str, Path], client_id: str, session_id: str) -> dict[str, Any]:
-    lease = lease_status(paths)
-    if not lease or lease.get("machine_id") != client_id or lease.get("session_id") != session_id:
-        raise AccessError("active Vault writer lease does not belong to this session")
-    if lease.get("expired"):
-        raise AccessError("Vault writer lease heartbeat expired; recover explicitly before continuing")
-    return lease
-
-
-def release_lease(paths: dict[str, Path], client_id: str, session_id: str) -> None:
-    require_lease(paths, client_id, session_id)
-    paths["lease_file"].unlink()
-    paths["lease"].rmdir()
-    fsync_directory(paths["state"])
-
-
-def recover_lease(config: dict[str, Any], reason: str) -> dict[str, Any]:
-    if len(reason.strip()) < 8:
-        raise AccessError("lease recovery needs an explicit reason of at least 8 characters")
-    paths = host_paths(config)
-    lease = lease_status(paths)
-    if not lease:
-        return {"recovered": False, "detail": "no lease exists"}
-    if not lease.get("expired"):
-        raise AccessError("refusing to recover a live lease")
-    event = {"at": utc_stamp(), "reason": reason.strip(), "lease": lease}
-    paths["events"].parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    with paths["events"].open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(event, sort_keys=True) + "\n")
-        handle.flush()
-        os.fsync(handle.fileno())
-    paths["lease_file"].unlink(missing_ok=True)
-    paths["lease"].rmdir()
-    return {"recovered": True, "event": event}
-
-
-def snapshot(root: Path) -> dict[str, dict[str, Any]]:
-    result: dict[str, dict[str, Any]] = {}
-    for current, directories, files in os.walk(root, topdown=True, followlinks=False):
-        current_path = Path(current)
-        relative_directory = current_path.relative_to(root)
-        if relative_directory.parts[:4] == ("_system", "local", "state", "remote-vault-receipts"):
-            directories[:] = []
-            continue
-        for name in [*directories, *files]:
-            path = current_path / name
-            relative = path.relative_to(root).as_posix()
-            try:
-                stat = path.lstat()
-            except FileNotFoundError:
-                continue
-            if path.is_symlink():
-                kind = "symlink"
-                target = os.readlink(path)
-            elif path.is_dir():
-                kind = "directory"
-                target = None
-            elif path.is_file():
-                kind = "file"
-                target = None
-            else:
-                kind = "other"
-                target = None
-            result[relative] = {
-                "type": kind,
-                "size": stat.st_size,
-                "mtime_ns": stat.st_mtime_ns,
-                **({"target": target} if target is not None else {}),
-            }
-    return result
-
-
-def snapshot_diff(
-    root: Path, before: dict[str, dict[str, Any]], after: dict[str, dict[str, Any]]
-) -> dict[str, Any]:
-    changed = sorted(path for path, value in after.items() if before.get(path) != value)
-    deleted = sorted(set(before) - set(after))
-    files: list[dict[str, Any]] = []
-    symlinks: list[dict[str, Any]] = []
-    directories: list[str] = []
-    other: list[str] = []
-    for relative in changed:
-        metadata = after[relative]
-        path = root / relative
-        if metadata["type"] == "file":
-            digest = hashlib.sha256(path.read_bytes()).hexdigest()
-            files.append({"path": relative, "sha256": digest, "size": metadata["size"]})
-        elif metadata["type"] == "symlink":
-            symlinks.append({"path": relative, "target": metadata["target"]})
-        elif metadata["type"] == "directory":
-            directories.append(relative)
-        else:
-            other.append(relative)
-    return {
-        "changed": changed,
-        "deleted": deleted,
-        "files": files,
-        "symlinks": symlinks,
-        "directories": directories,
-        "other": other,
-    }
-
-
-def fsync_changes(root: Path, diff: dict[str, Any]) -> None:
-    parents: set[Path] = {root}
-    for entry in diff["files"]:
-        path = root / entry["path"]
-        descriptor = os.open(path, os.O_RDONLY)
-        try:
-            os.fsync(descriptor)
-        finally:
-            os.close(descriptor)
-        parents.add(path.parent)
-    for entry in diff["symlinks"]:
-        parents.add((root / entry["path"]).parent)
-    for relative in [*diff["directories"], *diff["deleted"]]:
-        parents.add((root / relative).parent)
-    for parent in sorted(parents, key=lambda item: len(item.parts), reverse=True):
-        fsync_directory(parent)
-
-
-def latest_receipt(paths: dict[str, Path]) -> dict[str, Any] | None:
-    if not paths["receipts"].is_dir():
-        return None
-    candidates = sorted(paths["receipts"].glob("*.json"), key=lambda item: item.stat().st_mtime_ns, reverse=True)
-    return read_optional_json(candidates[0]) if candidates else None
-
-
-def host_begin(config: dict[str, Any], client_id: str, session_id: str, owner_pid: int | None) -> dict[str, Any]:
-    paths = host_paths(config)
-    health = icloud_health(paths["root"])
-    if not health["access_ready"]:
-        raise AccessError(f"incoming Vault state is not safe to edit: {health['state']}")
-    lease = acquire_lease(config, client_id, session_id, owner_pid)
-    session_dir = paths["sessions"] / session_id
-    try:
-        session_dir.mkdir(parents=True, mode=0o700)
-        atomic_write(session_dir / "before.json", snapshot(paths["root"]))
-        atomic_write(
-            session_dir / "session.json",
-            {
-                "schema_version": 1,
-                "machine_id": client_id,
-                "session_id": session_id,
-                "started_at": lease["started_at"],
-                "state": "active",
-            },
-        )
-    except Exception:
-        paths["lease_file"].unlink(missing_ok=True)
-        paths["lease"].rmdir()
-        raise
-    return {"ok": True, "session_id": session_id, "lease": lease, "icloud": health}
-
-
-def host_finish(config: dict[str, Any], client_id: str, session_id: str, timeout: int) -> dict[str, Any]:
-    paths = host_paths(config)
-    lease = require_lease(paths, client_id, session_id)
-    session_dir = paths["sessions"] / session_id
-    before = read_json(session_dir / "before.json", "session snapshot")
-    after = snapshot(paths["root"])
-    diff = snapshot_diff(paths["root"], before, after)
-    lease["changed_path_count"] = len(diff["changed"]) + len(diff["deleted"])
-    update_lease(paths, lease)
-    fsync_changes(paths["root"], diff)
-    receipt_path = paths["receipts"] / f"{session_id}.json"
-    receipt = {
-        "schema_version": 1,
-        "session_id": session_id,
-        "source_machine_id": config["machine_id"],
-        "writer_machine_id": client_id,
-        "started_at": lease["started_at"],
-        "finished_at": utc_stamp(),
-        "changed": diff["changed"],
-        "deleted": diff["deleted"],
-        "files": diff["files"],
-        "symlinks": diff["symlinks"],
-        "directories": diff["directories"],
-        "other": diff["other"],
-        "states": {
-            "filesystem_saved": True,
-            "icloud_uploaded": False,
-            "peer_observed": False,
-            "git_pushed": False,
-        },
-    }
-    atomic_write(receipt_path, receipt)
-    changed_paths = [paths["root"] / relative for relative in diff["changed"] if (paths["root"] / relative).exists()]
-    health = icloud_health(paths["root"], [*changed_paths, receipt_path])
-    receipt["states"]["icloud_uploaded"] = health["healthy"]
-    if health["healthy"]:
-        receipt["icloud_uploaded_at"] = utc_stamp()
-    receipt["last_icloud_activity"] = health.get("last_icloud_activity")
-    atomic_write(receipt_path, receipt)
-    atomic_write(session_dir / "receipt.json", receipt)
-    atomic_write(session_dir / "session.json", {**read_json(session_dir / "session.json", "session"), "state": "finished"})
-    release_lease(paths, client_id, session_id)
-    return {"ok": True, "finished": True, "receipt": receipt, "icloud": health}
-
-
 def host_status(config: dict[str, Any], *, full_health: bool = True) -> dict[str, Any]:
-    paths = host_paths(config)
-    health = icloud_health(paths["root"]) if full_health else {"healthy": None, "state": "not-checked"}
-    receipt = latest_receipt(paths)
+    root = Path(str(config["vault_root"])).expanduser()
+    health = icloud_health(root) if full_health else {"healthy": None, "state": "not-checked"}
     return {
         "ok": bool(health.get("access_ready")) if full_health else True,
         "machine_id": config["machine_id"],
-        "vault_root": str(paths["root"]),
+        "vault_root": str(root),
         "icloud": health,
-        "lease": lease_status(paths),
-        "latest_receipt": receipt,
     }
 
 
@@ -716,43 +397,15 @@ def host_main(argv: list[str]) -> int:
     sub = parser.add_subparsers(dest="action", required=True)
     status = sub.add_parser("status")
     status.add_argument("--json", action="store_true")
-    begin = sub.add_parser("begin")
-    begin.add_argument("--client", required=True)
-    begin.add_argument("--session", required=True)
-    begin.add_argument("--owner-pid", type=int)
-    heartbeat = sub.add_parser("heartbeat")
-    heartbeat.add_argument("--client", required=True)
-    heartbeat.add_argument("--session", required=True)
-    finish = sub.add_parser("finish")
-    finish.add_argument("--client", required=True)
-    finish.add_argument("--session", required=True)
-    finish.add_argument("--timeout", type=int, default=300)
-    recover = sub.add_parser("recover")
-    recover.add_argument("--reason", required=True)
     args = parser.parse_args(argv)
     config = host_config(args.config)
-    if args.action == "status":
-        result = host_status(config)
-    elif args.action == "begin":
-        result = host_begin(config, args.client, args.session, args.owner_pid)
-    elif args.action == "heartbeat":
-        paths = host_paths(config)
-        lease = require_lease(paths, args.client, args.session)
-        result = {"ok": True, "lease": update_lease(paths, lease)}
-    elif args.action == "finish":
-        result = host_finish(config, args.client, args.session, args.timeout)
-    elif args.action == "recover":
-        result = recover_lease(config, args.reason)
-    else:
-        raise AccessError(f"unsupported host action: {args.action}")
+    result = host_status(config)
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0 if result.get("ok", True) else 1
 
 
 def host_call(config: dict[str, Any], argv: list[str], *, timeout: int = 360) -> dict[str, Any]:
-    remote = ["python3", str(config["source_helper"]), "host", *argv, "--json"] if argv and argv[0] == "status" else [
-        "python3", str(config["source_helper"]), "host", *argv
-    ]
+    remote = ["python3", str(config["source_helper"]), "host", *argv, "--json"]
     result = ssh_command(str(config["source_alias"]), remote, timeout=timeout)
     if result.returncode != 0:
         raise AccessError(result.stderr.strip() or result.stdout.strip() or "Vault host command failed")
@@ -845,17 +498,7 @@ def access_mount(config: dict[str, Any], timeout: int) -> dict[str, Any]:
     return {"ok": True, "mount": state, "host": host}
 
 
-def active_local_session() -> dict[str, Any] | None:
-    return read_optional_json(LOCAL_STATE / "active-session.json")
-
-
 def access_unmount(config: dict[str, Any]) -> dict[str, Any]:
-    session = active_local_session()
-    if session:
-        raise AccessError(f"refusing to unmount during active session {session.get('session_id')}")
-    host = host_call(config, ["status"])
-    if host.get("lease"):
-        raise AccessError("refusing to unmount while a Vault writer lease exists")
     mount_root = str(config["mount_root"])
     state = mount_record(config)
     if state["mounted"]:
@@ -864,103 +507,6 @@ def access_unmount(config: dict[str, Any]) -> dict[str, Any]:
             raise AccessError(result.stderr.strip() or "graceful SSHFS unmount refused")
     systemctl("stop", "vault-remote.service")
     return {"ok": True, "mount": mount_record(config)}
-
-
-def start_heartbeat(session_id: str) -> int:
-    LOCAL_STATE.mkdir(parents=True, exist_ok=True, mode=0o700)
-    log = (LOCAL_STATE / "heartbeat.log").open("ab")
-    process = subprocess.Popen(
-        [sys.executable, str(INSTALLED_SCRIPT), "_heartbeat", session_id],
-        stdin=subprocess.DEVNULL,
-        stdout=log,
-        stderr=log,
-        start_new_session=True,
-        close_fds=True,
-    )
-    atomic_write(LOCAL_STATE / "heartbeat.json", {"session_id": session_id, "pid": process.pid})
-    return process.pid
-
-
-def stop_heartbeat(session_id: str) -> None:
-    heartbeat = read_optional_json(LOCAL_STATE / "heartbeat.json")
-    if heartbeat and heartbeat.get("session_id") == session_id and isinstance(heartbeat.get("pid"), int):
-        try:
-            os.kill(int(heartbeat["pid"]), signal.SIGTERM)
-        except ProcessLookupError:
-            pass
-    (LOCAL_STATE / "heartbeat.json").unlink(missing_ok=True)
-
-
-def heartbeat_loop(session_id: str) -> int:
-    config = client_config()
-    while True:
-        session = active_local_session()
-        if not session or session.get("session_id") != session_id:
-            return 0
-        try:
-            host_call(
-                config,
-                ["heartbeat", "--client", str(config["machine_id"]), "--session", session_id],
-                timeout=60,
-            )
-        except (AccessError, OSError):
-            pass
-        time.sleep(HEARTBEAT_SECONDS)
-
-
-def access_begin(config: dict[str, Any], task_id: str | None) -> dict[str, Any]:
-    state = mount_record(config)
-    if not state["healthy"] or not config.get("writable"):
-        raise AccessError("a healthy read-write remote Vault mount is required")
-    if active_local_session():
-        raise AccessError("this client already has an active Vault session")
-    suffix = re.sub(r"[^a-z0-9-]+", "-", (task_id or "session").casefold()).strip("-")[:24] or "session"
-    session_id = f"{suffix}-{utc_now().strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:8]}"
-    result = host_call(
-        config,
-        [
-            "begin",
-            "--client",
-            str(config["machine_id"]),
-            "--session",
-            session_id,
-            "--owner-pid",
-            str(os.getppid()),
-        ],
-        timeout=600,
-    )
-    session = {"schema_version": 1, "session_id": session_id, "started_at": utc_stamp(), "task_id": task_id}
-    atomic_write(LOCAL_STATE / "active-session.json", session)
-    heartbeat_pid = start_heartbeat(session_id)
-    return {"ok": True, "session": session, "heartbeat_pid": heartbeat_pid, "host": result}
-
-
-def access_finish(config: dict[str, Any], timeout: int) -> dict[str, Any]:
-    session = active_local_session()
-    if not session or not isinstance(session.get("session_id"), str):
-        raise AccessError("there is no active Vault session to finish")
-    session_id = session["session_id"]
-    stop_heartbeat(session_id)
-    try:
-        result = host_call(
-            config,
-            [
-                "finish",
-                "--client",
-                str(config["machine_id"]),
-                "--session",
-                session_id,
-                "--timeout",
-                str(timeout),
-            ],
-            timeout=timeout * 2 + 120,
-        )
-    except Exception:
-        start_heartbeat(session_id)
-        raise
-    (LOCAL_STATE / "active-session.json").unlink(missing_ok=True)
-    atomic_write(LOCAL_STATE / "last-finished-session.json", result)
-    return result
 
 
 def client_status(config: dict[str, Any], *, include_host: bool = True) -> dict[str, Any]:
@@ -980,7 +526,6 @@ def client_status(config: dict[str, Any], *, include_host: bool = True) -> dict[
         and host.get("machine_id") == config["source_machine_id"]
         and host.get("icloud", {}).get("access_ready")
     )
-    latest_states = (((host or {}).get("latest_receipt") or {}).get("states") or {})
     return {
         "ok": ready,
         "machine_id": config["machine_id"],
@@ -989,13 +534,6 @@ def client_status(config: dict[str, Any], *, include_host: bool = True) -> dict[
         "mount": mount,
         "host": host,
         "host_error": host_error,
-        "active_session": active_local_session(),
-        "states": {
-            "filesystem_saved": latest_states.get("filesystem_saved"),
-            "icloud_uploaded": latest_states.get("icloud_uploaded"),
-            "peer_observed": latest_states.get("peer_observed"),
-            "git_pushed": latest_states.get("git_pushed"),
-        },
     }
 
 
@@ -1017,8 +555,6 @@ def client_main(argv: list[str]) -> int:
     if argv[0] == "root":
         print(config["mount_root"])
         return 0
-    if argv[0] == "_heartbeat":
-        return heartbeat_loop(argv[1])
     if argv[0] == "_mount_service":
         return mount_service(config)
     if argv[0] != "access":
@@ -1030,20 +566,8 @@ def client_main(argv: list[str]) -> int:
     sub.add_parser("unmount")
     status = sub.add_parser("status")
     status.add_argument("--json", action="store_true")
-    wait = sub.add_parser("wait")
-    group = wait.add_mutually_exclusive_group(required=True)
-    group.add_argument("--download", action="store_true")
-    group.add_argument("--upload", action="store_true")
-    group.add_argument("--receipt")
-    wait.add_argument("--timeout", type=int, default=300)
-    begin = sub.add_parser("begin")
-    begin.add_argument("--task-id")
-    finish = sub.add_parser("finish")
-    finish.add_argument("--timeout", type=int, default=300)
     doctor = sub.add_parser("doctor")
     doctor.add_argument("--json", action="store_true")
-    recover = sub.add_parser("recover")
-    recover.add_argument("--reason", required=True)
     args = parser.parse_args(argv[1:])
     if args.action == "mount":
         result = access_mount(config, args.timeout)
@@ -1051,22 +575,6 @@ def client_main(argv: list[str]) -> int:
         result = access_unmount(config)
     elif args.action in {"status", "doctor"}:
         result = client_status(config)
-    elif args.action == "wait":
-        if args.receipt:
-            raise AccessError("receipt observation is performed by the registered Vault Git owner")
-        deadline = time.monotonic() + args.timeout
-        result = client_status(config)
-        while time.monotonic() < deadline and not result["ok"]:
-            time.sleep(2)
-            result = client_status(config)
-        if not result["ok"]:
-            raise AccessError(f"Vault access did not become healthy within {args.timeout}s")
-    elif args.action == "begin":
-        result = access_begin(config, args.task_id)
-    elif args.action == "finish":
-        result = access_finish(config, args.timeout)
-    elif args.action == "recover":
-        result = host_call(config, ["recover", "--reason", args.reason])
     else:
         raise AccessError(f"unsupported access action: {args.action}")
     print(json.dumps(result, indent=2, sort_keys=True))
@@ -1089,31 +597,13 @@ def generated_client_config(registry: dict[str, Any], client: dict[str, Any], so
     }
 
 
-def generated_host_config(
-    registry: dict[str, Any], machines: dict[str, dict[str, Any]], source: dict[str, Any]
-) -> dict[str, Any]:
+def generated_host_config(source: dict[str, Any]) -> dict[str, Any]:
     source_root = expand_root(str(source["home"]), source["roots"]["vault"])
-    allowed = [
-        machine["id"]
-        for machine in machines.values()
-        if machine.get("enabled")
-        and machine.get("vault", {}).get("checkout_mode") == "remote-sshfs"
-        and machine["vault"].get("remote_access", {}).get("source_machine_id") == source["id"]
-    ]
-    owner = registry["vault_git"]["owner_machine_id"]
-    if owner and owner not in allowed:
-        allowed.append(owner)
-    if source["id"] not in allowed:
-        allowed.append(source["id"])
     return {
         "schema_version": 1,
         "role": "host",
         "machine_id": source["id"],
         "vault_root": source_root,
-        "state_root": str(PurePosixPath(str(source["home"])) / ".local/state/vault-remote"),
-        "receipt_root": str(PurePosixPath(source_root) / "_system/local/state/remote-vault-receipts"),
-        "allowed_clients": sorted(allowed),
-        "git_owner_machine_id": owner,
     }
 
 
@@ -1209,13 +699,7 @@ def install_local(role: str, config_path: Path, mode: str) -> dict[str, Any]:
     results = {str(path): backup_if_needed(path, content, apply) for path, content in files.items()}
     if role == "client" and apply:
         Path(str(config["mount_root"])).mkdir(parents=True, exist_ok=True, mode=0o700)
-        LOCAL_STATE.mkdir(parents=True, exist_ok=True, mode=0o700)
         systemctl("daemon-reload", check=True)
-    if role == "host" and apply:
-        paths = host_paths(config)
-        paths["state"].mkdir(parents=True, exist_ok=True, mode=0o700)
-        paths["sessions"].mkdir(parents=True, exist_ok=True, mode=0o700)
-        paths["receipts"].mkdir(parents=True, exist_ok=True, mode=0o700)
     ready = all(status == "match" for status in results.values()) if mode == "verify" else True
     return {"ok": ready, "ready": ready, "mode": mode, "role": role, "files": results}
 
@@ -1335,7 +819,7 @@ def controller_main(argv: list[str]) -> int:
     registry, machines = load_registry(registry_path)
     client, source = remote_client_topology(registry, machines, args.machine_id)
     client_value = generated_client_config(registry, client, source)
-    host_value = generated_host_config(registry, machines, source)
+    host_value = generated_host_config(source)
     preflight = controller_preflight(client, source, str(client_value["source_root"]))
     selected_mode = "remove" if args.remove else "verify" if args.verify else "apply" if args.apply else "preview"
     report: dict[str, Any] = {

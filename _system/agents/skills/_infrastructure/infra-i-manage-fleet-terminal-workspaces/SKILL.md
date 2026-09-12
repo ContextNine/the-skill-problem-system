@@ -9,7 +9,7 @@ Read [[cmux-tmux-terminal-workspaces|Warp, cmux, and tmux Terminal Workspaces]] 
 
 User-facing shortcuts are consolidated in [[terminal-keybindings]]. Daily commands remain in [[_system/docs/terminal/README|Terminal Docs]]. Keep deployment and recovery references inside this skill so distributed copies remain self-contained.
 
-- Use `$infra-i-code-folder-and-computer-topology` and `ctx9-agents config` to load the canonical machine registry and private execution-chain observations. Do not duplicate machine IDs, aliases, homes, roots or routes in this skill.
+- Use `$infra-i-code-folder-and-computer-topology` and `fleet config` to load the canonical machine registry and private execution-chain observations. Do not duplicate machine IDs, aliases, homes, roots or routes in this skill.
 - Read [[README-warp-cmux-execution-chain|Warp and cmux Execution Chain]] when explaining machine boundaries or frontend routing.
 - Run `scripts/sync_terminal_profiles.py` for tmux, btop, Starship, workmux, and managed profile deployment. During new-machine onboarding, an explicitly named disabled target may be provisioned and verified with `--target MACHINE_ID --provision-disabled`; omitting the flag continues to reject disabled machines, and the flag never selects disabled machines implicitly.
 - Run `scripts/configure_warp_machine_workspaces.py` and `scripts/configure_cmux_machine_workspaces.py` for primary-host layouts. During onboarding, use cmux `--target MACHINE_ID` so an unrelated offline fleet member cannot block creation and verification of the reviewed target workspace; ordinary calls continue applying and verifying the complete enabled layout.

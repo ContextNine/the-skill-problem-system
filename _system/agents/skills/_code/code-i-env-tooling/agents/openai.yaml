@@ -1,2 +1,7 @@
+interface:
+  display_name: "Environment Tooling"
+  short_description: "Manage Git-owned environment contracts safely"
+  brand_color: "#FBBF24"
+  default_prompt: "Use $code-i-env-tooling to add this variable to the repository's schema-v4 environment contract and reconcile it safely."
 policy:
   allow_implicit_invocation: true

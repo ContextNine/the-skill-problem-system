@@ -11,7 +11,7 @@ Start with [[_system/agents/_package/docs/secrets/README|Machine-local Secrets]]
 
 `_system/agents/_package/generated/state/machine-secrets.lock.json` contains only sanitized facts emitted after verification: machine ID, credential name and provider ID where public, expiry, scopes, custody kind, helper digest, and boolean acceptance. An absent entry means unverified, not absent. Never hand-edit a successful record or infer it from file presence.
 
-Every credential entry must include a non-secret `documentation` reference that resolves either inside the agent package, to a manual skill reference, or through a logical workspace ID plus repository-relative path. Repository-owned authorities likewise use logical workspace IDs instead of checkout paths. Resolve those IDs through `ctx9-agents config` and schema-v2 `fleet/workspaces.json`; never persist expanded paths as authority.
+Every credential entry must include a non-secret `documentation` reference that resolves either inside the agent package, to a manual skill reference, or through a logical workspace ID plus repository-relative path. Repository-owned authorities likewise use logical workspace IDs instead of checkout paths. Resolve those IDs through `fleet config` and schema-v2 `fleet/workspaces.json`; never persist expanded paths as authority.
 
 Keep the lifecycle classes in this one registry rather than splitting them into separate manifests. The class answers the bootstrap question directly:
 
@@ -70,7 +70,7 @@ The primary runs the GitLab automation controller with the Secret Bindings helpe
 
 ```bash
 GITLAB_REPO="$HOME/Code/ctx9/gitlab"
-SECRET_BINDINGS_HELPER="$HOME/Code/ctx9/secret-bindings/scripts/ctx9-gitlab-read.py"
+SECRET_BINDINGS_HELPER="$HOME/Code/ctx9/secret-bindings/scripts/private-read.py"
 STATE="$(vault root)/_system/agents/_package/generated/state/machine-secrets.lock.json"
 
 "$GITLAB_REPO/setup-fleet-read-credential.sh" dry-run \
@@ -89,10 +89,10 @@ On a remote Mac, Keychain enrollment and verification run as a disposable job in
 Use the credential without a plaintext npmrc, Docker config, Git remote, or shell export:
 
 ```bash
-ctx9-gitlab-read verify --json
-ctx9-gitlab-read exec -- pnpm install --frozen-lockfile
-ctx9-gitlab-read exec -- git ls-remote https://gitlab.com/ctx9/secret-bindings.git
-ctx9-gitlab-read exec -- docker pull registry.gitlab.com/ctx9/<project>/<image>:<tag>
+ctx9 auth verify --json
+ctx9 auth exec -- pnpm install --frozen-lockfile
+ctx9 auth exec -- git ls-remote https://gitlab.com/ctx9/secret-bindings.git
+ctx9 auth exec -- docker pull registry.gitlab.com/ctx9/<project>/<image>:<tag>
 ```
 
 The wrapper injects npm, Git credential-helper, and Docker credential-helper configuration only for the child process. The token remains in native storage and process memory and is not written to the temporary configuration files.
@@ -107,10 +107,10 @@ temporary until the personal global authority rollout and rollback proof are com
 
 Secret Bindings models provider-owned custody: Keychain, Secret Service, SOPS, SSH agent, CI, and service stores remain the authorities, and plaintext fallback is forbidden. Secret Bindings generates and protects its own machine identities and consumes referenced provider values in broker or child-process memory.
 
-Secret Bindings intentionally does not manufacture GitHub OAuth, VPN identity, kubeconfig, shared SOPS authority, or other providers' credentials. Those are prerequisites owned by fleet onboarding. The GitLab read credential closes the bootstrap loop for Secret Bindings' private npm packages: onboarding enrolls it first, then the Secret Bindings installer uses `ctx9-gitlab-read exec` for its frozen dependency install. Secret Bindings records the service standard but never absorbs the token into its own portable state.
+Secret Bindings intentionally does not manufacture GitHub OAuth, VPN identity, kubeconfig, shared SOPS authority, or other providers' credentials. Those are prerequisites owned by fleet onboarding. The GitLab read credential closes the bootstrap loop for Secret Bindings' private npm packages: onboarding enrolls it first, then the Secret Bindings installer uses `ctx9 auth exec` for its frozen dependency install. Secret Bindings records the service standard but never absorbs the token into its own portable state.
 
 The generated Secret Bindings identity registry ID is `secret-bindings-machine-identities`. Native custody
-uses only the `secret-bindings-*` service/provider names above; no `ctx2` alias exists. Recovery generates a
+uses only the `secret-bindings-*` service/provider names above; no retired alias exists. Recovery generates a
 new target-local identity, enrolls its public material, and retires the prior identity without copying private
 material between machines.
 

@@ -9,7 +9,7 @@ Read [[setup-and-enrollment|Setup and Enrollment]] before installing, enabling, 
 
 The two capabilities are separate: observability plugins send Codex or Claude Code sessions to Langfuse; authenticated MCP or CLI access lets an agent query Langfuse data. Never treat a public docs MCP connection as project-data access.
 
-Non-secret instance metadata lives at `integrations/langfuse.json` below `ctx9-agents config path`. Credential ownership and lifecycle live in `fleet/machine-secrets.json` below the same private or installed config root. Neither file may contain an API key or authorization header. Keep the integration disabled until an authoritative personal HTTPS endpoint is configured; never inherit an application-specific endpoint by guesswork.
+Non-secret instance metadata lives at `integrations/langfuse.json` below `fleet config path`. Credential ownership and lifecycle live in `fleet/machine-secrets.json` below the same private or installed config root. Neither file may contain an API key or authorization header. Keep the integration disabled until an authoritative personal HTTPS endpoint is configured; never inherit an application-specific endpoint by guesswork.
 
 Use `scripts/install_scaffold.py` to install the official plugins without credentials and leave tracing unable to transmit:
 

@@ -6,7 +6,8 @@ Private fleet SOP for routing Claude Code through alternate model providers whil
 
 ```text
 claude-codex -> localhost:8317 -> CLIProxyAPI -> Codex OAuth -> GPT-5.6 Sol
-claude-kimi  -> localhost:8317 -> CLIProxyAPI -> Kimi OAuth -> included plan quota -> Kimi K3
+claude-kimi -> Kimi Platform Anthropic endpoint -> API key -> Kimi K3
+claude-kimi-proxy -> localhost:8317 -> CLIProxyAPI -> Kimi OAuth -> included plan quota -> Kimi K3
 claude-openrouter <slug> -> OpenRouter Anthropic endpoint -> selected model
 claude-featherless <slug> -> isolated loopback CLIProxyAPI -> Featherless OpenAI endpoint -> selected model
 claude       -> normal Claude Code configuration
@@ -25,11 +26,14 @@ claude-codex --effort high
 claude-codex --effort xhigh
 
 claude-kimi
-claude-kimi --normal
-claude-kimi --effort low
-claude-kimi --effort high
-claude-kimi --effort max
-claude-kimi --1m
+claude-kimi -p "Explain this repository"
+
+claude-kimi-proxy
+claude-kimi-proxy --normal
+claude-kimi-proxy --effort low
+claude-kimi-proxy --effort high
+claude-kimi-proxy --effort max
+claude-kimi-proxy --1m
 
 claude-openrouter moonshotai/kimi-k3
 claude-openrouter moonshotai/kimi-k3 -p "Explain this repository"
@@ -45,7 +49,8 @@ Each launcher prints route before Claude Code starts. Example:
 
 ```text
 Claude route: provider=Codex model=gpt-5.6-sol(high) effort=high base=http://127.0.0.1:8317
-Claude route: provider=Kimi-OAuth model=kimi-k3(max) effort=max base=http://127.0.0.1:8317 context=262144
+Claude route: provider=Kimi-Platform model=kimi-k3[1m] haiku=kimi-k2.7-code effort=max base=https://api.moonshot.ai/anthropic context=1000000
+Claude route: provider=Kimi-OAuth-Proxy model=kimi-k3(max) effort=max base=http://127.0.0.1:8317 context=262144
 Claude route: provider=OpenRouter model=moonshotai/kimi-k3 base=https://openrouter.ai/api
 Claude route: provider=Featherless model=empero-ai/Qwythos-9B-Claude-Mythos-5-1M base=http://127.0.0.1:<ephemeral-port> upstream=https://api.featherless.ai/v1
 ```
@@ -54,7 +59,8 @@ Remaining arguments pass to Claude Code unchanged:
 
 ```bash
 claude-codex-high -p --max-turns 1 "Explain this repository"
-claude-kimi --normal -p --max-turns 1 "Explain this repository"
+claude-kimi -p --max-turns 1 "Explain this repository"
+claude-kimi-proxy --normal -p --max-turns 1 "Explain this repository"
 claude-openrouter moonshotai/kimi-k3 -p --max-turns 1 "Explain this repository"
 ```
 
@@ -65,8 +71,8 @@ claude-openrouter moonshotai/kimi-k3 -p --max-turns 1 "Explain this repository"
 | Skill, scripts, tests, and this SOP | `_system/agents/skills/_infrastructure/infra-i-manage-claude-provider-routes/` |
 | Installed commands | `~/.local/bin/claude-*` |
 | Isolated OpenRouter and Featherless Claude state | `~/.config/ctx9/claude-provider-routes/claude/<provider>/` |
-| OpenRouter and Featherless credentials on macOS | Keychain services `ctx9-claude-provider-<provider>` |
-| OpenRouter and Featherless credentials on Linux | Secret Service attributes `ctx9-provider=claude-route`, `ctx9-route=<provider>` |
+| Kimi Platform, OpenRouter, and Featherless credentials on macOS | Keychain services `ctx9-claude-provider-<provider>` |
+| Kimi Platform, OpenRouter, and Featherless credentials on Linux | Secret Service attributes `ctx9-provider=claude-route`, `ctx9-route=<provider>` |
 | Shared Codex and Kimi proxy runtime | `~/cliproxyapi/` and `~/.cli-proxy-api/` |
 | Featherless per-session translator | `$TMPDIR/ctx9-claude-featherless.*`, removed when the launcher exits |
 | Sanitized fleet acceptance facts | topology machine notes and `machine-secrets.lock.json` |
@@ -75,7 +81,7 @@ Onboarding links here and installs these scripts. It does not keep another launc
 
 ## Shared rules
 
-- Required command parity on selected Claude Code development machines: `claude-codex`, `claude-codex-high`, `claude-codex-xhigh`, `claude-kimi`, `claude-provider`, `claude-provider-auth`, `claude-openrouter`, and `claude-featherless`. Provider credential enrollment remains optional until that route is selected.
+- Required command parity on selected Claude Code development machines: `claude-codex`, `claude-codex-high`, `claude-codex-xhigh`, `claude-kimi`, `claude-kimi-proxy`, `claude-provider`, `claude-provider-auth`, `claude-openrouter`, and `claude-featherless`. Provider credential enrollment remains optional until that route is selected.
 - Canonical launchers and installer live in `../scripts/`. Run installer without arguments for Primary machine or with SSH alias for another machine after native Claude Code installation.
 
 From Primary machine:
@@ -92,6 +98,33 @@ launcher_installer="$(vault root)/_system/agents/skills/_infrastructure/infra-i-
 - Keep provider credentials machine-local in the declared native store; never copy values into vault, logs, tickets, shell profiles, process arguments, or chat.
 - Do not add paid fallback, account rotation, limit bypass, or silent model downgrade.
 - Verify route with Claude Code `/status` after authentication.
+
+## Kimi Platform direct route
+
+`claude-kimi` uses Kimi Platform's Anthropic-compatible endpoint directly. It does not use CLIProxyAPI. The launcher reads a Kimi Platform API key from the machine's native credential store, clears competing Claude provider variables, exports Kimi's documented environment only to the child process, and starts the normal Claude Code executable. Running `claude` later uses the normal Anthropic configuration.
+
+The direct launcher follows Kimi's documented model mapping: `kimi-k3[1m]` for the main, Opus, Sonnet, Fable, and subagent slots; `kimi-k2.7-code` for Haiku; one-million-token auto-compaction; and maximum effort.
+
+Official guide: https://platform.kimi.ai/docs/guide/claude-code-kimi
+
+Create the API key at https://platform.kimi.ai, then enroll and verify it without printing the value:
+
+```bash
+claude-provider-auth kimi
+claude-provider-auth kimi --status
+claude-kimi
+```
+
+The API key belongs to Kimi Platform and uses Platform billing. It is not the Kimi Code membership key from `kimi.com/code/console`, nor the OAuth record used by `claude-kimi-proxy`.
+
+After launch, run `/status`. Expected Base URL: `https://api.moonshot.ai/anthropic`. The model should show `kimi-k3[1m]`. A bounded smoke test is:
+
+```bash
+claude-kimi -p --max-turns 1 \
+  'Reply with exactly: CLAUDE_KIMI_DIRECT_OK'
+```
+
+Expected response: `CLAUDE_KIMI_DIRECT_OK`.
 
 ## OpenRouter
 
@@ -245,7 +278,7 @@ Preserve private files for diagnosis. Remove installation or OAuth records only 
 
 ## Kimi Code through CLIProxyAPI
 
-Fleet default uses CLIProxyAPI Kimi OAuth. CLIProxyAPI translates Claude messages and tool calls, refreshes Kimi OAuth, and exposes proxy model `kimi-k3`. This route is experimental but passed a live Primary machine Claude Code request on 2026-07-19.
+`claude-kimi-proxy` preserves the older CLIProxyAPI Kimi OAuth route. CLIProxyAPI translates Claude messages and tool calls, refreshes Kimi OAuth, and exposes proxy model `kimi-k3`. This route is experimental but passed a live Primary machine Claude Code request on 2026-07-19.
 
 Official documentation:
 
@@ -269,8 +302,8 @@ kimi login
 ### Model and effort
 
 - Proxy model ID: `kimi-k3`; CLIProxyAPI normalizes upstream model to `k3`.
-- `claude-kimi` defaults to Claude effort `max`, mapped by Kimi to K3 `max` thinking.
-- `claude-kimi --normal` uses Claude effort `high`, mapped to K3 `high` thinking.
+- `claude-kimi-proxy` defaults to Claude effort `max`, mapped by Kimi to K3 `max` thinking.
+- `claude-kimi-proxy --normal` uses Claude effort `high`, mapped to K3 `high` thinking.
 - `--effort low|high|max` selects explicit K3 effort.
 - Default context is safe 256K: proxy model `kimi-k3(<effort>)`, context `262144`.
 - `--1m` uses proxy model form `kimi-k3[1m](<effort>)` and context `1048576`; use only with Allegretto-or-higher 1M entitlement.
@@ -318,20 +351,16 @@ Launcher exports only for child Claude process:
 - `kimi-k3(<effort>)` model variables for all Claude model slots and subagents
 - 256K or explicitly selected 1M context variables
 
-After launch, run `/status`. Expected Base URL: `http://127.0.0.1:8317`. Route banner must show `provider=Kimi-OAuth` and `model=kimi-k3(...)`.
+After launch, run `/status`. Expected Base URL: `http://127.0.0.1:8317`. Route banner must show `provider=Kimi-OAuth-Proxy` and `model=kimi-k3(...)`.
 
 Live smoke test:
 
 ```bash
-claude-kimi -p --max-turns 1 \
-  'Reply with exactly: CLAUDE_KIMI_COMMAND_OK'
+claude-kimi-proxy -p --max-turns 1 \
+  'Reply with exactly: CLAUDE_KIMI_PROXY_OK'
 ```
 
-Expected response: `CLAUDE_KIMI_COMMAND_OK`.
-
-### Official direct API-key alternative
-
-Kimi officially supports direct Claude Code routing through `https://api.kimi.com/coding/` using Kimi Code membership API key from https://www.kimi.com/code/console. That key consumes included plan quota, not Kimi Open Platform pay-as-you-go billing. Fleet launcher does not use this route while tested CLIProxyAPI OAuth works. Do not use `api.moonshot.cn` or change route without review.
+Expected response: `CLAUDE_KIMI_PROXY_OK`.
 
 ### Failure and OAuth refresh
 

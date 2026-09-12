@@ -347,11 +347,11 @@ All schemas use JSON Schema draft 2020-12 with required/optional field separatio
 
 ### 8.1 Installation and discovery
 
-The vault installs the pack with `ctx9-agents sync --dry-run` followed by `ctx9-agents sync`. Its location under `manual-skills/` makes every generated `agents/openai.yaml` set `allow_implicit_invocation: false`. Type `vibe-marketer` in skill autocomplete to discover the full pack.
+The vault installs the pack with `fleet sync --dry-run` followed by `fleet sync`. Its location under `manual-skills/` makes every generated `agents/openai.yaml` set `allow_implicit_invocation: false`. Type `vibe-marketer` in skill autocomplete to discover the full pack.
 
 ### 8.2 Health Checks
 
-`ctx9-agents sync --dry-run` is the authoritative structural validator. It checks organizer naming, skill-folder/frontmatter identity, global uniqueness, the `vibe-marketer-` prefix, and the `Vibe Marketer ·` H1 hierarchy.
+`fleet sync --dry-run` is the authoritative structural validator. It checks organizer naming, skill-folder/frontmatter identity, global uniqueness, the `vibe-marketer-` prefix, and the `Vibe Marketer ·` H1 hierarchy.
 
 ### 8.3 End-to-End Testing
 

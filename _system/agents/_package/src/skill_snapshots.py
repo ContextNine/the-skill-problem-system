@@ -232,7 +232,7 @@ def discovery_roots(home: Path) -> list[Path]:
 def overlay_marker(source: str, allowed: bool) -> str:
     return json.dumps(
         {
-            "managed_by": "ctx9-agents sync",
+            "managed_by": "fleet sync",
             "materialization": "overlay",
             "source": source,
             "allow_implicit_invocation": allowed,
@@ -459,7 +459,7 @@ def write_state(home: Path, skills: dict[str, dict[str, object]]) -> None:
     path.parent.chmod(0o700)
     payload = {
         "schema_version": SCHEMA_VERSION,
-        "managed_by": "ctx9-agents sync",
+        "managed_by": "fleet sync",
         "skills": dict(sorted(skills.items())),
     }
     descriptor, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)

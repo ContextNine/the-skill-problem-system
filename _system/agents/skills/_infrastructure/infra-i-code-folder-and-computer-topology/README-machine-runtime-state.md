@@ -35,10 +35,7 @@ Remote Vault topology and capability remain in the schema-v7 machine registry. R
 ~/.config/vault/remote-access.json
 ~/.config/vault/remote-access-host.json
 ~/.local/share/vault-access/
-~/.local/state/vault-remote/
 ~/.config/systemd/user/vault-remote.service
 ```
 
-Use mode `0700` for state/config directories and `0600` for files containing local paths or operational metadata. The macOS host's atomic lease, session snapshots, recovery events, and local receipt copies belong under `~/.local/state/vault-remote/`. Linux mount state and heartbeat records use the same machine-local root. Systemd's journal owns client service logs.
-
-Named handoff receipts are Vault-owned ignored state under `_system/local/state/remote-vault-receipts/` because they must travel through iCloud to the Git-owner Mac. They contain paths, hashes, deletion facts, timestamps, and sync-state acknowledgements only, never file bodies, credentials, iCloud tokens, or Git metadata.
+Use mode `0700` for configuration directories and `0600` for files containing local paths or operational metadata. Systemd's journal owns client service logs.

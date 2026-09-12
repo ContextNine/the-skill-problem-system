@@ -7,7 +7,7 @@ description: Onboards, rebuilds, replaces, recovers, or accepts a Mac or Linux m
 
 Read `$infra-i-code-folder-and-computer-topology`, its role model, private config README, registries, and the selected machine convention before operating.
 
-Collect and validate the machine's absolute home plus user-selected Code and Vault roots during registration. Store Code and Vault roots in `fleet/machines.json`, store workspace paths relative to Code root, and verify them through `ctx9-agents config validate` before any sync. Vault participation is an explicit registry choice, not an operating-system inference. Standalone agent-package installation, generated global instructions, Claude alias and discovery aliases are separate opt-ins; do not make any of them a prerequisite for a working Vault.
+Collect and validate the machine's absolute home plus user-selected Code and Vault roots during registration. Store Code and Vault roots in `fleet/machines.json`, store workspace paths relative to Code root, and verify them through `fleet config validate` before any sync. Vault participation is an explicit registry choice, not an operating-system inference. Standalone agent-package installation, generated global instructions, Claude alias and discovery aliases are separate opt-ins; do not make any of them a prerequisite for a working Vault.
 
 Read [[machine-access-selection|Machine Access Selection]], then exactly one provider route: [[wireguard-machine-access|WireGuard Machine Access]] or [[tailscale-machine-access|Tailscale Machine Access]]. Neither provider is the default. Keep the registry's canonical SSH alias as the durable identity; use `-lan` and `-mesh` only for diagnosis.
 

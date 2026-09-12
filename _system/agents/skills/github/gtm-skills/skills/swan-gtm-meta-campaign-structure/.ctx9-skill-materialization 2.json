@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-meta-campaign-structure",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/meta-campaign-structure",
-  "source_id": "gtm-skills",
-  "source_sha256": "cc48259ff43990511dfb824ef16a9d95bdbe7594c76ea58bdcc3101758993675"
-}

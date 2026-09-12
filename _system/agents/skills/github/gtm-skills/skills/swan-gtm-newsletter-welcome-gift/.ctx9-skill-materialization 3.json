@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-newsletter-welcome-gift",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/newsletter-welcome-gift",
-  "source_id": "gtm-skills",
-  "source_sha256": "ba985ba70d438b01972c4f71ac83f21e61251f4f5a812ec075e2c0739b7220af"
-}

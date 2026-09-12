@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "mp-wizard",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/mattpocock-skills/skills/wizard",
-  "source_id": "mattpocock-skills",
-  "source_sha256": "e3fac43ce4c4d31341d1038bf33f00833ea3afd648c5ea1e6422ab06e7ceb519"
-}

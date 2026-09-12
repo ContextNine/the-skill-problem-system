@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-ads-scaling-quadrant",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/ads-scaling-quadrant",
-  "source_id": "gtm-skills",
-  "source_sha256": "1e55e3fb596f76639b162a921729782d3890f649978b26e47c0c2bdbeb81e859"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-write-b2b-sponsored-post",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/write-b2b-sponsored-post",
-  "source_id": "gtm-skills",
-  "source_sha256": "3fd7a9b21d54991ea32b0bc9c2e49b4797e07bc2a0dfc935b84e4c75703b0c14"
-}

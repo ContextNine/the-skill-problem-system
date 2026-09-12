@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-subreddit-pre-post-check",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/subreddit-pre-post-check",
-  "source_id": "gtm-skills",
-  "source_sha256": "545881c0bd9481a5d10b128331ca66549408339d277bd695300158339b2bfd5b"
-}

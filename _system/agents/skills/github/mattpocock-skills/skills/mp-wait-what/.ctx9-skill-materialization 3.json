@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "mp-wait-what",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/mattpocock-skills/skills/wait-what",
-  "source_id": "mattpocock-skills",
-  "source_sha256": "5a5be2856b5a1dde6416e842f325363b926a7aa6f3aa50e2d098388382461945"
-}

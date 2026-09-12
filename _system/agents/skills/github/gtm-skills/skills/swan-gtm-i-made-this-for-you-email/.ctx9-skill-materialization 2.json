@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-i-made-this-for-you-email",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/i-made-this-for-you-email",
-  "source_id": "gtm-skills",
-  "source_sha256": "ed9d8834fea175e1c2217313313fe2df40e90577a7170b0c65be625af9d93433"
-}

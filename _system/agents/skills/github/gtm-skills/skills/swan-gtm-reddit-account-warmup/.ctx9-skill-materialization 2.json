@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-reddit-account-warmup",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/reddit-account-warmup",
-  "source_id": "gtm-skills",
-  "source_sha256": "f4aa90d2a5c39867478fa2cdc2f54e49a3984071f119b94c853993eac01c7f59"
-}

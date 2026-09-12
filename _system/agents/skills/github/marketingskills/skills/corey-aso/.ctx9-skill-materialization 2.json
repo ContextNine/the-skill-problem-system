@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "corey-aso",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/aso",
-  "source_id": "marketingskills",
-  "source_sha256": "1d46557c6873c439430a37e1e840d72d3ddd03d5bfbe9b66bb36c66bbb9fa7fc"
-}

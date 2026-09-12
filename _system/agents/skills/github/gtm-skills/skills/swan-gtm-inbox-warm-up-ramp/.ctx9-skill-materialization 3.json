@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-inbox-warm-up-ramp",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/inbox-warm-up-ramp",
-  "source_id": "gtm-skills",
-  "source_sha256": "bf6ce0662308d9af3ad8a6ee2c4ce67fe5919921fcb636dc013145e5d799e64e"
-}

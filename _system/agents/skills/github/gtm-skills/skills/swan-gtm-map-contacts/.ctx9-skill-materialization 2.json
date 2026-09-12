@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-map-contacts",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/map-contacts",
-  "source_id": "gtm-skills",
-  "source_sha256": "eecbbef2368961fb15c23e50ebb03bf5a3b81f29089d1931601c0a74a5b7852b"
-}

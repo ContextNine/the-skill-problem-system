@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-revops-org-chart",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/revops-org-chart",
-  "source_id": "gtm-skills",
-  "source_sha256": "409aaf51932b8ab7e6ab2a6ebb6b4feb69fe7d2bfbf97e34417b30bb35e6e81a"
-}

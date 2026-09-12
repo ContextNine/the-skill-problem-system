@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-ads-measurement-scorecard",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/ads-measurement-scorecard",
-  "source_id": "gtm-skills",
-  "source_sha256": "41edb527fc687ebb5ed1641dc26a86150e0f534ad04b56963bcb36d343b1bfb7"
-}

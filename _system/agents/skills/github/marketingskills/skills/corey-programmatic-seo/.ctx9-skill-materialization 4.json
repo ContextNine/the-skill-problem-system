@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "corey-programmatic-seo",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/programmatic-seo",
-  "source_id": "marketingskills",
-  "source_sha256": "613e125f43fba83cf67790043835047336cc55692fbacc69d396b5bd138232ee"
-}

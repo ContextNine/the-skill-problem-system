@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-deal-desk-operations",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/deal-desk-operations",
-  "source_id": "gtm-skills",
-  "source_sha256": "c9b2f5f07890527b7d2f2f44f6ccf9a63e7585b7ef4ebaa7181f6302ad578d6a"
-}

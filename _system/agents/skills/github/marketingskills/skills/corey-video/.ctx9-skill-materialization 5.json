@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "corey-video",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/video",
-  "source_id": "marketingskills",
-  "source_sha256": "7da4ab891961382bbf10dab6aa11fb6ffa4e0e01455536eb4c403ef64a020764"
-}

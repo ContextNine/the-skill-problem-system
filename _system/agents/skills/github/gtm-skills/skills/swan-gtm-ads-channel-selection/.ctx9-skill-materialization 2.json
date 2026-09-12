@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-ads-channel-selection",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/ads-channel-selection",
-  "source_id": "gtm-skills",
-  "source_sha256": "65f276fc86a8e86846614a718e44dbec3870d4a3e5e40eafe5a499d3c5b6311a"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "corey-marketing-loops",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/marketing-loops",
-  "source_id": "marketingskills",
-  "source_sha256": "0be9c48e539a8ffc84c832dead6a18d25e35a68006cd7d2fd29743e6efd0ce46"
-}

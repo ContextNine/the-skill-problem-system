@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-competitive-intelligence-radar",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/competitive-intelligence-radar",
-  "source_id": "gtm-skills",
-  "source_sha256": "c74b47b320eec5392accefea35795819793a105c1a9b21bb3800a85f8b00bad5"
-}

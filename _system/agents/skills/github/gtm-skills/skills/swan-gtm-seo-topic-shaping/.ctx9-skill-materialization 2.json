@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-seo-topic-shaping",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/seo-topic-shaping",
-  "source_id": "gtm-skills",
-  "source_sha256": "9885f49a36c855bb54850b27983b4d4fb90102b758ad62882f5565073b3615e8"
-}

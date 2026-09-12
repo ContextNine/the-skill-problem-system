@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-linkedin-inmail",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/linkedin-inmail",
-  "source_id": "gtm-skills",
-  "source_sha256": "6e1ba9d8bbe040dc564d3e505888db3b5cc280172cbf085ba931d2503f60524e"
-}

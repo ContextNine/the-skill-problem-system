@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-skillify",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/skillify",
-  "source_id": "gtm-skills",
-  "source_sha256": "a167a2138d53a0e5b135c82d9c62de09c9ae83d4c3527aa25f79e6959e9ef77e"
-}

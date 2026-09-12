@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "corey-cro",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/cro",
-  "source_id": "marketingskills",
-  "source_sha256": "b0e2ddcd125121ab0fced6cc9dfd7fc24e7180124381f0749336b03a3d02a6aa"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "corey-prospecting",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/prospecting",
-  "source_id": "marketingskills",
-  "source_sha256": "013c43a8a3e3dbb29d2d2a1c3715c71fd9140e7d0c484609b912bf6bab52665d"
-}

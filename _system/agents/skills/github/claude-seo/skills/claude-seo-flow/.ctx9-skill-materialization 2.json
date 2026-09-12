@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "claude-seo-flow",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/claude-seo/skills/seo-flow",
-  "source_id": "claude-seo",
-  "source_sha256": "46a281db71f567dcfc0b1b218e6bca569962bf9eca1b3d646456e8c43236a2e3"
-}

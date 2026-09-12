@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-creating-campaigns-ads-audiences",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/creating-campaigns-ads-audiences",
-  "source_id": "gtm-skills",
-  "source_sha256": "7f691611d6846e3d198bcdf99b52b14ab14520efcfbf27efc0eadc7003169da9"
-}

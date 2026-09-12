@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-advantage-plus",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/advantage-plus",
-  "source_id": "gtm-skills",
-  "source_sha256": "66b5cb3da5e0057e5a23fb4021e6cc69e359071c5aa16e4ccda3181562596115"
-}

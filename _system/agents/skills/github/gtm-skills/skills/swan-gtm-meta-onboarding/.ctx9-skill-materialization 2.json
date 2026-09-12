@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-meta-onboarding",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/meta-onboarding",
-  "source_id": "gtm-skills",
-  "source_sha256": "46d2126e5a0958e14c11364e1bf4d6aa49367aa1d1464d7fa72073804f71e0b6"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-handle-reply",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/handle-reply",
-  "source_id": "gtm-skills",
-  "source_sha256": "7050ab36952d95a0b7b19f5db58c3f97722deb52c0af52bd4e53f9e0b8caf28f"
-}

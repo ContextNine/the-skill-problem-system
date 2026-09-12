@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-inbound-is-data",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/inbound-is-data",
-  "source_id": "gtm-skills",
-  "source_sha256": "0d448ce16cf0608aae51287a9c5a1ada066253ef9576d5a914a9e1b59750d9b7"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "corey-image",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/image",
-  "source_id": "marketingskills",
-  "source_sha256": "3ca229ef8617b0423a97f4bfbb3a5e7e210abd67f776c6c62786d789f9b7d7ec"
-}

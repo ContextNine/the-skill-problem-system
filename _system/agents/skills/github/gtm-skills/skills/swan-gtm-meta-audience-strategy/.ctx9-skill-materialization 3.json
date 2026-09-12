@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-meta-audience-strategy",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/meta-audience-strategy",
-  "source_id": "gtm-skills",
-  "source_sha256": "0eb17d7529db7d78a44cf69c95d8d1d0af7393591e2af8825cf5ce356991a06d"
-}

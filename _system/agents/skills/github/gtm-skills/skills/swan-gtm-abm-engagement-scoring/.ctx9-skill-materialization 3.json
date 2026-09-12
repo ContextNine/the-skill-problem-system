@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-abm-engagement-scoring",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/abm-engagement-scoring",
-  "source_id": "gtm-skills",
-  "source_sha256": "c3ce6c07f9619d2fa9aa5c5fba8ef38e4206e81bc10580548a958b5917a5e27e"
-}

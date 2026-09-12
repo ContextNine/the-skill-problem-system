@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-pricing-monetisation-ops",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/pricing-monetisation-ops",
-  "source_id": "gtm-skills",
-  "source_sha256": "b38511e0496a7a6043fbc338b1efce4f0f4b77ce41b686583c32a7e30e9e3781"
-}

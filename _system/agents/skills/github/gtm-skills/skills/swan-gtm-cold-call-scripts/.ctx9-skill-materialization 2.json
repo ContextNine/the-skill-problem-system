@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-cold-call-scripts",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/cold-call-scripts",
-  "source_id": "gtm-skills",
-  "source_sha256": "b12a6b2cc7b7411774160d6a9f8000f6132ebd49946c580ac36134fc5d6187ad"
-}

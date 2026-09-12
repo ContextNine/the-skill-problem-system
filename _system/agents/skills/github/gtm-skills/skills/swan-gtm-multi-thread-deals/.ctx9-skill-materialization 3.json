@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-multi-thread-deals",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/multi-thread-deals",
-  "source_id": "gtm-skills",
-  "source_sha256": "d8df50f38b5e52a3ec80ae338cb0a04890a082301dcaae2dc24539ba5e3e437d"
-}

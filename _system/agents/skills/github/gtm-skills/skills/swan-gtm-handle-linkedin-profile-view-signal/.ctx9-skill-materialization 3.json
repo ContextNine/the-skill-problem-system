@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-handle-linkedin-profile-view-signal",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/handle-linkedin-profile-view-signal",
-  "source_id": "gtm-skills",
-  "source_sha256": "f2eec70f812d03d7c71af037a8e09040387e99145523518386ddef0a87cf4bed"
-}

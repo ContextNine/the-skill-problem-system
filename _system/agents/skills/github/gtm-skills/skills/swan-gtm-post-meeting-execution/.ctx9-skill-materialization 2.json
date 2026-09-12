@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-post-meeting-execution",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/post-meeting-execution",
-  "source_id": "gtm-skills",
-  "source_sha256": "2a751fb106d3ef29f81e5e5a39f146ad54587925adbeda959ab42324b2ef7afc"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-cold-email-strategist",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/cold-email-strategist",
-  "source_id": "gtm-skills",
-  "source_sha256": "b4a16a43395df31188ad04ec9ad1f31e4479d8fb6223ddece1edc2b16000d6e0"
-}

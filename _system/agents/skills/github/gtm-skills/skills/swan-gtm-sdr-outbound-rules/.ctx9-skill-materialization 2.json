@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-sdr-outbound-rules",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/sdr-outbound-rules",
-  "source_id": "gtm-skills",
-  "source_sha256": "9338b836aa01cb241da7ac5b2bf7b3dba0c221f25beffeac1093ce75d77b2f56"
-}

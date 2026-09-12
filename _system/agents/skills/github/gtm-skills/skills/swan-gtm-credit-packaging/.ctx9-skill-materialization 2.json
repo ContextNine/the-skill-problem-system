@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-credit-packaging",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/credit-packaging",
-  "source_id": "gtm-skills",
-  "source_sha256": "94a827e0db1de8da081c30c9711b12bebcbc456462a6bee45e6581d1ed80eaa5"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "corey-onboarding",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/onboarding",
-  "source_id": "marketingskills",
-  "source_sha256": "0e820b9ca8cfb38dac612befd8d6a7e3fd39149422c65df252d83af9ce6b2546"
-}

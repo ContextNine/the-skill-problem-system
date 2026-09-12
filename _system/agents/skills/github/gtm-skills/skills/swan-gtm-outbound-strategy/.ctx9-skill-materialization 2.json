@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-outbound-strategy",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/outbound-strategy",
-  "source_id": "gtm-skills",
-  "source_sha256": "2f989406cb2df8f0a5405babda5a47957eb32325b3e7e2b5a41bbe0e03cf8fe7"
-}

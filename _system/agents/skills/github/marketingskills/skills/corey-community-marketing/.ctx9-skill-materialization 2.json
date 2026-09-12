@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "corey-community-marketing",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/community-marketing",
-  "source_id": "marketingskills",
-  "source_sha256": "01c202400ee0fe6ac5fc3a8b370a857f0ba417e691fa2927300c30c96ba10bd9"
-}

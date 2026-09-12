@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "corey-churn-prevention",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/churn-prevention",
-  "source_id": "marketingskills",
-  "source_sha256": "4ed619c9214cdde9d98d69301001c3a5109525f435e8e8f2c5b4226274a59125"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-multi-sender-rotation",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/multi-sender-rotation",
-  "source_id": "gtm-skills",
-  "source_sha256": "66a57275694bb51921cd4711a3aaa547bb0246732cf042a882c2bb8281679e89"
-}

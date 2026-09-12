@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-gtm-compensation",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/gtm-compensation",
-  "source_id": "gtm-skills",
-  "source_sha256": "9646407dcd3112082129ac199537acb52da1f578ea227f6b270a0ad9bb946a5f"
-}

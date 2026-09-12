@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-cold-email-preflight",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/cold-email-preflight",
-  "source_id": "gtm-skills",
-  "source_sha256": "762c4795c539abe48a89081add372948e035b32f9cd78be02ab81401034f8783"
-}

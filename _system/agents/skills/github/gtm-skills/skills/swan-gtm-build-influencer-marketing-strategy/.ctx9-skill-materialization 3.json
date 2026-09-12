@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-build-influencer-marketing-strategy",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/build-influencer-marketing-strategy",
-  "source_id": "gtm-skills",
-  "source_sha256": "db8f12e06f74602c72991c9d456b9613093fdfc404b9b15c9cdedcaacacc0d63"
-}

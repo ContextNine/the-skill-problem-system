@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "mp-ask-matt",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/mattpocock-skills/skills/ask-matt",
-  "source_id": "mattpocock-skills",
-  "source_sha256": "b6d0089a5a64362b2b79f63d49c520ecd4a0d3b337ed62d212d4dd9b798365cc"
-}

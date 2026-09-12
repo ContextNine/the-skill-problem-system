@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-reddit-attribution-tracking",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/reddit-attribution-tracking",
-  "source_id": "gtm-skills",
-  "source_sha256": "b178256838b6d8f6591137694f9ed5a647e75dc8b24a6078db8f1ac713268c92"
-}

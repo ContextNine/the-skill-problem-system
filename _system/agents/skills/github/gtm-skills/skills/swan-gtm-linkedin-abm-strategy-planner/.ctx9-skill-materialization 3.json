@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-linkedin-abm-strategy-planner",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/linkedin-abm-strategy-planner",
-  "source_id": "gtm-skills",
-  "source_sha256": "0ad4723dff8b59514c54a8d5582b64545b9d465f933d85c9191d80d2d27a895c"
-}

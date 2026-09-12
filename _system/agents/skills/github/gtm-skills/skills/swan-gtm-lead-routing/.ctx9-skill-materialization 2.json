@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-lead-routing",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/lead-routing",
-  "source_id": "gtm-skills",
-  "source_sha256": "149cc8258b35e3023041ae3a7e6c581ac6fe518399d5c4283c2eba3d2ce63af3"
-}

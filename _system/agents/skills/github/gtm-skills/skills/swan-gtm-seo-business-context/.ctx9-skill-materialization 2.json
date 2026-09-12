@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-seo-business-context",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/seo-business-context",
-  "source_id": "gtm-skills",
-  "source_sha256": "ec29b15ebe074596c9260904f9a6de28987b85bd1c3310ed61fdd0f2373e3a28"
-}

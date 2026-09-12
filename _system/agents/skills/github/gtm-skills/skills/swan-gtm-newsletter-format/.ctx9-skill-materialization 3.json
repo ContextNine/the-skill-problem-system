@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-newsletter-format",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/newsletter-format",
-  "source_id": "gtm-skills",
-  "source_sha256": "56da48bf55f4816f3c064c62bc08189e07197f8ceb7d919e7d28b0a33c2e06c2"
-}

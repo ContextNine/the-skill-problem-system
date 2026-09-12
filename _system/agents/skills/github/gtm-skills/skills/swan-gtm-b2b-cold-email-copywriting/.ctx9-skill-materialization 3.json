@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-b2b-cold-email-copywriting",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/b2b-cold-email-copywriting",
-  "source_id": "gtm-skills",
-  "source_sha256": "f53d5afa30ba628f46d8921af1c259bdd501dada17fc0579988cc6687b43a981"
-}

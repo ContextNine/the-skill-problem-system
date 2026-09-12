@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-dev-tool-pricing",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/dev-tool-pricing",
-  "source_id": "gtm-skills",
-  "source_sha256": "6d211b27c78cb22e65d33c07c7a920e9510aaf44b5b1688d95725bc1f0d712e3"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-meta-reporting",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/meta-reporting",
-  "source_id": "gtm-skills",
-  "source_sha256": "138ec046869c5e6f734da311ddd0c858c7ef96406e06e7a10ca3e035afac3d48"
-}

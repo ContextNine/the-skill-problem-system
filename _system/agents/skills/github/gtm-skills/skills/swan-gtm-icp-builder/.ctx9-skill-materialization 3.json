@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-icp-builder",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/icp-builder",
-  "source_id": "gtm-skills",
-  "source_sha256": "12b663e37f33bd43a39ef7ca1506d8c359751a43719f0dbeeeb2af71ac01c12c"
-}

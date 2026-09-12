@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-cold-email-templates-34",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/cold-email-templates-34",
-  "source_id": "gtm-skills",
-  "source_sha256": "eef7a9d0313e422c36c08aa70df4ea854da6ac7a4bea1eee1a84603362033bbc"
-}

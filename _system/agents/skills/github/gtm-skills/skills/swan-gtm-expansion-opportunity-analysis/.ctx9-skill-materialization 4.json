@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-expansion-opportunity-analysis",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/expansion-opportunity-analysis",
-  "source_id": "gtm-skills",
-  "source_sha256": "0b34869bff013fe1f17c1f4781817d92754c51c3b2e186a7a593c0ff7b03ad9d"
-}

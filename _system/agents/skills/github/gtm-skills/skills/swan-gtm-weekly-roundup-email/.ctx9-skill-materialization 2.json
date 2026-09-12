@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-weekly-roundup-email",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/weekly-roundup-email",
-  "source_id": "gtm-skills",
-  "source_sha256": "1b120ba4037556bc441a09680e861632d8b30423e1b53ce22b8fd45b0731fe83"
-}

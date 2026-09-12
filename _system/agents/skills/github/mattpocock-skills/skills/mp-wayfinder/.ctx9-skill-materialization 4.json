@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "mp-wayfinder",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/mattpocock-skills/skills/wayfinder",
-  "source_id": "mattpocock-skills",
-  "source_sha256": "96c9575d64187d442d36975213f3715d804e52934babac1a7cd41292aefc2051"
-}

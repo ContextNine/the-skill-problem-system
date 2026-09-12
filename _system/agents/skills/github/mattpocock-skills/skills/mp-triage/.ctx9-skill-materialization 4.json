@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "mp-triage",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/mattpocock-skills/skills/triage",
-  "source_id": "mattpocock-skills",
-  "source_sha256": "8edc6dea9f8ecf8bc942f27079fad55f47a01e2de4def458c2feca9280404acb"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-sales-methodology",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/sales-methodology",
-  "source_id": "gtm-skills",
-  "source_sha256": "d4fa75351711e30978f843fe42d9e9e015bed5b861115c7e8c2042e790aba56c"
-}

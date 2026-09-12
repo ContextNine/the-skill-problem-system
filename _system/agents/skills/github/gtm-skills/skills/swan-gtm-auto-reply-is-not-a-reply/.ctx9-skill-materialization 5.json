@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-auto-reply-is-not-a-reply",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/auto-reply-is-not-a-reply",
-  "source_id": "gtm-skills",
-  "source_sha256": "b5632620e998457ffa517b24a84b2f9dbfea206d7917506aef00121089d532fa"
-}

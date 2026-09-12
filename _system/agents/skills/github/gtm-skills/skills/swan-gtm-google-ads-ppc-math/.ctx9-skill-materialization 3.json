@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-google-ads-ppc-math",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/google-ads-ppc-math",
-  "source_id": "gtm-skills",
-  "source_sha256": "79faee2329d727a0258840effc9dcf7f764984047de30d2ba3bf7e3dc82f224f"
-}

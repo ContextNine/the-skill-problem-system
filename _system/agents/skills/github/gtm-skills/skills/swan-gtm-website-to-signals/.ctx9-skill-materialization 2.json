@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-website-to-signals",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/website-to-signals",
-  "source_id": "gtm-skills",
-  "source_sha256": "c8ff09a0745e3a5bb7849b20a7b9969d3795d2bd61194c17aa8a25c711411ac2"
-}

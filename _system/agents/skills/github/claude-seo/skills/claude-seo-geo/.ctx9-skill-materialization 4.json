@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "claude-seo-geo",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/claude-seo/skills/seo-geo",
-  "source_id": "claude-seo",
-  "source_sha256": "8b55d3d5a8b81ff4b20cb9ac583bda38dcf9b1c9e47675fb4788b499d5e35efd"
-}

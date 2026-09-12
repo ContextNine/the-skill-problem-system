@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "corey-schema",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/schema",
-  "source_id": "marketingskills",
-  "source_sha256": "604c68bf3a2b65c7ca7057dbe2443d2d346a3ece2817e0fe50ef5c0ea28101f5"
-}

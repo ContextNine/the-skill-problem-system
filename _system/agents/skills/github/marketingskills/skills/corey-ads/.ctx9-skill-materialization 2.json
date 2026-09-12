@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "corey-ads",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/ads",
-  "source_id": "marketingskills",
-  "source_sha256": "1bd464a10447217827c6f12bdbccb487c09eb3a5b9b64cb7e3ce9a9f1a59fb54"
-}

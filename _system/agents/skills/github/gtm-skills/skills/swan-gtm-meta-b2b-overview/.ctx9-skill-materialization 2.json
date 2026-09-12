@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-meta-b2b-overview",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/meta-b2b-overview",
-  "source_id": "gtm-skills",
-  "source_sha256": "be07333fac6dedb52adccb0c789749d22ce7b2e0ea4af2979a19d7f2e92cf32f"
-}

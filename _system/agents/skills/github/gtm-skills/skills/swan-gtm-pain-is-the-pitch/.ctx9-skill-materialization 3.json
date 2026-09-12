@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-pain-is-the-pitch",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/pain-is-the-pitch",
-  "source_id": "gtm-skills",
-  "source_sha256": "d5b09730eec531446689534f0354f6547542d71c6a017644a3bbca73160af066"
-}

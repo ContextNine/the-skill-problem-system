@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-competitor-connection-displacement",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/competitor-connection-displacement",
-  "source_id": "gtm-skills",
-  "source_sha256": "03aaf59495cbff253a92a230d6f96cd01d6d4b1719ad8d98590d4dd187803738"
-}

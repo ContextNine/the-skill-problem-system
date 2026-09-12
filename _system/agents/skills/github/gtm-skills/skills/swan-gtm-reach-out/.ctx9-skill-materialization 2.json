@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-reach-out",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/reach-out",
-  "source_id": "gtm-skills",
-  "source_sha256": "6220cf21651b7625b02998217fe965b8a480f5c8a59068ce89e055fb6567ed39"
-}

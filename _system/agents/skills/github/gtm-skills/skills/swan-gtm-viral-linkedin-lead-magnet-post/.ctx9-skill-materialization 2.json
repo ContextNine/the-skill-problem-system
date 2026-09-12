@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-viral-linkedin-lead-magnet-post",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/viral-linkedin-lead-magnet-post",
-  "source_id": "gtm-skills",
-  "source_sha256": "ab80a7c5d3b7d609f060fcfc26bdaac6c875b98f74fa106d203a60eb2afdd179"
-}

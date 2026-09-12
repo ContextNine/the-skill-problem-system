@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-seo-business-fit-filter",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/seo-business-fit-filter",
-  "source_id": "gtm-skills",
-  "source_sha256": "694ab8b8fb431532fcec6a6027df1eb97f26ae5ea6743af3bbfefeba2168ec34"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-signal-to-campaign",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/signal-to-campaign",
-  "source_id": "gtm-skills",
-  "source_sha256": "18cf1184861448904aabda1106e1708829ca66a940cef91a33f3b31a09499b33"
-}

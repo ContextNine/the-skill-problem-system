@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-outreach-4-categories",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/outreach-4-categories",
-  "source_id": "gtm-skills",
-  "source_sha256": "6583e8dfe7206e8c5b68db6fa09a06d268dcef9392a1c68d1b513b9ddeff6b2f"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-audit-swan",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/audit-swan",
-  "source_id": "gtm-skills",
-  "source_sha256": "8cde5c71fd4830cd981983c3bbf8c33fe52847e0a74185567f5fe7d451fdbdf7"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-email-writing-frameworks",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/email-writing-frameworks",
-  "source_id": "gtm-skills",
-  "source_sha256": "755fd5a6522b326d0d5c95db093116cac030846acb917e0c2a33b4ce986e5300"
-}

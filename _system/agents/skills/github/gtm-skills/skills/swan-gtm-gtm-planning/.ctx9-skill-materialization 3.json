@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-gtm-planning",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/gtm-planning",
-  "source_id": "gtm-skills",
-  "source_sha256": "3473b52825fc0dae01bfd435a09e375ba96743ec685ea5f86f9c45fe59be0e28"
-}

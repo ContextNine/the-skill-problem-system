@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-never-guess-an-email",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/never-guess-an-email",
-  "source_id": "gtm-skills",
-  "source_sha256": "81c19ab333e4247a16cdc7df9c772692e209ae0d282afaeaed42fbe771447373"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-persona-mapping-framework",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/persona-mapping-framework",
-  "source_id": "gtm-skills",
-  "source_sha256": "e90921c14b95d39069b3bb376681cbb7d244f015c5f3b5ed620cb6dc6bce4ec2"
-}

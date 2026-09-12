@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-gtm-plays-11",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/gtm-plays-11",
-  "source_id": "gtm-skills",
-  "source_sha256": "6837a2618558edab4c25d7aeb27dfb9b0b6759a67cd2f29616d0b101d4bc2a76"
-}

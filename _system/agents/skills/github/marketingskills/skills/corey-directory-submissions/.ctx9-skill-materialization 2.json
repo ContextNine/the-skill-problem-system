@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "corey-directory-submissions",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/directory-submissions",
-  "source_id": "marketingskills",
-  "source_sha256": "350d3681c9f173f8be800095cd9a9c019121aafd22f1e9866326cd345b02107f"
-}

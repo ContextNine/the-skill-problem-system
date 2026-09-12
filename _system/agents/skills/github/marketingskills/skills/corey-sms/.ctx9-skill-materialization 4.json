@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "corey-sms",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/sms",
-  "source_id": "marketingskills",
-  "source_sha256": "6590d61f19d5433ab31a1d73021c3d29a30f5f983520a05692381de22110d0a2"
-}

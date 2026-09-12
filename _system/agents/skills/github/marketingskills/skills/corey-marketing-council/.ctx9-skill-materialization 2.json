@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "corey-marketing-council",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/marketing-council",
-  "source_id": "marketingskills",
-  "source_sha256": "e2a498df24d1432419adc01f8ee5f6932288fcc5ba390a859b333537c303c572"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-linkedin-dm-signal-classifier",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/linkedin-dm-signal-classifier",
-  "source_id": "gtm-skills",
-  "source_sha256": "ef4c2c1c965dde9fe8dd4fa20449f852b7f7e815297626576102ae480752b29d"
-}

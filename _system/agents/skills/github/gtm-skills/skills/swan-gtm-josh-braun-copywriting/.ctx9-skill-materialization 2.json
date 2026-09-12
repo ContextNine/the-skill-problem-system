@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-josh-braun-copywriting",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/josh-braun-copywriting",
-  "source_id": "gtm-skills",
-  "source_sha256": "260c9c107a788acb29160af1ced7e34af6d7351677336b8b0e7e1f89ddfef12f"
-}

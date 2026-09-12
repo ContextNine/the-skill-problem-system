@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-hiring-radar",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/hiring-radar",
-  "source_id": "gtm-skills",
-  "source_sha256": "a0b69e660a0948c398613457832cbf1116ff2d0170e10fe8872e49d2106f38c2"
-}

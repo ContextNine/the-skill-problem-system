@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-personalization-6-buckets",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/personalization-6-buckets",
-  "source_id": "gtm-skills",
-  "source_sha256": "89e2a49c0f13835e6802d974b3678f60e59e145d23ab815db61b6bbd2ccc0494"
-}

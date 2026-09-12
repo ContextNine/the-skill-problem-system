@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-founder-post-triggers-24",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/founder-post-triggers-24",
-  "source_id": "gtm-skills",
-  "source_sha256": "2c166bd68e5f8d2ab5204daccca8a2a4fde3fc452a230adc92fb7568339bc735"
-}

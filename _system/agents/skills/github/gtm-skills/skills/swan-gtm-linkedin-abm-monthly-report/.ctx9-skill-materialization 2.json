@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-linkedin-abm-monthly-report",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/linkedin-abm-monthly-report",
-  "source_id": "gtm-skills",
-  "source_sha256": "1a0933796f16eb1fb58fc26306892ef35f9532af37043bc0d2a762b2d78dd81e"
-}

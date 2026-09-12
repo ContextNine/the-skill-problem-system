@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "mp-teach",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/mattpocock-skills/skills/teach",
-  "source_id": "mattpocock-skills",
-  "source_sha256": "62a3b868e7855b7c44c5050ade0b75a85fc47c9675fe2b05a709231b471cf13d"
-}

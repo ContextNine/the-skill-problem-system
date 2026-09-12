@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "corey-ab-testing",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/ab-testing",
-  "source_id": "marketingskills",
-  "source_sha256": "bc005e3d0b99ab4d12746c47bcd570fd67dff9541638e2ead895fccf75f4ff3d"
-}

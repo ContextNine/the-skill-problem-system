@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-inbound-triggers-30",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/inbound-triggers-30",
-  "source_id": "gtm-skills",
-  "source_sha256": "ee96fcb73c26610c434318618daa09870b6fd903284ef27e5add0d7d8884a00d"
-}

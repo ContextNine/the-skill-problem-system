@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "corey-revops",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/revops",
-  "source_id": "marketingskills",
-  "source_sha256": "3ccca0ccf68d455b7633aa568c853c075f3e99af7f7b3474560bf49607c150f2"
-}

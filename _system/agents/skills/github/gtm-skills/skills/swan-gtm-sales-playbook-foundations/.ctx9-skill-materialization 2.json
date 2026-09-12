@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-sales-playbook-foundations",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/sales-playbook-foundations",
-  "source_id": "gtm-skills",
-  "source_sha256": "9aae02458532e57fbf597649e36dcead6cfb7e5abff60a8b8feea3d94b78b460"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-outbound-performance-diagnosis",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/outbound-performance-diagnosis",
-  "source_id": "gtm-skills",
-  "source_sha256": "b6595722ef0c9233388130779f18ffd1d29953f65e9ff573de5d9cd6220d7fe7"
-}

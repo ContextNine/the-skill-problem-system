@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-draft-creator-campaign-brief",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/draft-creator-campaign-brief",
-  "source_id": "gtm-skills",
-  "source_sha256": "ea9e943071130755c95169ac54914172c143cdb428db0e97934b74acfdf36fab"
-}

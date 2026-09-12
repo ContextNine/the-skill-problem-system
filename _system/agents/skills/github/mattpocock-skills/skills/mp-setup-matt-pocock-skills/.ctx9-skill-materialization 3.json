@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "mp-setup-matt-pocock-skills",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/mattpocock-skills/skills/setup-matt-pocock-skills",
-  "source_id": "mattpocock-skills",
-  "source_sha256": "93cd3c8c964e0dfb4d00351839a607457a47e92a302585e7e30a61ae064ba5f2"
-}

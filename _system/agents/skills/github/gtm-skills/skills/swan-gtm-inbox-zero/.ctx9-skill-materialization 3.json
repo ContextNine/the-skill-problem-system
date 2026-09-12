@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-inbox-zero",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/inbox-zero",
-  "source_id": "gtm-skills",
-  "source_sha256": "97099f2a47e1b464740f09b376b0a2035f0ac24a09423bab61225700febd1902"
-}

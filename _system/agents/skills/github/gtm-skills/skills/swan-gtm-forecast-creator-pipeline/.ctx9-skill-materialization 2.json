@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-forecast-creator-pipeline",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/forecast-creator-pipeline",
-  "source_id": "gtm-skills",
-  "source_sha256": "73023f398f0e9275ca7bde834368080e7d6365cb1a50a9b99f4b278d2cb743e3"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-score",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/score",
-  "source_id": "gtm-skills",
-  "source_sha256": "6b4f53e7d6701c99a617708eb9a960c4cfbadb909fa6b08d00206153cad5ddf2"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "corey-site-architecture",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/site-architecture",
-  "source_id": "marketingskills",
-  "source_sha256": "7a0b8f2a77df269214585ba52fc0f1e798c0bc6edd3c8d52a9254868b0155929"
-}

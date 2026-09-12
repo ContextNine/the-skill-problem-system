@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-icp",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/icp",
-  "source_id": "gtm-skills",
-  "source_sha256": "f883ff91e40a8c09c70e78d82f1c408c391157f11030d17b0b438c09b6fd6391"
-}

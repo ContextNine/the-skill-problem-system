@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-google-ads-budget-portfolio-reallocation",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/google-ads-budget-portfolio-reallocation",
-  "source_id": "gtm-skills",
-  "source_sha256": "d08ba75efdc7db7e478d663d099c1e8a8ff43a706df52631592b327e82cd925a"
-}

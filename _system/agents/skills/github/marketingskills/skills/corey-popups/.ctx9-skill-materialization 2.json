@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "corey-popups",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/popups",
-  "source_id": "marketingskills",
-  "source_sha256": "cf416daa64cf011a9019cf5e6e951c732676b887e361f1a1ac4458659b6033c5"
-}

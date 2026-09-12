@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-linkedin-ads-audience-guide",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/linkedin-ads-audience-guide",
-  "source_id": "gtm-skills",
-  "source_sha256": "21236f6402cbfe1591e16bce0fa43eaf59bf294c9c6d29378eba3fc754bca315"
-}

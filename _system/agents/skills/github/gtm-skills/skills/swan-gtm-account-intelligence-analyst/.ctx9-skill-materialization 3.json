@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-account-intelligence-analyst",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/account-intelligence-analyst",
-  "source_id": "gtm-skills",
-  "source_sha256": "80f0c9df3064a17a5d2768082da0c99d8bdb031532fceddcc8fcd9f48af51a29"
-}

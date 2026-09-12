@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-linkedin-ads-ctr-signal",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/linkedin-ads-ctr-signal",
-  "source_id": "gtm-skills",
-  "source_sha256": "24d4acd12a02539c58da6f442d2d1283a3b60f00316f6a0f99083b813ac0ec8e"
-}

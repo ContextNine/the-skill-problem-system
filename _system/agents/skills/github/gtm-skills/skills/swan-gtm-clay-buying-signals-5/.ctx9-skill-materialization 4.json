@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-clay-buying-signals-5",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/clay-buying-signals-5",
-  "source_id": "gtm-skills",
-  "source_sha256": "9bf9bb2dfc6eef4e9b0e23cc061531249ddb6d1a23b3d26e6147457a70f864fb"
-}

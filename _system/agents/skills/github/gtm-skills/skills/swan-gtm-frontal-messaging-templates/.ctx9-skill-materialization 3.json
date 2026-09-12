@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-frontal-messaging-templates",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/frontal-messaging-templates",
-  "source_id": "gtm-skills",
-  "source_sha256": "66d75d8f6e4c921a36a19578eeb027f6e8ef77b09ea0a51fd11777cbfef16708"
-}

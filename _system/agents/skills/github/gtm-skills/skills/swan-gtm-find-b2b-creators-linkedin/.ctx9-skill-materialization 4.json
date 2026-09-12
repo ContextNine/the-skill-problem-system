@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-find-b2b-creators-linkedin",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/find-b2b-creators-linkedin",
-  "source_id": "gtm-skills",
-  "source_sha256": "e09a80ee27bd0c7ca7d2ce0074f244eb9e700d02e4ea2ad6e8358d525514118d"
-}

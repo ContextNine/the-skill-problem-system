@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-meta-creative-strategy",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/meta-creative-strategy",
-  "source_id": "gtm-skills",
-  "source_sha256": "9d8a13b504718704295f703e5f2d404001458d81be19f4c79507fc61c79cbb90"
-}

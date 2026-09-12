@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-ads-campaign-planning",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/ads-campaign-planning",
-  "source_id": "gtm-skills",
-  "source_sha256": "46dad01145c10ab851430ae892599d75098fcdab04667ac05a553fdb24b9f587"
-}

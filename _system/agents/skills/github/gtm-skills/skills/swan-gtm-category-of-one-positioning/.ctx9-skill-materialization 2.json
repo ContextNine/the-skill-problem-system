@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-category-of-one-positioning",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/category-of-one-positioning",
-  "source_id": "gtm-skills",
-  "source_sha256": "fd8b853975319ddd238263805e904830a9901d222dc1ed25ac6f4c0afd937c68"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-demand-lifecycle",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/demand-lifecycle",
-  "source_id": "gtm-skills",
-  "source_sha256": "1279bef64e195b5b8850d3274c2e6383756547279b9fe09b4320a67e79f6a7d2"
-}

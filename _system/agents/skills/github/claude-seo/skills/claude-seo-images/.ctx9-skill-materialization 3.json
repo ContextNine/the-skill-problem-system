@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "claude-seo-images",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/claude-seo/skills/seo-images",
-  "source_id": "claude-seo",
-  "source_sha256": "1051725d516664b08dd00d4b0ae19c3b09edf7b2ad2766b60586872ce3735b8e"
-}

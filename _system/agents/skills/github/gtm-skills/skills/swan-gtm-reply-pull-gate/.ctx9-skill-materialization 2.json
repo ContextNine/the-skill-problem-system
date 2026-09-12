@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-reply-pull-gate",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/reply-pull-gate",
-  "source_id": "gtm-skills",
-  "source_sha256": "48462b7ef79a3ee6b14444bbb444c157266fe12c93a23eafc84c56f31c5576f9"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-linkedin-success-factors",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/linkedin-success-factors",
-  "source_id": "gtm-skills",
-  "source_sha256": "2e82ff2696579a57e78b892ddf338a4dbae174c1921ee7be56b29ef85b48c650"
-}

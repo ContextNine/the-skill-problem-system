@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "mp-research",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/mattpocock-skills/skills/research",
-  "source_id": "mattpocock-skills",
-  "source_sha256": "6d80124084d1bccae7df009795fd2b5374094a2981dcf0ebda765757c578a01d"
-}

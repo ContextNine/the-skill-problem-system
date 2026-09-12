@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-outreach-messaging",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/outreach-messaging",
-  "source_id": "gtm-skills",
-  "source_sha256": "9f756baabf8c64f022b5fa8bdcb9fd06522cdf6b37b2a78c7667017baf333dbf"
-}

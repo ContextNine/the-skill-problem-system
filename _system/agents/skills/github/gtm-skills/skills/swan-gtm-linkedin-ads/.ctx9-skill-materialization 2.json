@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-linkedin-ads",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/linkedin-ads",
-  "source_id": "gtm-skills",
-  "source_sha256": "481c79b25656ccf5eafa0e66b90ee2f9224506b57ab930c0bf20ba568d9d82fd"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-meta-offer-strategy",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/meta-offer-strategy",
-  "source_id": "gtm-skills",
-  "source_sha256": "11670edbcfca801bc42affdda33daff0627b0593e7aaa61fdbd06eabb168d501"
-}

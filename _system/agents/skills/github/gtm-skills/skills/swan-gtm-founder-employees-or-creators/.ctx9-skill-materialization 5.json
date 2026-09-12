@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-founder-employees-or-creators",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/founder-employees-or-creators",
-  "source_id": "gtm-skills",
-  "source_sha256": "dbb9f4e71be8dabc9110a1f708f083f52bf282550a8df41573a5295eba81285c"
-}

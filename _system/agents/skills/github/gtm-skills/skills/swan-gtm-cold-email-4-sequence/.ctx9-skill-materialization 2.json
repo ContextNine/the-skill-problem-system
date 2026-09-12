@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-cold-email-4-sequence",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/cold-email-4-sequence",
-  "source_id": "gtm-skills",
-  "source_sha256": "6574b26cac78fd481a1196e17880cf6435a3662849cc6d6e3ec44c243fa3b001"
-}

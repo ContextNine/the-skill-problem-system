@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-signal-sourcer",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/signal-sourcer",
-  "source_id": "gtm-skills",
-  "source_sha256": "26450de8e65ac1c1238e1e87c6f652ec0ba1c98436c626ac9772cf2a1833db8b"
-}

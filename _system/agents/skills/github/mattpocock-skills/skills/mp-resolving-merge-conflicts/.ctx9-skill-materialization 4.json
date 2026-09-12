@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "mp-resolving-merge-conflicts",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/mattpocock-skills/skills/resolving-merge-conflicts",
-  "source_id": "mattpocock-skills",
-  "source_sha256": "83daa81e35d9bb2ee0890344159373f08a1862c8d76e2f322fb448962b21b827"
-}

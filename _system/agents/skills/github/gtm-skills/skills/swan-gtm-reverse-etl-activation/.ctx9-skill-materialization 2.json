@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-reverse-etl-activation",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/reverse-etl-activation",
-  "source_id": "gtm-skills",
-  "source_sha256": "472eee3326e8c5251da30ea32e1232fa108f9f8111542615783e42dec40c135e"
-}

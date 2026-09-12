@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-objection-mining",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/objection-mining",
-  "source_id": "gtm-skills",
-  "source_sha256": "c6da1522a9969a260a5981852d443d97a87fbb5cac8122cd0de9cf48214d491c"
-}

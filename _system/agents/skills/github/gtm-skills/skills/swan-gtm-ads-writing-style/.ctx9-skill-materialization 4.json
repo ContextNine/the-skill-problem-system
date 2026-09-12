@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-ads-writing-style",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/ads-writing-style",
-  "source_id": "gtm-skills",
-  "source_sha256": "8df5944852570b64b6b324d0106e0509d187012b897d5509b85c83854c20741b"
-}

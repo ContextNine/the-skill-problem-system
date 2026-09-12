@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "mp-handoff",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/mattpocock-skills/skills/handoff",
-  "source_id": "mattpocock-skills",
-  "source_sha256": "c279a97082f45b4a81b547a96057f86fa249467b3bd30d7b3b716ffcfc8f0b0e"
-}

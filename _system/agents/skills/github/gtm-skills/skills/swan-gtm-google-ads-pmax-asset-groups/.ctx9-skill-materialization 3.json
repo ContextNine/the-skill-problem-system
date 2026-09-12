@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-google-ads-pmax-asset-groups",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/google-ads-pmax-asset-groups",
-  "source_id": "gtm-skills",
-  "source_sha256": "37c2fbe1e973294ec48ec141bb09b9716d9aef092d157e4b94bc7625a36e08e6"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "ctx9-agents sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-call-scorecards",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/call-scorecards",
-  "source_id": "gtm-skills",
-  "source_sha256": "47a5b2560c6f87c5ed68e9b824d38764bef2f6aeb6905e4cb25940527f407ed6"
-}

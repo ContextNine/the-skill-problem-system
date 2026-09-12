@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-revenue-operating-cadence",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/revenue-operating-cadence",
-  "source_id": "gtm-skills",
-  "source_sha256": "1cffc13be0bc7f454d6b39d54ad707f7da22cd71687af794e45bc1f6128ab681"
-}

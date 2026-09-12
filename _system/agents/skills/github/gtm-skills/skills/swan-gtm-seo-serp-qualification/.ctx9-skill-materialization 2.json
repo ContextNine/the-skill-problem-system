@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-seo-serp-qualification",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/seo-serp-qualification",
-  "source_id": "gtm-skills",
-  "source_sha256": "569a6a672d69fca9aac772b2faa50ebcd5720e4084a80eee6de9d5699cf76806"
-}

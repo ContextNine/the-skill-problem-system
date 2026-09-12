@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-deal-velocity-engineer",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/deal-velocity-engineer",
-  "source_id": "gtm-skills",
-  "source_sha256": "38a72017a3d98688d0990daddbef027c9757c1d5b6b69c363429f832515b825d"
-}

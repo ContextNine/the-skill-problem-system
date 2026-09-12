@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-positioning-and-story",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/positioning-and-story",
-  "source_id": "gtm-skills",
-  "source_sha256": "bf387fda534bf81dc41195ab7d78232e1208155fb1a2d682afd571394e3b0358"
-}

@@ -1,9 +1,0 @@
-{
-  "allow_implicit_invocation": false,
-  "managed_by": "fleet sync",
-  "materialization": "snapshot",
-  "name": "swan-gtm-creative-fatigue-detection",
-  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/creative-fatigue-detection",
-  "source_id": "gtm-skills",
-  "source_sha256": "b9dee59d57b0b761d70e4851c8ee7e3b1ec289615ac1d68340efcb9c4692a236"
-}

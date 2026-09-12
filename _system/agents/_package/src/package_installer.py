@@ -19,7 +19,7 @@ import working_repo_skills
 
 INSTALL_MARKER = ".fleet-install.json"
 MANAGED_TEXT_MARKER = "fleet.managed"
-PACKAGE_VERSION = "0.2.4"
+PACKAGE_VERSION = "0.2.5"
 INSTALL_IGNORE = shutil.ignore_patterns(
     "__pycache__", "*.pyc", ".DS_Store", working_repo_skills.MARKER
 )
@@ -343,6 +343,7 @@ def verify(home: Path) -> dict[str, Any]:
     state = installed_state_root(home)
     manifest = state / "installed.json"
     problems: list[str] = []
+    installed_version: str | None = None
     if not (package / INSTALL_MARKER).is_file():
         problems.append(f"managed package marker is missing: {package}")
     if not config.is_dir():
@@ -354,10 +355,22 @@ def verify(home: Path) -> dict[str, Any]:
             problems.append(str(exc))
     if not manifest.is_file():
         problems.append(f"installed ownership manifest is missing: {manifest}")
+    else:
+        try:
+            installed = json.loads(manifest.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            problems.append(f"installed ownership manifest is invalid: {exc}")
+        else:
+            installed_version = installed.get("package_version")
+            if installed_version != PACKAGE_VERSION:
+                problems.append(
+                    f"installed Fleet version is {installed_version or 'unknown'}; expected {PACKAGE_VERSION}"
+                )
     return {
         "ok": not problems,
         "ready": not problems,
-        "version": PACKAGE_VERSION,
+        "version": installed_version,
+        "expected_version": PACKAGE_VERSION,
         "problems": problems,
         "package": str(package),
         "config": str(config),

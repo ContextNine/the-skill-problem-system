@@ -14,7 +14,7 @@ from package_export import ExportError, export as export_package, read_manifest,
 from package_layout import ConfigurationError, PACKAGE_ROOT, active_instance_root, load_instance, resolve_dotted
 
 
-VERSION = "0.2.4"
+VERSION = "0.2.5"
 SCRIPT_DIRECTORY = Path(__file__).resolve().parent
 FLEET_COMMANDS = {
     "sync": SCRIPT_DIRECTORY / "sync_agents.py",

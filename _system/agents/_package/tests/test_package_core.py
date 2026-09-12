@@ -122,6 +122,11 @@ class StandaloneInstallTests(unittest.TestCase):
             )
             self.assertTrue(first["ok"])
             self.assertTrue(verify(home)["ok"])
+            installed_manifest = home / ".local/state/fleet/installed.json"
+            stale = json.loads(installed_manifest.read_text(encoding="utf-8"))
+            stale["package_version"] = "0.0.0"
+            installed_manifest.write_text(json.dumps(stale), encoding="utf-8")
+            self.assertFalse(verify(home)["ok"])
             machines = json.loads(
                 (home / ".config/ctx9/fleet/fleet/machines.json").read_text(encoding="utf-8")
             )
@@ -138,6 +143,7 @@ class StandaloneInstallTests(unittest.TestCase):
                 code_root="~/Developer",
             )
             self.assertTrue(second["ok"])
+            self.assertTrue(verify(home)["ok"])
             self.assertIn("match", {action["status"] for action in second["actions"]})
             self.assertNotIn("backup", {action["status"] for action in second["actions"]})
             removed = uninstall(home, apply=True)

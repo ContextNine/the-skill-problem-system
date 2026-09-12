@@ -28,7 +28,14 @@ class FleetUpdateError(RuntimeError):
     pass
 
 
-AUTOMATIC_PACKAGE_MANAGERS = {"apt", "brew", "brew-cask", "npm", "uv-tool"}
+AUTOMATIC_PACKAGE_MANAGERS = {
+    "apt",
+    "brew",
+    "brew-cask",
+    "npm",
+    "rclone-selfupdate",
+    "uv-tool",
+}
 CODING_ADAPTERS = {"codex", "t3-code", "claude-code", "opencode"}
 SAFE_ID = re.compile(r"[a-z0-9][a-z0-9-]*")
 
@@ -112,6 +119,8 @@ def package_installed(manager: str, package: str) -> bool:
             for line in result.stdout.splitlines()
             if line and not line.startswith("-")
         )
+    if manager == "rclone-selfupdate":
+        return package == "rclone" and command_state("rclone")["installed"]
     return False
 
 
@@ -126,6 +135,11 @@ def package_update_command(manager: str, package: str) -> list[str]:
         return ["npm", "install", "--global", "--prefix", str(Path.home() / ".local"), f"{package}@latest"]
     if manager == "uv-tool":
         return ["uv", "tool", "upgrade", package]
+    if manager == "rclone-selfupdate":
+        executable = shutil.which("rclone", path=environment()["PATH"])
+        if executable is None or package != "rclone":
+            raise FleetUpdateError("rclone-selfupdate needs an installed rclone command")
+        return ["sudo", "-n", executable, "selfupdate", "--stable", "--package", "deb"]
     raise FleetUpdateError(f"unsupported update manager: {manager}")
 
 

@@ -29,6 +29,7 @@ SUPPORTED_MANAGERS = {
     "github-python-installer",
     "node-archive",
     "npm",
+    "rclone-selfupdate",
     "uv-tool",
 }
 SUPPORTED_KINDS = {
@@ -345,7 +346,15 @@ def validate_manifest(
             manager = recipe.get("manager")
             if manager not in SUPPORTED_MANAGERS:
                 raise DependencyError(f"package {package_id} uses unsupported manager {manager}")
-            if manager in {"apt", "brew", "brew-cask", "ctx9-component", "npm", "uv-tool"}:
+            if manager in {
+                "apt",
+                "brew",
+                "brew-cask",
+                "ctx9-component",
+                "npm",
+                "rclone-selfupdate",
+                "uv-tool",
+            }:
                 package_name = recipe.get("package")
                 if (
                     not isinstance(package_name, str)
@@ -730,6 +739,31 @@ def install_package(package: dict[str, Any], recipe: dict[str, Any]) -> None:
     name = str(recipe.get("package") or "")
     if not name:
         raise DependencyError(f"{package['id']} has no package name")
+    if manager == "rclone-selfupdate":
+        if platform_name() != "linux" or name != "rclone":
+            raise DependencyError("rclone-selfupdate is only supported for the Linux rclone package")
+        sudo = shutil.which("sudo", path=environment()["PATH"])
+        apt = shutil.which("apt-get", path=environment()["PATH"])
+        if sudo is None or apt is None or run([sudo, "-n", "true"]).returncode != 0:
+            raise DependencyError("rclone-selfupdate needs APT and noninteractive sudo")
+        executable = shutil.which("rclone", path=environment()["PATH"])
+        if executable is None:
+            installed = run([sudo, "-n", apt, "install", "-y", "--no-install-recommends", name])
+            if installed.returncode != 0:
+                output = (installed.stderr or installed.stdout).strip().splitlines()
+                raise DependencyError(
+                    f"install failed for {package['id']}: {output[-1][:500] if output else 'command failed'}"
+                )
+            executable = shutil.which("rclone", path=environment()["PATH"])
+        if executable is None:
+            raise DependencyError("APT did not install rclone")
+        updated = run([sudo, "-n", executable, "selfupdate", "--stable", "--package", "deb"])
+        if updated.returncode != 0:
+            output = (updated.stderr or updated.stdout).strip().splitlines()
+            raise DependencyError(
+                f"update failed for {package['id']}: {output[-1][:500] if output else 'command failed'}"
+            )
+        return
     if manager == "ctx9-component":
         executable = shutil.which("ctx9", path=environment()["PATH"])
         if executable is None:
@@ -840,6 +874,18 @@ def install_preflight(package: dict[str, Any], recipe: dict[str, Any], eligible_
             return False, "sudo is missing"
         protected = run([sudo, "-n", "true"])
         return (protected.returncode == 0, "noninteractive sudo" if protected.returncode == 0 else "sudo needs a protected prompt")
+    if manager == "rclone-selfupdate":
+        if platform_name() != "linux" or recipe.get("package") != "rclone":
+            return False, "rclone-selfupdate is only supported for Linux rclone"
+        apt = shutil.which("apt-get", path=environment()["PATH"])
+        sudo = shutil.which("sudo", path=environment()["PATH"])
+        if apt is None or sudo is None:
+            return False, "APT or sudo is missing"
+        protected = run([sudo, "-n", "true"])
+        return (
+            protected.returncode == 0,
+            "signed Rclone stable channel" if protected.returncode == 0 else "sudo needs a protected prompt",
+        )
     if manager == "npm":
         available = shutil.which("npm", path=environment()["PATH"]) is not None or "node24" in eligible_ids
         return available, "npm supplied by node24" if available else "npm is missing"

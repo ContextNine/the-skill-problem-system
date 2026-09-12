@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-event-radar",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/event-radar",
+  "source_id": "gtm-skills",
+  "source_sha256": "723bde6243dc35ea8369b2546951caaa8097a85fe0eac7ffc23c3871a4ffd1d1"
+}

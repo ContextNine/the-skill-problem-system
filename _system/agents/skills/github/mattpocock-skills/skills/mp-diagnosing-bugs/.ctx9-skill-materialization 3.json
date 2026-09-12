@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "mp-diagnosing-bugs",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/mattpocock-skills/skills/diagnosing-bugs",
+  "source_id": "mattpocock-skills",
+  "source_sha256": "099c61e0bc224d67bae1dca53c348f747386be050e1f8618cacef8e8f3429441"
+}

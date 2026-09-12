@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-creator-programme-qbr",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/creator-programme-qbr",
+  "source_id": "gtm-skills",
+  "source_sha256": "94f237645877a1f022c17527a700aae53864fd3968ed5f05b1d149f0f9094583"
+}

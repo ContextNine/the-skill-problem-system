@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-warm-intro-intelligence",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/warm-intro-intelligence",
+  "source_id": "gtm-skills",
+  "source_sha256": "1103176a12346b45a9d2c24f0d35a66fe41a1181d2b145a0b416943b63900c40"
+}

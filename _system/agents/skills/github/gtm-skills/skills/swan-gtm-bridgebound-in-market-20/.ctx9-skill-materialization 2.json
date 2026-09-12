@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-bridgebound-in-market-20",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/bridgebound-in-market-20",
+  "source_id": "gtm-skills",
+  "source_sha256": "1a30205dd2862c2a897755f50e2d7467bb6374325aef0423ff2735e4a540eb16"
+}

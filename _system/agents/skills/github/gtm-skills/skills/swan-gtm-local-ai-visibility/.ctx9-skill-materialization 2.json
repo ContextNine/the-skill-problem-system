@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-local-ai-visibility",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/local-ai-visibility",
+  "source_id": "gtm-skills",
+  "source_sha256": "aa13a7b0120e3d1a3ec327bb6da79247b47706fecaec1610330db55675af8768"
+}

@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-lead-sources-guide",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/lead-sources-guide",
+  "source_id": "gtm-skills",
+  "source_sha256": "d1e5ce46705933525837f672fc47a1e7017f91e8a2b43fbec1a30baf6cb9b304"
+}

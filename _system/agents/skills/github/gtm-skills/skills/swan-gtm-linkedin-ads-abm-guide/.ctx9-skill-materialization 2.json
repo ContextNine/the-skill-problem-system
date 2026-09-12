@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-linkedin-ads-abm-guide",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/linkedin-ads-abm-guide",
+  "source_id": "gtm-skills",
+  "source_sha256": "522205467a2f2db7dbd6f9616817d87a9954d9ed30ecae441179b7cce08d7936"
+}

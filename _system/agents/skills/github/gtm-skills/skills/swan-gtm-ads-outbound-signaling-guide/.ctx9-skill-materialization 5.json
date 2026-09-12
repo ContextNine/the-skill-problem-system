@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-ads-outbound-signaling-guide",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/ads-outbound-signaling-guide",
+  "source_id": "gtm-skills",
+  "source_sha256": "6947b9e1900e07255a9f69fcf5074a8136c41a28f7d0ba836f2903161df35a7a"
+}

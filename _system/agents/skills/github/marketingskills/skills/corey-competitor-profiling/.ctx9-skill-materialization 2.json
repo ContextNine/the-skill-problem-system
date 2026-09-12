@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "corey-competitor-profiling",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/competitor-profiling",
+  "source_id": "marketingskills",
+  "source_sha256": "a6dbd9874b0804581e32ed9e281746c94bc9a811c8f937b8eb3729b199a96f0e"
+}

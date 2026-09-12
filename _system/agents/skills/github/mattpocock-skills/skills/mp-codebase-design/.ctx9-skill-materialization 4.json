@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "mp-codebase-design",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/mattpocock-skills/skills/codebase-design",
+  "source_id": "mattpocock-skills",
+  "source_sha256": "11e1169cb97a806f3ff7643038b4dab6f0912a69062aabe03142ac205c4b19f6"
+}

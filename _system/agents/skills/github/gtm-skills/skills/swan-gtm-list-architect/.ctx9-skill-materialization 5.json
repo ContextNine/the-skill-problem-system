@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-list-architect",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/list-architect",
+  "source_id": "gtm-skills",
+  "source_sha256": "aaa4e7e0f2d56fab4ad8a975188fc73bd32a05a8f94e5f86eabca6f766055cc4"
+}

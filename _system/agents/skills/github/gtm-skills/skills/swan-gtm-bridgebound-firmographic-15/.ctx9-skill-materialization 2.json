@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-bridgebound-firmographic-15",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/bridgebound-firmographic-15",
+  "source_id": "gtm-skills",
+  "source_sha256": "8af572f310e50768e620c027eb44bfb91e49b7587a933199bfdc1e2a8927603a"
+}

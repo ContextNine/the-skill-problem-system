@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-revops-revenue-planning",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/revops-revenue-planning",
+  "source_id": "gtm-skills",
+  "source_sha256": "737d62af85625e7f7bc6df6773fbcbe2dc6b81529d934c475c66d85f04e937b7"
+}

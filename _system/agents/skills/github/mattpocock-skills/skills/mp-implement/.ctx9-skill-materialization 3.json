@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "mp-implement",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/mattpocock-skills/skills/implement",
+  "source_id": "mattpocock-skills",
+  "source_sha256": "91ef417b4a10c6fde60beadf3c984afd29324ab00aca7d424ed6b0128fe51252"
+}

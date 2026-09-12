@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-move-gtm-diagnostic",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/move-gtm-diagnostic",
+  "source_id": "gtm-skills",
+  "source_sha256": "2dca0fcfd9a855588e7e1d79f0e6449eb968c65ad317b15e7b0a3818379773ce"
+}

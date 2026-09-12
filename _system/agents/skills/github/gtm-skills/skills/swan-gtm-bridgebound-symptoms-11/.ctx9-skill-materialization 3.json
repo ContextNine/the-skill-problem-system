@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-bridgebound-symptoms-11",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/bridgebound-symptoms-11",
+  "source_id": "gtm-skills",
+  "source_sha256": "88c13c2dfde70e8cf60d71ba54b1ea84aa585b2da4d371ce940630476483d825"
+}

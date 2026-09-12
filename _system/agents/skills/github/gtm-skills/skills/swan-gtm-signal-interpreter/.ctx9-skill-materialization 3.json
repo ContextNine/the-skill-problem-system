@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-signal-interpreter",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/signal-interpreter",
+  "source_id": "gtm-skills",
+  "source_sha256": "a205c94707299bb1f378d7124fbf52cd663c27da66ae3c36e442000b85fbe45c"
+}

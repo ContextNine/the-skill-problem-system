@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-reddit-account-health",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/reddit-account-health",
+  "source_id": "gtm-skills",
+  "source_sha256": "7e7863c1ab495933ba8af3e90838bae8ec1f9df5b9fc6d924e6b80d206a2af0a"
+}

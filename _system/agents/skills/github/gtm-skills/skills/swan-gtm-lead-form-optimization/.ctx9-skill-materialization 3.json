@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-lead-form-optimization",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/lead-form-optimization",
+  "source_id": "gtm-skills",
+  "source_sha256": "83b6122ede9e4d5aa7052cb8e59e189aa819e7c1919b0d794ebc4c2ef650d82e"
+}

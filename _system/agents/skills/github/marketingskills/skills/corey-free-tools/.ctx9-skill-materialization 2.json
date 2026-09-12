@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "corey-free-tools",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/free-tools",
+  "source_id": "marketingskills",
+  "source_sha256": "00f69b6bbdc190f990ca61f7c84d66716e0783408bd64934711840ec69f9eba1"
+}

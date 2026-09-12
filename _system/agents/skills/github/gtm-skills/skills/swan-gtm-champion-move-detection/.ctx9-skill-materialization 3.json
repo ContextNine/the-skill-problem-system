@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-champion-move-detection",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/champion-move-detection",
+  "source_id": "gtm-skills",
+  "source_sha256": "e4b1032a305d260b5c51dd5a987adca0cf5b12b4ad834d0ee8014dd83c1a2485"
+}

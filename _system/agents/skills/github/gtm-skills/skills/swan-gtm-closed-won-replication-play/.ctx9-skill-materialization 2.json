@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-closed-won-replication-play",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/closed-won-replication-play",
+  "source_id": "gtm-skills",
+  "source_sha256": "63bae2922128782e3c795f3c6a87c6fdc00b58ff25187b956861effa86d08528"
+}

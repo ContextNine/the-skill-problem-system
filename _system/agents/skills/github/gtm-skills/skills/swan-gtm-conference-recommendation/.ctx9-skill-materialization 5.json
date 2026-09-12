@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-conference-recommendation",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/conference-recommendation",
+  "source_id": "gtm-skills",
+  "source_sha256": "5bff7a808e91a0cf0f813b02d8bca9bc0207f7bde215e0b77c1a0cc834a88004"
+}

@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "corey-pricing",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/pricing",
+  "source_id": "marketingskills",
+  "source_sha256": "e1e5f5d9f6eef1b86866938319b7861118a42b73434408cee2c38bc174fe7fe2"
+}

@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "creative-frontend-slides",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/frontend-slides/skills/frontend-slides",
+  "source_id": "frontend-slides",
+  "source_sha256": "477392302655d20c600f16317af0d0416c0a71975de09ee4c7654fa0a35c4d1c"
+}

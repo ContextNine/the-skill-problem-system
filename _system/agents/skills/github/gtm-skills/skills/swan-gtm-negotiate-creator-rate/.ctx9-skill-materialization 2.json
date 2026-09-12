@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-negotiate-creator-rate",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/negotiate-creator-rate",
+  "source_id": "gtm-skills",
+  "source_sha256": "c8879bd2012799a0d47c0e82e903c53b3b64663c67c54d49c436dcbfc1b4995c"
+}

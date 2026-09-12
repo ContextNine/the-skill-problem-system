@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "corey-referrals",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/referrals",
+  "source_id": "marketingskills",
+  "source_sha256": "2c069f70e179d6bc24052633770d7b9b0f7c4e07c2313f2d5e915f31333ed6c4"
+}

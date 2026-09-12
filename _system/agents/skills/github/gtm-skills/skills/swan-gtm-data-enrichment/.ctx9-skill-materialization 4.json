@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-data-enrichment",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/data-enrichment",
+  "source_id": "gtm-skills",
+  "source_sha256": "a379aaff2d87ba167d754cfe05203e682591bc058b8a868aa9b01af561c9b95d"
+}

@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-crm-migration-consolidation",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/crm-migration-consolidation",
+  "source_id": "gtm-skills",
+  "source_sha256": "4f9fa8947704a6b402cc545ae3a20db2781cbe5a0ec9dda5aa017f1b85e89efb"
+}

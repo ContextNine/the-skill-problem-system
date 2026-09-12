@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-cold-email-inbox-warmup",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/cold-email-inbox-warmup",
+  "source_id": "gtm-skills",
+  "source_sha256": "d4f898edc721b280af812b6fa1a836833c77e0091a8bbddeadb42fd3d093358e"
+}

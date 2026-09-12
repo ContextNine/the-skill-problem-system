@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-seo-opportunity-extraction",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/seo-opportunity-extraction",
+  "source_id": "gtm-skills",
+  "source_sha256": "90028c4a7bf551c18cc50c2f91a0b85052cb95e77118935bd3e4cfa5c3118034"
+}

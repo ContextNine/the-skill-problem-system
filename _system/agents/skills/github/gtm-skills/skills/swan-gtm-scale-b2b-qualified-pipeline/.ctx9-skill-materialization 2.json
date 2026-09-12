@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-scale-b2b-qualified-pipeline",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/scale-b2b-qualified-pipeline",
+  "source_id": "gtm-skills",
+  "source_sha256": "60891833435c3b363ad57e169b2eba4b7e8350a11be752da5cbe2f33f3e9a3e1"
+}

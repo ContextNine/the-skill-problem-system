@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "mp-grill-me",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/mattpocock-skills/skills/grill-me",
+  "source_id": "mattpocock-skills",
+  "source_sha256": "81866b306c9e1062dfc6f6f649c1489c75907f4c52241ac0c5473763abd8cdd7"
+}

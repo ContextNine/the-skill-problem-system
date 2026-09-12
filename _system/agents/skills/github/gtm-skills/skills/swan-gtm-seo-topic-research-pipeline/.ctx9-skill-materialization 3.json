@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-seo-topic-research-pipeline",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/seo-topic-research-pipeline",
+  "source_id": "gtm-skills",
+  "source_sha256": "7d4bd3affade71c56ac93108b11828a76b151515d50c7604079b154b7d0d34b6"
+}

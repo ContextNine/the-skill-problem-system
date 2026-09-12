@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-b2b-affiliate-program-playbook",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/b2b-affiliate-program-playbook",
+  "source_id": "gtm-skills",
+  "source_sha256": "bfe00c3d5f8aeba7040dfe41c9864ddb64d78c2bf1bbe52eca37fcde7acbbe0d"
+}

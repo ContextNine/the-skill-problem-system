@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "mp-prototype",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/mattpocock-skills/skills/prototype",
+  "source_id": "mattpocock-skills",
+  "source_sha256": "835d6bc6c79dc5b5d572fb29e7e7494f7390c94e8df85b8b93f3b5dedeb8a352"
+}

@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-abm-measurement-framework",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/abm-measurement-framework",
+  "source_id": "gtm-skills",
+  "source_sha256": "1d5a73d29f9028e2af9bf8cf2f967b2589ba550595abf150a1cbd2a9dc02b3d9"
+}

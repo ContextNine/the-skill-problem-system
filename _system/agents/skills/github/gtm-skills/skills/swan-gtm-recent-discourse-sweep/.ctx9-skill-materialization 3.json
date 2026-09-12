@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-recent-discourse-sweep",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/recent-discourse-sweep",
+  "source_id": "gtm-skills",
+  "source_sha256": "2a036168c3ad2e7ef841118bad88c26843886d3c3cae1c401d059dc237813392"
+}

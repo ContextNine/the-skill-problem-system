@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-customer-expansion-scoring",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/customer-expansion-scoring",
+  "source_id": "gtm-skills",
+  "source_sha256": "363617298c5aace31dfdf926f69b5310ea41a81e79cbc1d21b0df39f5fc98cd0"
+}

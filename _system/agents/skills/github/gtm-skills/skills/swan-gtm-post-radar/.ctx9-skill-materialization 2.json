@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-post-radar",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/post-radar",
+  "source_id": "gtm-skills",
+  "source_sha256": "b9531b410c4c2776374ba836153f5f2fcc8a608cc56da1d8c2378848bf97dbae"
+}

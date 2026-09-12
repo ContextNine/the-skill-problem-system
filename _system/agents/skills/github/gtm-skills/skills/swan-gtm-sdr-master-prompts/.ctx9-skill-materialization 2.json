@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-sdr-master-prompts",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/sdr-master-prompts",
+  "source_id": "gtm-skills",
+  "source_sha256": "1ff6306996115ce8c4b249a891ad31175a9ccae80f70b310da4f061071348e91"
+}

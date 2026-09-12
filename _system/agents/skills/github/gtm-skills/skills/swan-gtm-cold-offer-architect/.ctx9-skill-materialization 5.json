@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-cold-offer-architect",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/cold-offer-architect",
+  "source_id": "gtm-skills",
+  "source_sha256": "38988c6981ea72c2f7093384152dad19e2f6b852b6011f0e5fd43371d53c18db"
+}

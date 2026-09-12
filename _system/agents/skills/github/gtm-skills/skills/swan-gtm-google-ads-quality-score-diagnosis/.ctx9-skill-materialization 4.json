@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-google-ads-quality-score-diagnosis",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/google-ads-quality-score-diagnosis",
+  "source_id": "gtm-skills",
+  "source_sha256": "dd81f8d244dfda1217e2df9c399eeb47dfbf3b23b9c34c6404a176950fc6f829"
+}

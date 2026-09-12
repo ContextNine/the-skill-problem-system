@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "corey-cold-email",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/cold-email",
+  "source_id": "marketingskills",
+  "source_sha256": "b19f848c34b5daa8e6c3554c6b91dc26a35e54c0017475395626b7adaabe9075"
+}

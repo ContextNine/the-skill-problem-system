@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-saas-lifecycle",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/saas-lifecycle",
+  "source_id": "gtm-skills",
+  "source_sha256": "d1e3c50ddf5aa17fc94ed5480fd689274c908468406505aa309b92ba3c53e144"
+}

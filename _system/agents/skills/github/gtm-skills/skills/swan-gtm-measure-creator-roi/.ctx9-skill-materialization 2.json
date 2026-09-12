@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-measure-creator-roi",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/measure-creator-roi",
+  "source_id": "gtm-skills",
+  "source_sha256": "eefc86b1adf6517f6ec2247b2c317b3213c215f89001cbaa0cbb0ec0f4c2a1d9"
+}

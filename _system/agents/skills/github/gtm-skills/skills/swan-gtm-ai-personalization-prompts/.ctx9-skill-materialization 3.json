@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-ai-personalization-prompts",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/ai-personalization-prompts",
+  "source_id": "gtm-skills",
+  "source_sha256": "bd1aa862efb2cccb245743276de36068d8fd0ffea05022a331044774a6e1da42"
+}

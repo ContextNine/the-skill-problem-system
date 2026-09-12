@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-creator-led-growth-90-days",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/creator-led-growth-90-days",
+  "source_id": "gtm-skills",
+  "source_sha256": "372816af7fac5aa121f13a780d69557f06ae56c6c79355665ef9428987df7410"
+}

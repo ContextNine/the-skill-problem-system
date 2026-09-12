@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-clear-my-desk",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/clear-my-desk",
+  "source_id": "gtm-skills",
+  "source_sha256": "0042c08311c368e91b26ff1dda96fe495079aa8502466189202ad9c67f0df8f0"
+}

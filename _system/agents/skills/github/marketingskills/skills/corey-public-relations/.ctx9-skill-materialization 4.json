@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "corey-public-relations",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/public-relations",
+  "source_id": "marketingskills",
+  "source_sha256": "365c38ae04c67ffdcef5c60d0fc74d625772f350dbfae0ba42eb5621562c07e9"
+}

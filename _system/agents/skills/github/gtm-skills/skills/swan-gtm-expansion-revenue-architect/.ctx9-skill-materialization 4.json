@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-expansion-revenue-architect",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/expansion-revenue-architect",
+  "source_id": "gtm-skills",
+  "source_sha256": "735524fe56d2d54d912d84fb5fe9d346771d98bfddd7cbada84ab1cc1ac485fe"
+}

@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-reddit-comment-safety",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/reddit-comment-safety",
+  "source_id": "gtm-skills",
+  "source_sha256": "ee4a9a778caee7de0f56c0796a69c31c83e95483a41a046eedcb7e1a0bfce8c4"
+}

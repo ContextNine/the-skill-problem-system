@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-google-ads-write-safety",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/google-ads-write-safety",
+  "source_id": "gtm-skills",
+  "source_sha256": "6442877125a30e8b804d60d2df17171249ff8f73fb0ea655c2f3283791f12f87"
+}

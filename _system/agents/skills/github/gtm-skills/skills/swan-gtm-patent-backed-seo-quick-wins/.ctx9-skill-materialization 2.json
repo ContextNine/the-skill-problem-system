@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-patent-backed-seo-quick-wins",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/patent-backed-seo-quick-wins",
+  "source_id": "gtm-skills",
+  "source_sha256": "f6f9b0e3b429f8a68fcab259a30f3f77606fc231d852111fd8d24c9b41ae318d"
+}

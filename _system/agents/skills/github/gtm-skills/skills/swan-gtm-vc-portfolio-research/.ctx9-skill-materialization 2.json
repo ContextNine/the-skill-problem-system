@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-vc-portfolio-research",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/vc-portfolio-research",
+  "source_id": "gtm-skills",
+  "source_sha256": "7946fe3545c4bc31b07c71961827281f4808003674639b2941786f94474a2323"
+}

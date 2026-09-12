@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-linkedin-post-to-newsletter",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/linkedin-post-to-newsletter",
+  "source_id": "gtm-skills",
+  "source_sha256": "9afa9728eb747f098999afdb0efbe6288c714bd73ea5bf4c5bb52d1b6e5ae3b7"
+}

@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-seo-topic-prioritization",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/seo-topic-prioritization",
+  "source_id": "gtm-skills",
+  "source_sha256": "7f1657f8e84113f8310b015a11bf6f55d9de38cc7315c3742f453d3e5ece0ed5"
+}

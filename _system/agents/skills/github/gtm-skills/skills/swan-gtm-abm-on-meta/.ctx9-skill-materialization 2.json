@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-abm-on-meta",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/abm-on-meta",
+  "source_id": "gtm-skills",
+  "source_sha256": "f23888e0e0b41325a59d47c649adc5c01f1bb4592c97e0227211f94aa772de61"
+}

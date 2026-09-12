@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-partner-ecosystem-architect",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/partner-ecosystem-architect",
+  "source_id": "gtm-skills",
+  "source_sha256": "3ceab19bbe0093f99b4b6a9e54e761eb684a3a38f18a42c8d6c24ccddd6df3d2"
+}

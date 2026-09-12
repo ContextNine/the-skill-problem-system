@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-meta-third-party-conversion-tracking",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/meta-third-party-conversion-tracking",
+  "source_id": "gtm-skills",
+  "source_sha256": "12edcdcabad86dfda2ded9de2c26820d7ff3e00662921fc6e1f6e85d9d4edb2e"
+}

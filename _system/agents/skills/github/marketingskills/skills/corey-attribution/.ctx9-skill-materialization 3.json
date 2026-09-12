@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "corey-attribution",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/attribution",
+  "source_id": "marketingskills",
+  "source_sha256": "c39faa5867dcd7e7dadca3dc386966474bd36cc8003ace678d641bdfb3845556"
+}

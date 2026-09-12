@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "corey-competitors",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/competitors",
+  "source_id": "marketingskills",
+  "source_sha256": "4cbac79b554fb79c9e1cb3efdec8498f828737b92698cffab09e0ead15333817"
+}

@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-visitor-radar",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/visitor-radar",
+  "source_id": "gtm-skills",
+  "source_sha256": "bd6def548d1c5875bab13b2edc35f170c9b095d31ef4b4eec5611b6bb539faab"
+}

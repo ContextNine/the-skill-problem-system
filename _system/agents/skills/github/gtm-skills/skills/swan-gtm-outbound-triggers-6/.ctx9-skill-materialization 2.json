@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-outbound-triggers-6",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/outbound-triggers-6",
+  "source_id": "gtm-skills",
+  "source_sha256": "42b0642904c57b31c97eadf51b4634f25232d2ed53d290aa2a313e26ec2643c9"
+}

@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-email-sequence",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/email-sequence",
+  "source_id": "gtm-skills",
+  "source_sha256": "2423ea9046f5ce7d6b2da6c405194e4955e66038c0352b97a96193261d160eea"
+}

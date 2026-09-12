@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-clay-enrichment-9step",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/clay-enrichment-9step",
+  "source_id": "gtm-skills",
+  "source_sha256": "c2c86369666cd6ac5ae6f2924fa7f72c1c86d68754fc864b0e59763c67831593"
+}

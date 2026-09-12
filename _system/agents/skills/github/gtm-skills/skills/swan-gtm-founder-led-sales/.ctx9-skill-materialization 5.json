@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-founder-led-sales",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/founder-led-sales",
+  "source_id": "gtm-skills",
+  "source_sha256": "c7e3cc1ce99ff6d25e78b92dd66f3615a2b9716436c1534841297e88dd4e5242"
+}

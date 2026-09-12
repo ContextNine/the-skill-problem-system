@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-tam-builder",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/tam-builder",
+  "source_id": "gtm-skills",
+  "source_sha256": "f79bd0f5651041f954f6d1d35ec97addd1c84d737f05c0668dd428152fb59cec"
+}

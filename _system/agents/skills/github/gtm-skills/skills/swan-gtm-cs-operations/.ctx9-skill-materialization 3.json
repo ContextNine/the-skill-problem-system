@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-cs-operations",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/cs-operations",
+  "source_id": "gtm-skills",
+  "source_sha256": "8f2d298421cd02d342283245928183c83d574208d396663ae806fed83e80e95a"
+}

@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-ads-offers-strategy",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/ads-offers-strategy",
+  "source_id": "gtm-skills",
+  "source_sha256": "926fb90e01e3516ba7f53bc98ad9b3de1c08777cace4765c2a0ed039e4f4c7ca"
+}

@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-reddit-brand-mention-triage",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/reddit-brand-mention-triage",
+  "source_id": "gtm-skills",
+  "source_sha256": "64415324cbb95156fa285f35c67b9bcf881e529a2f3e7f3f28357456e7315693"
+}

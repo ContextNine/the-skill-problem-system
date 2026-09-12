@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-revops-crisis",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/revops-crisis",
+  "source_id": "gtm-skills",
+  "source_sha256": "6e1791e91acb1726f5bcf946873b13f304ff0defa943d084782f777b56b09964"
+}

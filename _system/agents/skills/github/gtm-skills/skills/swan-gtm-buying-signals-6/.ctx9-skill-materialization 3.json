@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-buying-signals-6",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/buying-signals-6",
+  "source_id": "gtm-skills",
+  "source_sha256": "6ab94047855efda80a9f461b41cb20c7dfe39311824c647114371193110f0cf0"
+}

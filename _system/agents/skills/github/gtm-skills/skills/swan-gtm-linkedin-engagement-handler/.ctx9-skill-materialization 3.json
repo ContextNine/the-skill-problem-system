@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-linkedin-engagement-handler",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/linkedin-engagement-handler",
+  "source_id": "gtm-skills",
+  "source_sha256": "4758fb0c873e0373170ff2da805327102b451d8eb1c416a61ccc395118cd4bb0"
+}

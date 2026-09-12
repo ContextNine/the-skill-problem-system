@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "claude-seo-drift",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/claude-seo/skills/seo-drift",
+  "source_id": "claude-seo",
+  "source_sha256": "56fe9c9babf9c7d049f490200ee6d1aad9ff44062306970a3790ca54e4691ba3"
+}

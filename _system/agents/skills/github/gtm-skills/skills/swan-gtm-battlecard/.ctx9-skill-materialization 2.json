@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-battlecard",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/battlecard",
+  "source_id": "gtm-skills",
+  "source_sha256": "40645c2b6c30b633a7bb2f727624778af7458ae1300786e0378de920038339be"
+}

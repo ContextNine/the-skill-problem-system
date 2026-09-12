@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-brief",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/brief",
+  "source_id": "gtm-skills",
+  "source_sha256": "fbb1c2deff32b985fb80db9280989b30ab180882b9221ed1a8a40520b43eff02"
+}

@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "claude-seo-image-gen",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/claude-seo/skills/seo-image-gen",
+  "source_id": "claude-seo",
+  "source_sha256": "c64559a70ab5cf959538b07b9157541ea08eaf3c1d02c0e86ead80769739f2f1"
+}

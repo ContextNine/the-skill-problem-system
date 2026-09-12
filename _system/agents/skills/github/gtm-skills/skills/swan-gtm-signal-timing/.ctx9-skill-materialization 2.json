@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-signal-timing",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/signal-timing",
+  "source_id": "gtm-skills",
+  "source_sha256": "fb4f09e3c3e0c771a679a80ffca02f54e47b174431df4d12df0d4241aed6aaef"
+}

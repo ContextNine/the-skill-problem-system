@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-outreach-execution",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/outreach-execution",
+  "source_id": "gtm-skills",
+  "source_sha256": "4fa59043232a6909919cc156948d2583b411fdf89f5535d01dfc15c0bea6ed72"
+}

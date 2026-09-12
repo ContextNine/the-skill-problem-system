@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-partner-channel-operations",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/partner-channel-operations",
+  "source_id": "gtm-skills",
+  "source_sha256": "6ceffb11bbcee87bf9fbd97cc7367850498f4c6918d4ab2c1df5c5559ae775fb"
+}

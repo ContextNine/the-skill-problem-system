@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-meta-capi-and-events",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/meta-capi-and-events",
+  "source_id": "gtm-skills",
+  "source_sha256": "1fe3ed86fa5090d628ca1480d375fecb489fef1807e2f490040e40c0073756f1"
+}

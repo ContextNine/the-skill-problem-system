@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-set-creator-benchmarks",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/set-creator-benchmarks",
+  "source_id": "gtm-skills",
+  "source_sha256": "188220f90c9ed8827e57c94de2fe5a83097b39f84dab9afe3be6c1720e7599e6"
+}

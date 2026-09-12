@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-email-1-variations-7",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/email-1-variations-7",
+  "source_id": "gtm-skills",
+  "source_sha256": "aff5a299623c4d81a638c38c15092739e941d33c9d443a8907a2fb17463ba323"
+}

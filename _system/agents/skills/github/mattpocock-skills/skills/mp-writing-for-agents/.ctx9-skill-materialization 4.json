@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "mp-writing-for-agents",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/mattpocock-skills/skills/writing-for-agents",
+  "source_id": "mattpocock-skills",
+  "source_sha256": "ccebe16b669844a0dd81bf76882ef9caebe3aee5ddd9c572d5a0651c196991b1"
+}

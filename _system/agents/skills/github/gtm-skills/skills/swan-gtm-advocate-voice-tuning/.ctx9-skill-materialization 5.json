@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-advocate-voice-tuning",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/advocate-voice-tuning",
+  "source_id": "gtm-skills",
+  "source_sha256": "9a8537d61a5544a10c64a60562735715348af4c820cb4e79302ab4ce2e1e4c9e"
+}

@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-bridge-before-cold",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/bridge-before-cold",
+  "source_id": "gtm-skills",
+  "source_sha256": "e32553d3f125e2df11f77194ae0d72de3d566e0063e2b9d9d7244a3d5a13f3ed"
+}

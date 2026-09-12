@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-stage-aware-follow-up",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/stage-aware-follow-up",
+  "source_id": "gtm-skills",
+  "source_sha256": "0e512240050c7f3828c15ecc11d4169987dbd9c258087d65e67beebeb77597c7"
+}

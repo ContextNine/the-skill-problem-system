@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-earned-autonomy",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/earned-autonomy",
+  "source_id": "gtm-skills",
+  "source_sha256": "4a2709d8f30f32346605a354b52045c794c67c894d33f7f06a90c86dfdeec9da"
+}

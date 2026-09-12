@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-ads-budget-allocation",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/ads-budget-allocation",
+  "source_id": "gtm-skills",
+  "source_sha256": "ae5a2459910785d7ce510edaf47c257fb353f17ae1b8aca24819c2d45b1a6d6a"
+}

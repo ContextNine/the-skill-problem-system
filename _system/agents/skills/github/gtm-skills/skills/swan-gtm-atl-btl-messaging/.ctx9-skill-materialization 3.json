@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-atl-btl-messaging",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/atl-btl-messaging",
+  "source_id": "gtm-skills",
+  "source_sha256": "bac7a179c66ec3a330c04beb6ec6ec5ea07fc8df3d5b201851f870ccd638d51e"
+}

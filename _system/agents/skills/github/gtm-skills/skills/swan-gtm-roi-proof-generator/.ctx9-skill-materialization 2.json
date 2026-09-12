@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-roi-proof-generator",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/roi-proof-generator",
+  "source_id": "gtm-skills",
+  "source_sha256": "95c76713f234f37d28a115cf0d1b6c9a45dc0c02f57025909ac78ea00800de07"
+}

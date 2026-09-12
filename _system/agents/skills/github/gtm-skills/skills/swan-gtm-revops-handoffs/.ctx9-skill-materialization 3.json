@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-revops-handoffs",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/revops-handoffs",
+  "source_id": "gtm-skills",
+  "source_sha256": "6ab36c8dc0e5253144ff87b800cd0de056f533dbbacf52616636579450a69365"
+}

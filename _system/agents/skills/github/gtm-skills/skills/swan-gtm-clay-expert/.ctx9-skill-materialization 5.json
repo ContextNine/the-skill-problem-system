@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-clay-expert",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/clay-expert",
+  "source_id": "gtm-skills",
+  "source_sha256": "d307775408816711c260e1f44fccc6f90d282f20b941801d4870fb539d9d854d"
+}

@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-marketing-operations",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/marketing-operations",
+  "source_id": "gtm-skills",
+  "source_sha256": "b55ba72a1728f01738851e5f377782567daee64a0f36c1d6c287fd0d044ef1bf"
+}

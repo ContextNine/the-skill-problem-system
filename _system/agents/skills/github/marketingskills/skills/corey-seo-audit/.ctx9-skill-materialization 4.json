@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "corey-seo-audit",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/seo-audit",
+  "source_id": "marketingskills",
+  "source_sha256": "97292eb6ee1993b9671cb22f566a3af97fe325ee50167dd306b4e79c37f74c93"
+}

@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-gtm-data-architecture",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/gtm-data-architecture",
+  "source_id": "gtm-skills",
+  "source_sha256": "60782ecff10605fb6640b701cc10903d28a5cd362add93273c29687367637167"
+}

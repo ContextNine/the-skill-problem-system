@@ -48,4 +48,3 @@ For cross-repository equality, origins, duplicate overrides, and reviewed promot
 Regular `.env`, `.env.*`, `.decrypted`, and aggregate generated plaintext files are forbidden after migration. Before removing an exact legacy source, complete protected import, value-hidden equality, profile acceptance, recovery, and reviewed rollback evidence. Never inspect the file to shortcut that process.
 
 Application-owned `run-secret-bindings.mjs`, `load-env.sh`, post-update plumbing, and production `SECRET_BINDINGS_BIN` overrides do not belong in consumers. Package scripts call the installed CLI directly. Do not recreate a removed wrapper.
-

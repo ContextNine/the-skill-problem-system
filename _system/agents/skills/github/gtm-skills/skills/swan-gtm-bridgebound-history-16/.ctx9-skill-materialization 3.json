@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-bridgebound-history-16",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/bridgebound-history-16",
+  "source_id": "gtm-skills",
+  "source_sha256": "8f58c55ee140644f13dc6087a8300d9113d142b7768a2026d8813e0e5dd4257e"
+}

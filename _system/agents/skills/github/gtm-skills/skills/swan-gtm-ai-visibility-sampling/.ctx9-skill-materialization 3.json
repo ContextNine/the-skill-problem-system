@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-ai-visibility-sampling",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/ai-visibility-sampling",
+  "source_id": "gtm-skills",
+  "source_sha256": "31b651aae5c629b095934f231a54b8881e4d00ce4485fcfa76186db8819ec561"
+}

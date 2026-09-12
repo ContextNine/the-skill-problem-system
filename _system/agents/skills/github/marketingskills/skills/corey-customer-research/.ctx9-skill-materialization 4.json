@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "corey-customer-research",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/customer-research",
+  "source_id": "marketingskills",
+  "source_sha256": "f142e4ae5d54831512b1ec8503fe0854a96e8cf273a9788f31ef23055c196d0f"
+}

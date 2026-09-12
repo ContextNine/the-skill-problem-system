@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-personalization-playbooks",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/personalization-playbooks",
+  "source_id": "gtm-skills",
+  "source_sha256": "51176e0a728e21207c38bcf313970f98909fd69e044e5af495d9ef32e8eaaa83"
+}

@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-google-ads",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/google-ads",
+  "source_id": "gtm-skills",
+  "source_sha256": "bc8b4b2174914906313edfbc6209ca4e77b0f7eb3e058d6ae7eb3212148ba11d"
+}

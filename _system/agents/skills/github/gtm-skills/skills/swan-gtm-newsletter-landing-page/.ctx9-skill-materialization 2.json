@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-newsletter-landing-page",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/newsletter-landing-page",
+  "source_id": "gtm-skills",
+  "source_sha256": "946187210ce391fcfa2991b09b62f941a050408d47994c19fe7f77a8acc027d0"
+}

@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-revops-metrics",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/revops-metrics",
+  "source_id": "gtm-skills",
+  "source_sha256": "174c8c83ac9b84e3bebc3768e24b454ea70cdad6449492c997acb4081b60eebb"
+}

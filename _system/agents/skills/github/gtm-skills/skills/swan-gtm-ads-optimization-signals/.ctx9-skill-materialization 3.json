@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-ads-optimization-signals",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/ads-optimization-signals",
+  "source_id": "gtm-skills",
+  "source_sha256": "3f41a970f79662ade4fb59dd63bd9aafaeec4e95716f65c24c2aafc1b3926c5c"
+}

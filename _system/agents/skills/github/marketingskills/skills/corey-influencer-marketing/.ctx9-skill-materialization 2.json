@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "corey-influencer-marketing",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/influencer-marketing",
+  "source_id": "marketingskills",
+  "source_sha256": "a02c7b8c0ae6a86fb224b70bcd5022a0f052aed502c0460a47e93a7a34e1a3e6"
+}

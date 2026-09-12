@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-list-building-tips",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/list-building-tips",
+  "source_id": "gtm-skills",
+  "source_sha256": "a09f26f690766c8d224b2c9229bab2b83412417b52312f4e5af47264c4a7bb69"
+}

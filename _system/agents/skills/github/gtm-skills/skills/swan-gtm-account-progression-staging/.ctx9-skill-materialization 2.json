@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-account-progression-staging",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/account-progression-staging",
+  "source_id": "gtm-skills",
+  "source_sha256": "d679b54d0306a55c9fa8c354ec00f243eb5720bc23ecded0330d986beeeb6021"
+}

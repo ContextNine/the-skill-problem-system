@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-creator-deal-pricing",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/creator-deal-pricing",
+  "source_id": "gtm-skills",
+  "source_sha256": "f935f2349a22882cbb0a9e7075566ebf76543464311ca3ada76bc91c1e635a17"
+}

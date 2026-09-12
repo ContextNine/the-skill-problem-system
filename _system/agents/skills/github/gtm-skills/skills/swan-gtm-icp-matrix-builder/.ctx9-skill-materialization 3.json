@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-icp-matrix-builder",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/icp-matrix-builder",
+  "source_id": "gtm-skills",
+  "source_sha256": "79d9cc52b492976d2eb6d12a7cef1e7013813a7e162069ad2b86bc8c03a0cdc7"
+}

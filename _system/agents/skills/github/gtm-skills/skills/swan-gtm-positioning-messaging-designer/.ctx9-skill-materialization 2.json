@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-positioning-messaging-designer",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/positioning-messaging-designer",
+  "source_id": "gtm-skills",
+  "source_sha256": "b859688e63f31f3786e9fce3c19262156dccd74ee0dd1d29f29a286e83ba7b8a"
+}

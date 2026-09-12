@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-account-tier-scoring",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/account-tier-scoring",
+  "source_id": "gtm-skills",
+  "source_sha256": "230a99a44a8f05e558dc07cbabe8222aceb27379b8b785712c3d3bf19f441cc9"
+}

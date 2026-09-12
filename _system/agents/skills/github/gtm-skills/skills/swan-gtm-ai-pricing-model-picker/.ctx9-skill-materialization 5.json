@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-ai-pricing-model-picker",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/ai-pricing-model-picker",
+  "source_id": "gtm-skills",
+  "source_sha256": "707a7d5f04a94e27968c06c74e37a13ad6f41a9c01b7f2f3588fa3be36437b81"
+}

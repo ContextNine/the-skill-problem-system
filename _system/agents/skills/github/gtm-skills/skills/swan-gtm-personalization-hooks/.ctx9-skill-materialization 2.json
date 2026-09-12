@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-personalization-hooks",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/personalization-hooks",
+  "source_id": "gtm-skills",
+  "source_sha256": "70cd780d335af289927aadcdee578f3dfcd2a15007fa44a8351d56684dcc93d5"
+}

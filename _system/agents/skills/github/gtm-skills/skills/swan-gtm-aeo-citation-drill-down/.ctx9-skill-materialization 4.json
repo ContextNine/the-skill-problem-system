@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-aeo-citation-drill-down",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/aeo-citation-drill-down",
+  "source_id": "gtm-skills",
+  "source_sha256": "d19b6a2e16863befa2342996141f20517999c30a857c8d2a0481f54e1531a677"
+}

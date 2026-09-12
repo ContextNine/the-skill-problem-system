@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-citation-gap-outreach",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/citation-gap-outreach",
+  "source_id": "gtm-skills",
+  "source_sha256": "9a7f7a7e49718436ad1261df8ed6ea936981e78ad85ce654cf00c07ca8e80776"
+}

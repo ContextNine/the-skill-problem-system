@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-meta-ads",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/meta-ads",
+  "source_id": "gtm-skills",
+  "source_sha256": "6c3df17f7990a248b812bfbb0212a26d5973a3bad77f46c4761d7c24ac0b32ae"
+}

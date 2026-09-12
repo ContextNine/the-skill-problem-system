@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-email-subject-lines",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/email-subject-lines",
+  "source_id": "gtm-skills",
+  "source_sha256": "27fbca1cb8c7e9005df70339c2f9688f1fe879fbb0cec62166561a7ba1f388ee"
+}

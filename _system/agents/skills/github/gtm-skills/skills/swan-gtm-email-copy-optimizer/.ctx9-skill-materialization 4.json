@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-email-copy-optimizer",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/email-copy-optimizer",
+  "source_id": "gtm-skills",
+  "source_sha256": "4e4b68ca6520c740c102621df094ae696a252d721869b564aae4d1c3b1232451"
+}

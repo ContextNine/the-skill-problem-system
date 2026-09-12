@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-aeo-visibility-tracking",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/aeo-visibility-tracking",
+  "source_id": "gtm-skills",
+  "source_sha256": "754fd5218b288e1594dd5579e357345e0b6fc0363b23ce8fde0bf2a6da2d183c"
+}

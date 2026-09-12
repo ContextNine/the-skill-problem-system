@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "mp-improve-codebase-architecture",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/mattpocock-skills/skills/improve-codebase-architecture",
+  "source_id": "mattpocock-skills",
+  "source_sha256": "6958d13bd7f3c5bf547adf9ed335ae23f38f8f08f2f7b606a5e484e42bd7d5c8"
+}

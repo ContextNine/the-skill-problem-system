@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-seo-keyword-validation",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/seo-keyword-validation",
+  "source_id": "gtm-skills",
+  "source_sha256": "2dbf814c36331c3be680d7c1a0d6fb34af660adc1b3e0e4b90dacc5681d3d9bd"
+}

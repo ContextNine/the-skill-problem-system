@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "mp-to-tickets",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/mattpocock-skills/skills/to-tickets",
+  "source_id": "mattpocock-skills",
+  "source_sha256": "280c1d27fef08844d48d6ee936bc53bf5edd94f01723f75e1128a762b2d78067"
+}

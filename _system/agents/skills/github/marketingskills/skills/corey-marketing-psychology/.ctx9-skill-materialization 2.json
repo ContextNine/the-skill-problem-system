@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "corey-marketing-psychology",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/marketing-psychology",
+  "source_id": "marketingskills",
+  "source_sha256": "cd4e731451a920f99fb4edcd6d9050141bbc6f2795d3fa7202095644e9c434ea"
+}

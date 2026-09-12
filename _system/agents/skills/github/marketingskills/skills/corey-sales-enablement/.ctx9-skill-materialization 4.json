@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "corey-sales-enablement",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/sales-enablement",
+  "source_id": "marketingskills",
+  "source_sha256": "8e0fad5f6314c1c4e07005b61ead0dcb547d1a2ae97c39bccd36e3fe2a72bd83"
+}

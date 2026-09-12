@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-community-radar",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/community-radar",
+  "source_id": "gtm-skills",
+  "source_sha256": "34b052a8630b692cd3b9a851ca6c681fc12b2f539565c3963083d0cb5ea18771"
+}

@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "corey-lead-magnets",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/lead-magnets",
+  "source_id": "marketingskills",
+  "source_sha256": "538bd891a75457d9763b2ac201ea1571eaf5d6fa3c904be07b8aaebe6bcf7e24"
+}

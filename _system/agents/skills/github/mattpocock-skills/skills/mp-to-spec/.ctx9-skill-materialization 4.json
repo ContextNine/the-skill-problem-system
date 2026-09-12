@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "mp-to-spec",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/mattpocock-skills/skills/to-spec",
+  "source_id": "mattpocock-skills",
+  "source_sha256": "bbdff3a1615c6952c533e7f39a4a263b129c775fbb8509c339f57beb9ecb658d"
+}

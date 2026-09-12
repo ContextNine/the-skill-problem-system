@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "claude-seo-schema",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/claude-seo/skills/seo-schema",
+  "source_id": "claude-seo",
+  "source_sha256": "722b3eea90c4db343a1015da15528154cc0852d25982db679adcdadc86590a6f"
+}

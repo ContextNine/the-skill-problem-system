@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-beehiiv-newsletter-report",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/beehiiv-newsletter-report",
+  "source_id": "gtm-skills",
+  "source_sha256": "33aaeb6e526cfa6e12bef9e17da88b4cd49e642e01e0d34b1e354660dfb47570"
+}

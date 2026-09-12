@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-meta-optimization-playbook",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/meta-optimization-playbook",
+  "source_id": "gtm-skills",
+  "source_sha256": "43e0a68a288336c8ba6198e3b1d97222fa005704c901c758706e9f8e4e1eecaf"
+}

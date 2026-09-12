@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-newsletter-value-prop",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/newsletter-value-prop",
+  "source_id": "gtm-skills",
+  "source_sha256": "796e7c9a14e1f77b87730de8afa5490fd6178c610480fa9ee135b43a7239e0e5"
+}

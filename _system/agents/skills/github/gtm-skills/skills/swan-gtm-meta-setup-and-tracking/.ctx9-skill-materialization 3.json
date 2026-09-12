@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-meta-setup-and-tracking",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/meta-setup-and-tracking",
+  "source_id": "gtm-skills",
+  "source_sha256": "01904daa150e3975ca29619937144c666b3466ac589a8a91053cf0bc9501c0f6"
+}

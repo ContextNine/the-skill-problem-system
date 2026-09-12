@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "corey-paywalls",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/paywalls",
+  "source_id": "marketingskills",
+  "source_sha256": "6592fc15d3cc065b2e9b2962821484787e13fcbbf80746351bb8ab9014efe2f9"
+}

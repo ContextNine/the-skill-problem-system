@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-linkedin-abm-audit",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/linkedin-abm-audit",
+  "source_id": "gtm-skills",
+  "source_sha256": "a1ea54403efe3d06a13c5280a8674c74ca428f2dae0e9c10eb3a801cbccee86e"
+}

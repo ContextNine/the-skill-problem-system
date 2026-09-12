@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-account-health-audit",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/account-health-audit",
+  "source_id": "gtm-skills",
+  "source_sha256": "7918da8f28bd55869d896ef51ae52682299f10c63f5c03431568f5b7a46cb7a9"
+}

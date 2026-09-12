@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "claude-seo-ecommerce",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/claude-seo/skills/seo-ecommerce",
+  "source_id": "claude-seo",
+  "source_sha256": "7995a42c691f89ba55bedc4cca7900281c57f76fdacd5b9df3bf320b4bccc136"
+}

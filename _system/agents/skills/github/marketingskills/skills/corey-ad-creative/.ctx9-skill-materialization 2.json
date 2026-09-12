@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "corey-ad-creative",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/ad-creative",
+  "source_id": "marketingskills",
+  "source_sha256": "0bb0fc05693adb1a996000af10ec87f806422059ebf35fb5490e09e13f6371e9"
+}

@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "corey-launch",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/launch",
+  "source_id": "marketingskills",
+  "source_sha256": "f965053a9fdc4c620aa1110113c29e3565771c776929e259d13c4de143342ae8"
+}

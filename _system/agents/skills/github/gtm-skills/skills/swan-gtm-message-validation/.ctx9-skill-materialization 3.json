@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-message-validation",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/message-validation",
+  "source_id": "gtm-skills",
+  "source_sha256": "9197ab6eca62728de9330f01ebf6a1cfa9d7a5adfa526d80012ea3f7fec7646a"
+}

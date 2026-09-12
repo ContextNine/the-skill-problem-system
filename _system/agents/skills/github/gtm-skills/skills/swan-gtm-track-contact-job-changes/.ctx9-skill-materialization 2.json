@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-track-contact-job-changes",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/track-contact-job-changes",
+  "source_id": "gtm-skills",
+  "source_sha256": "951a33a262835f79e57883d2041768428767de3136368d3a927aa6abbd806245"
+}

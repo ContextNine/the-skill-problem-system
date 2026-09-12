@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "mp-tdd",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/mattpocock-skills/skills/tdd",
+  "source_id": "mattpocock-skills",
+  "source_sha256": "993bb4f71248981cc03cc92a1caf7d00b43db78d26f174dca57196b712798498"
+}

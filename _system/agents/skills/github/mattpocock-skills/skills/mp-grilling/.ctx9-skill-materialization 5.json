@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "mp-grilling",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/mattpocock-skills/skills/grilling",
+  "source_id": "mattpocock-skills",
+  "source_sha256": "0175779ce373117b20cea645cb1a30e3a810d1b4e51f71f1557914936e8506c4"
+}

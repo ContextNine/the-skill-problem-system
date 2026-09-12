@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "corey-copy-editing",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/copy-editing",
+  "source_id": "marketingskills",
+  "source_sha256": "d1e11c2fd291a872dd09afb87e15f9fe2ae64813b3014c243ac97474b8f9d9af"
+}

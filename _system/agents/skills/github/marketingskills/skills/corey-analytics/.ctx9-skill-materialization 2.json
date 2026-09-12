@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "corey-analytics",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/marketingskills/skills/analytics",
+  "source_id": "marketingskills",
+  "source_sha256": "b044b1a0387e489f0bf49cb22a5a47fc2b7687868d07e631fc089b1df8dc3ce2"
+}

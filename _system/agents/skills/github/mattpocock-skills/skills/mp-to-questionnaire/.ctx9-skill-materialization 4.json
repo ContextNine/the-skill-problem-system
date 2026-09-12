@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "fleet sync",
+  "materialization": "snapshot",
+  "name": "mp-to-questionnaire",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/mattpocock-skills/skills/to-questionnaire",
+  "source_id": "mattpocock-skills",
+  "source_sha256": "82fe852172f18de21917d792eedbb8f0d5dbb6a90ee907c7f5d9e56438f21899"
+}

@@ -1,0 +1,9 @@
+{
+  "allow_implicit_invocation": false,
+  "managed_by": "ctx9-agents sync",
+  "materialization": "snapshot",
+  "name": "swan-gtm-linkedin-campaign-complete",
+  "source": "/Users/matthewderman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Vault/_system/agents/skills/github/gtm-skills/skills/linkedin-campaign-complete",
+  "source_id": "gtm-skills",
+  "source_sha256": "23b8885b6c45aac1f53a732b77add62498cc053f975a95c93213dabf86fab217"
+}

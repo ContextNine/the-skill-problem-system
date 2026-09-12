@@ -738,10 +738,6 @@ def install_package(package: dict[str, Any], recipe: dict[str, Any]) -> None:
         if private_catalog_url:
             command = [
                 executable,
-                "auth",
-                "exec",
-                "--",
-                executable,
                 "--private-catalog-url",
                 str(private_catalog_url),
                 "--credential-binding",

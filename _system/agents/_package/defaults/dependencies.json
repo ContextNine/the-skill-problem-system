@@ -673,23 +673,23 @@
         "recipes": {
           "macos": {
             "manager": "github-python-installer",
-            "version": "0.3.6",
+            "version": "0.3.7",
             "archive": {
-              "url": "https://github.com/MDerman/ctx9/releases/download/v0.3.6/ctx9-0.3.6.tar.gz",
-              "sha256": "cbb29d15ea6d613ba462be46ce06ec6fe11b6fd04e56a0302fe21b9029e0fb08"
+              "url": "https://github.com/MDerman/ctx9/releases/download/v0.3.7/ctx9-0.3.7.tar.gz",
+              "sha256": "276208f00e9aab9e6da414a107f3eaaf6f6b349d377d3b31ca108c64296873ac"
             },
-            "archive_root": "ctx9-0.3.6",
+            "archive_root": "ctx9-0.3.7",
             "installer": "scripts/install.py",
             "arguments": []
           },
           "linux": {
             "manager": "github-python-installer",
-            "version": "0.3.6",
+            "version": "0.3.7",
             "archive": {
-              "url": "https://github.com/MDerman/ctx9/releases/download/v0.3.6/ctx9-0.3.6.tar.gz",
-              "sha256": "cbb29d15ea6d613ba462be46ce06ec6fe11b6fd04e56a0302fe21b9029e0fb08"
+              "url": "https://github.com/MDerman/ctx9/releases/download/v0.3.7/ctx9-0.3.7.tar.gz",
+              "sha256": "276208f00e9aab9e6da414a107f3eaaf6f6b349d377d3b31ca108c64296873ac"
             },
-            "archive_root": "ctx9-0.3.6",
+            "archive_root": "ctx9-0.3.7",
             "installer": "scripts/install.py",
             "arguments": []
           }
@@ -699,7 +699,7 @@
           "args": [
             "--version"
           ],
-          "exact": "0.3.6"
+          "exact": "0.3.7"
         }
       }
     },
@@ -745,7 +745,7 @@
             "fleet",
             "--json"
           ],
-          "exact": "0.2.5"
+          "exact": "0.2.6"
         }
       }
     },

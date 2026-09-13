@@ -674,23 +674,23 @@
         "recipes": {
           "macos": {
             "manager": "github-python-installer",
-            "version": "0.3.10",
+            "version": "0.3.11",
             "archive": {
-              "url": "https://github.com/MDerman/ctx9/releases/download/v0.3.10/ctx9-0.3.10.tar.gz",
-              "sha256": "7be00b4866ce36cd935e20a257534a8a648f9bf18a2f95fe28ed7c2a5d30f537"
+              "url": "https://github.com/MDerman/ctx9/releases/download/v0.3.11/ctx9-0.3.11.tar.gz",
+              "sha256": "8c4859c4a3791066320f2c39cea7a6d1a2ab8f5e0787ff13c9a6b95d3155f184"
             },
-            "archive_root": "ctx9-0.3.10",
+            "archive_root": "ctx9-0.3.11",
             "installer": "scripts/install.py",
             "arguments": []
           },
           "linux": {
             "manager": "github-python-installer",
-            "version": "0.3.10",
+            "version": "0.3.11",
             "archive": {
-              "url": "https://github.com/MDerman/ctx9/releases/download/v0.3.10/ctx9-0.3.10.tar.gz",
-              "sha256": "7be00b4866ce36cd935e20a257534a8a648f9bf18a2f95fe28ed7c2a5d30f537"
+              "url": "https://github.com/MDerman/ctx9/releases/download/v0.3.11/ctx9-0.3.11.tar.gz",
+              "sha256": "8c4859c4a3791066320f2c39cea7a6d1a2ab8f5e0787ff13c9a6b95d3155f184"
             },
-            "archive_root": "ctx9-0.3.10",
+            "archive_root": "ctx9-0.3.11",
             "installer": "scripts/install.py",
             "arguments": []
           }
@@ -700,7 +700,7 @@
           "args": [
             "--version"
           ],
-          "exact": "0.3.10"
+          "minimum": "0.3.11"
         }
       }
     },
@@ -786,7 +786,7 @@
             "vault",
             "--json"
           ],
-          "exact": "0.2.14"
+          "exact": "0.2.16"
         }
       }
     },
@@ -1448,6 +1448,82 @@
       "contract": {
         "adapter": "tailscale",
         "install_policy": "selected-by-machine-registry"
+      }
+    },
+    {
+      "id": "codegraph",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "code-intelligence"
+      ],
+      "eligibility": "capability-selected",
+      "required_by": [
+        "code-install-codegraph-mcp"
+      ],
+      "lifecycle_doc": "dependencies/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "selected",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "github-archive",
+            "version": "1.6.0",
+            "archives": {
+              "x64": {
+                "url": "https://github.com/colbymchenry/codegraph/releases/download/v1.6.0/codegraph-darwin-x64.tar.gz",
+                "sha256": "cb86a2b62ee676b62a56bf8423600e7d867e752e57f323cdc98c0f6236efd908"
+              },
+              "arm64": {
+                "url": "https://github.com/colbymchenry/codegraph/releases/download/v1.6.0/codegraph-darwin-arm64.tar.gz",
+                "sha256": "1c73033512d55f67be04717e81532e8beaf7be6fb8531f51a179fa23064ad480"
+              }
+            },
+            "binaries_by_arch": {
+              "x64": {
+                "codegraph": "codegraph-darwin-x64/bin/codegraph"
+              },
+              "arm64": {
+                "codegraph": "codegraph-darwin-arm64/bin/codegraph"
+              }
+            }
+          },
+          "linux": {
+            "manager": "github-archive",
+            "version": "1.6.0",
+            "archives": {
+              "x64": {
+                "url": "https://github.com/colbymchenry/codegraph/releases/download/v1.6.0/codegraph-linux-x64.tar.gz",
+                "sha256": "de3391f79ed42622d937e6cd5b7642a7ea8bb7d1473607e80b879ba73ef216b0"
+              },
+              "arm64": {
+                "url": "https://github.com/colbymchenry/codegraph/releases/download/v1.6.0/codegraph-linux-arm64.tar.gz",
+                "sha256": "6dc935a7b8f1a61e688a578b98ea34680eb2e36d7b91db079d64f4011f1a668f"
+              }
+            },
+            "binaries_by_arch": {
+              "x64": {
+                "codegraph": "codegraph-linux-x64/bin/codegraph"
+              },
+              "arm64": {
+                "codegraph": "codegraph-linux-arm64/bin/codegraph"
+              }
+            }
+          }
+        },
+        "verify": {
+          "command": "codegraph",
+          "args": [
+            "--version"
+          ],
+          "minimum": "1.6.0",
+          "maximum_exclusive": "2.0.0"
+        }
       }
     },
     {

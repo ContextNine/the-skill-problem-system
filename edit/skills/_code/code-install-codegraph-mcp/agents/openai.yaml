@@ -1,0 +1,5 @@
+interface:
+  short_description: "Install CodeGraph as a local code-graph MCP"
+  default_prompt: "Use $code-install-codegraph-mcp to install and configure CodeGraph for Codex in this repository."
+policy:
+  allow_implicit_invocation: false

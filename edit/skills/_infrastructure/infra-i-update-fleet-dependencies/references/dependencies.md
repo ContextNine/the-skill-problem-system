@@ -8,7 +8,7 @@ The registry is standard JSON so the portable worker can parse it before optiona
 
 Repository-built commands remain transitional recipes in `edit/settings/dependencies/selections.json`. They must reference a logical workspace ID from `edit/settings/fleet/workspaces.json`, never a path or checkout URL. The matching `workspace-command` entry here provides stable identity and lifecycle routing. When an immutable package owns the same accepted command, add its release recipe and remove the workspace recipe in the same change.
 
-Public CTX9 tools use the checksummed `ctx9-launcher` release plus typed `ctx9-component` recipes. The launcher catalog owns component artifact details and doctor behavior; this registry owns fleet eligibility, dependency ordering, the exact accepted versions, and lifecycle routing. See `dependencies/ctx9.md`.
+Public CTX9 tools use the checksummed `ctx9-launcher` release plus typed `ctx9-component` recipes. The launcher catalog owns component artifact details and doctor behavior; this registry owns fleet eligibility, dependency ordering, accepted versions, and lifecycle routing. Component versions are exact; the launcher uses a minimum accepted version to avoid a catalog-to-component release cycle. See `dependencies/ctx9.md`.
 
 Verified target facts live under machine-local `~/.agents/state/`; sanitized aggregate facts live in `internal/generated/state/`. Locks never drive desired configuration. Read the selected file under `dependencies/` before installing, updating, aligning, recovering, replacing, or removing a complex dependency.
 

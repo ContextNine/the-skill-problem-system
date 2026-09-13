@@ -1,5 +1,0 @@
-interface:
-  short_description: "Install CCE as a local embedding MCP"
-  default_prompt: "Use $code-install-cce-local-embedding-mcp to install Code Context Engine with local embeddings for Codex in this repository."
-policy:
-  allow_implicit_invocation: false

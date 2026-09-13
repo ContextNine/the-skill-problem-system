@@ -1,5 +1,0 @@
-interface:
-  short_description: "Upload private, public, or Git-owned files"
-  default_prompt: "Use $infra-i-file-upload to inspect and upload this requested file with the right namespace, visibility, and optional expiry."
-policy:
-  allow_implicit_invocation: true

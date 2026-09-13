@@ -1,0 +1,8 @@
+{
+  "schema_version": 2,
+  "instance_id": "personal",
+  "enabled": false,
+  "base_url": null,
+  "credential_registry_id": "langfuse-coding-agent-api",
+  "integrations": {}
+}

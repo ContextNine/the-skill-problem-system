@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "install": {
+    "codex": true,
+    "claude_alias": true
+  },
+  "outputs": [
+    {
+      "target": "AGENTS.md",
+      "base": "AGENTS.md",
+      "format": "markdown",
+      "fragments": [
+        {
+          "id": "platform:macos",
+          "path": "fleet-templates/platform/macos.md",
+          "when": {"platform": "macos"}
+        },
+        {
+          "id": "platform:linux",
+          "path": "fleet-templates/platform/linux.md",
+          "when": {"platform": "linux"}
+        },
+        {
+          "id": "role:primary",
+          "path": "fleet-templates/role/primary.md",
+          "when": {"role": "primary"}
+        },
+        {
+          "id": "role:worker",
+          "path": "fleet-templates/role/worker.md",
+          "when": {"role": "worker"}
+        },
+        {
+          "id": "machine:{machine_id}",
+          "path": "fleet-templates/machine.md"
+        }
+      ]
+    }
+  ],
+  "append_fragments": []
+}

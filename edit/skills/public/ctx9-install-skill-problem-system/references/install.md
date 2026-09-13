@@ -1,0 +1,7 @@
+# Installation
+
+Run `./install.sh` from the fresh user-owned repository. The wizard initializes the editable source under `edit/`, installs runtime, settings, instructions, skills, and state under `~/.agents/`, installs the `fleet` launcher, and makes every public skill globally discoverable.
+
+The installer asks about optional global instructions, the Claude alias, and a local Context Vault. Existing unmanaged files are preserved and block only the conflicting integration. Run the same command again to verify convergence.
+
+Use `fleet verify` to check ownership and configuration. Preview removal with `fleet uninstall`, then apply with `fleet uninstall --apply`.

@@ -21,6 +21,6 @@ Then tell your agent:
 ## How I solved it
 
 - I use one naming and folder standard for automatic, manual, and imported skills.
-- I keep public defaults and schemas in Git while private instance data stays outside the public export.
+- I keep editable settings, skills, and instruction templates under `edit/`, with implementation under `internal/`.
 - I project validated skills into each agent's discovery folder with `fleet sync`.
-- I publish every active non-repository skill while keeping repository-owned projections private.
+- I publish approved skills while keeping generated projections and user-selected exclusions private.

@@ -3,7 +3,8 @@ set -euo pipefail
 export PYTHONDONTWRITEBYTECODE=1
 
 repo_root="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
-package_root="${repo_root}/_system/agents/_package"
+package_root="${repo_root}/internal"
+source_root="${CTX9_SOURCE_ROOT:-${repo_root}}"
 home_dir="${HOME}"
 machine_id="$(hostname -s 2>/dev/null | tr '[:upper:]_' '[:lower:]-' || printf primary)"
 code_root="~/Developer"
@@ -44,10 +45,11 @@ fi
 
 args=(
   "${package_root}/src/fleet.py" install
-  --source "${package_root}"
+  --source "${source_root}"
   --home "${home_dir}"
   --machine-id "${machine_id}"
   --code-root "${code_root}"
+  --initialize-source
   --discovery-aliases
   --apply
 )
@@ -56,9 +58,9 @@ args=(
 [[ "${claude_alias}" == "1" ]] && args+=(--claude-alias)
 
 python3 "${args[@]}"
-python3 "${package_root}/src/fleet.py" config validate --config-root "${home_dir}/.config/ctx9/fleet"
+python3 "${package_root}/src/fleet.py" config validate --config-root "${home_dir}/.agents/settings"
 python3 "${package_root}/src/fleet.py" verify --home "${home_dir}"
 
 printf '\nInstalled fleet and all public skills.\n'
-printf 'Repository: %s\n' "${repo_root}"
+printf 'Editable source: %s/edit\n' "${source_root}"
 printf 'This repository has no user remote until you add one.\n'

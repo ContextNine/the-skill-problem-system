@@ -1,0 +1,1 @@
+This target is macOS. Include `/opt/homebrew/bin` and `/usr/local/bin` when resolving user-installed commands, and use the macOS GUI bootstrap route where the workflow requires native Keychain access.

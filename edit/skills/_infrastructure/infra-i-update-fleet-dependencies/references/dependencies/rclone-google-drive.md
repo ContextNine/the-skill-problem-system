@@ -1,0 +1,5 @@
+## Rclone Google Drive
+
+Dependency ID: `rclone`. It is a required package on enabled agent machines because each CodeFolderSync source uploads its own encrypted recovery bundle directly. Homebrew owns the macOS package. Linux bootstraps the Debian package through APT, then Fleet uses `rclone selfupdate --stable --package deb`. Rclone verifies the downloaded hash and signed release metadata before replacing the package. Verification requires Rclone `1.70.0` or newer through `rclone version`; configuration and provider authentication remain separate machine-local gates.
+
+Use `$infra-i-update-fleet-dependencies` for preview, approved installation, updates, and fleet convergence. Use `$infra-i-manage-rclone-google-drive` for encrypted configuration, target-local OAuth, dedicated-root acceptance, ciphertext transfer, restore download, and retirement. Use `$infra-i-onboard-machine` for native secret custody. Never substitute Rclone's shared OAuth client, copy a config or token, place secret values in dependency state, or broaden `drive.file` without explicit approval.

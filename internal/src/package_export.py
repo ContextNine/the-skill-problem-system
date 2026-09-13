@@ -49,6 +49,7 @@ FORBIDDEN_PARTS = {
 FORBIDDEN_SUFFIXES = {".pyc", ".pyo"}
 ICLOUD_DUPLICATE_RE = re.compile(r"^.+ \d+(?:\.[^.]+)?$")
 EXCLUSIONS_PATH = AGENTS_ROOT / "edit/settings/public-skill-repo-export-exclusions.json"
+LEGACY_PUBLIC_ROOTS = (Path("_system/agents"),)
 
 
 class ExportError(RuntimeError):
@@ -534,6 +535,12 @@ def replace_owned(destination: Path, stage: Path) -> None:
         target = destination / safe_relative(relative, "previous export path")
         if target.is_file() or target.is_symlink():
             target.unlink()
+    for relative in LEGACY_PUBLIC_ROOTS:
+        target = destination / relative
+        if target.is_symlink() or target.is_file():
+            target.unlink()
+        elif target.is_dir():
+            shutil.rmtree(target)
     for source in sorted(stage.rglob("*")):
         target = destination / source.relative_to(stage)
         if source.is_dir():
@@ -550,6 +557,12 @@ def export_changes(destination: Path, stage: Path) -> list[dict[str, str]]:
     previous_manifest = destination / MANIFEST_NAME
     previous = json.loads(previous_manifest.read_text(encoding="utf-8")) if previous_manifest.is_file() else {"owned_paths": []}
     previous_paths = {str(item) for item in previous.get("owned_paths", [])}
+    previous_paths.update(
+        path.relative_to(destination).as_posix()
+        for root in LEGACY_PUBLIC_ROOTS
+        for path in (destination / root).rglob("*")
+        if path.is_file() or path.is_symlink()
+    )
     next_paths = {
         path.relative_to(stage).as_posix()
         for path in stage.rglob("*")

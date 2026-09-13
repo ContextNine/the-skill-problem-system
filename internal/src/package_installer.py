@@ -22,7 +22,7 @@ import working_repo_skills
 
 INSTALL_MARKER = ".fleet-install.json"
 MANAGED_TEXT_MARKER = "fleet.managed"
-PACKAGE_VERSION = "0.2.9"
+PACKAGE_VERSION = "0.2.10"
 ICLOUD_DUPLICATE_RE = re.compile(r"^.+ \d+(?:\.[^.]+)?$")
 
 

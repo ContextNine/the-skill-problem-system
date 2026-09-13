@@ -14,7 +14,7 @@ from package_export import ExportError, export as export_package, read_manifest,
 from package_layout import AGENTS_ROOT, ConfigurationError, active_instance_root, load_instance, resolve_dotted
 
 
-VERSION = "0.2.10"
+VERSION = "0.2.11"
 SCRIPT_DIRECTORY = Path(__file__).resolve().parent
 FLEET_COMMANDS = {
     "sync": SCRIPT_DIRECTORY / "sync_agents.py",
@@ -48,6 +48,7 @@ def parser() -> argparse.ArgumentParser:
     install_parser.add_argument("--code-root")
     install_parser.add_argument("--vault-root")
     install_parser.add_argument("--initialize-source", action="store_true")
+    install_parser.add_argument("--command-root", type=Path)
     install_parser.add_argument("--json", action="store_true", help=argparse.SUPPRESS)
     verify_parser = commands.add_parser("verify")
     verify_parser.add_argument("--home", type=Path, default=Path.home())
@@ -97,6 +98,7 @@ def main(argv: list[str] | None = None) -> int:
                 code_root=args.code_root,
                 vault_root=args.vault_root,
                 initialize_source=args.initialize_source,
+                command_root=args.command_root,
             )
         elif args.command == "verify":
             report = verify(args.home)

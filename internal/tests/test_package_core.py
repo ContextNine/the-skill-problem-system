@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import json
+import shutil
 import sys
 import tempfile
 import unittest
@@ -179,6 +180,8 @@ class StandaloneInstallTests(unittest.TestCase):
             self.assertEqual(machines["primary_machine_id"], "test-mac")
             self.assertEqual(machines["machines"][0]["roots"]["code"], "~/Developer")
             self.assertFalse((home / ".agents/internal/skills").exists())
+            launcher = (home / ".local/bin/fleet").read_text(encoding="utf-8")
+            self.assertIn(f"--root {json.dumps(str(package.parents[1].resolve()))}", launcher)
             second = install(
                 package,
                 home,
@@ -241,6 +244,28 @@ class StandaloneInstallTests(unittest.TestCase):
                 (home / ".agents/settings/fleet/machines.json").read_text(encoding="utf-8")
             )
             self.assertEqual(installed_registry, source_registry)
+
+    def test_command_root_overrides_a_temporary_private_source(self) -> None:
+        package = Path(__file__).resolve().parents[2]
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "migration-source"
+            registered_root = root / "Vault"
+            home = root / "worker-home"
+            home.mkdir()
+            shutil.copytree(package, source, symlinks=True)
+            report = install(
+                source,
+                home,
+                apply=True,
+                global_instructions=False,
+                claude_alias=False,
+                discovery_aliases=False,
+                command_root=registered_root,
+            )
+            self.assertTrue(report["ready"])
+            launcher = (home / ".local/bin/fleet").read_text(encoding="utf-8")
+            self.assertIn(f"--root {json.dumps(str(registered_root.resolve()))}", launcher)
 
 
 if __name__ == "__main__":

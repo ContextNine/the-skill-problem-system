@@ -22,7 +22,7 @@ import working_repo_skills
 
 INSTALL_MARKER = ".fleet-install.json"
 MANAGED_TEXT_MARKER = "fleet.managed"
-PACKAGE_VERSION = "0.2.10"
+PACKAGE_VERSION = "0.2.11"
 ICLOUD_DUPLICATE_RE = re.compile(r"^.+ \d+(?:\.[^.]+)?$")
 
 
@@ -296,11 +296,17 @@ def install(
     code_root: str | None = None,
     vault_root: str | None = None,
     initialize_source: bool = False,
+    command_root: Path | None = None,
 ) -> dict[str, Any]:
     if claude_alias and not global_instructions:
         raise InstallError("Claude instruction alias requires managed global instructions")
     source = source.expanduser().resolve()
     home = home.expanduser().resolve()
+    sync_root = (
+        command_root.expanduser().resolve()
+        if command_root is not None
+        else source.parents[1] if is_private_source(source) else source
+    )
     parts = distribution_paths(source)
     package_target = installed_package_root(home)
     config_target = installed_config_root(home)
@@ -406,7 +412,7 @@ def install(
         "case \"$command_name\" in\n"
         "  sync|update)\n"
         "    shift\n"
-        f"    exec python3 {json.dumps(str(package_target / 'src/fleet.py'))} \"$command_name\" \"$@\" --root {json.dumps(str(source))}\n"
+        f"    exec python3 {json.dumps(str(package_target / 'src/fleet.py'))} \"$command_name\" \"$@\" --root {json.dumps(str(sync_root))}\n"
         "    ;;\n"
         "  *)\n"
         f"    exec python3 {json.dumps(str(package_target / 'src/fleet.py'))} \"$@\"\n"

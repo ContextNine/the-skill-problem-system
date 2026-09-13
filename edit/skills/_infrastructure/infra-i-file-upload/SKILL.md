@@ -32,7 +32,7 @@ publish upload <path-to-file> --namespace private --visibility tenant \
 - Never upload env files, credentials, private keys, authentication exports, cookies, database dumps, or unreviewed archives.
 - If doctor or authentication fails, report the missing configuration without printing values. Do not retry with another service.
 
-Read [[references/publisher-file-lifecycle|Publisher File Lifecycle]] only for versioning, expiry, download, or deletion.
+Read [Publisher File Lifecycle](references/publisher-file-lifecycle.md) only for versioning, expiry, download, or deletion.
 
 ## Use the URL in GitHub
 

@@ -5,7 +5,7 @@ description: Use when the user wants a plan, spec, write-up, findings, summary, 
 
 # Infra · MD HTML Publisher
 
-Read [[references/publisher-document-lifecycle|Publisher Document Lifecycle]] for discovery, versioning, and exact deletion.
+Read [Publisher Document Lifecycle](references/publisher-document-lifecycle.md) for discovery, versioning, and exact deletion.
 
 ## When to Use
 

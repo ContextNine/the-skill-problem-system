@@ -1,6 +1,6 @@
 # Financial model pipeline overview
 
-This document explains where financial-model files live, what owns each file, and how statement data reaches Excel. For field schemas and accounting rules, see [[REFERENCE]].
+This document explains where financial-model files live, what owns each file, and how statement data reaches Excel. For field schemas and accounting rules, see [REFERENCE](REFERENCE.md).
 
 ## Big picture
 

@@ -9,7 +9,7 @@ Handle one live Brain Dump section with review before mutation. Do not run whole
 
 ## Prepare
 
-1. Read [[_system/docs/workflows/README-brain-dump-routing|Brain Dump Routing]] completely.
+1. Read Brain Dump Routing completely.
 2. Run `vault inventory`, then read relevant context-folder and library routing notes.
 3. Read `_system/inbox/BRAIN_DUMP.md` and identify requested section between full-line `***` or `---` separators. File boundary can replace outer separator.
 4. If description matches multiple sections, show short opening previews and ask user to identify one. Do not guess.

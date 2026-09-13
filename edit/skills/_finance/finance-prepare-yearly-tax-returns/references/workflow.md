@@ -2,9 +2,9 @@
 
 ## Standard
 
-Every finance and tax-reporting workspace follows the ownership and location map in [[Finance & Biz]]. Each relevant tax year has one control note in the location named there.
+Every finance and tax-reporting workspace follows the ownership and location map in Finance & Biz. Each relevant tax year has one control note in the location named there.
 
-[[Finance & Biz]] also owns each taxpayer's legal year-end. Never assume a company uses the individual 1 March to February period. Allocate transactions by legal period and transaction date even when historical folder labels are wrong.
+Finance & Biz also owns each taxpayer's legal year-end. Never assume a company uses the individual 1 March to February period. Allocate transactions by legal period and transaction date even when historical folder labels are wrong.
 
 The control note must record:
 

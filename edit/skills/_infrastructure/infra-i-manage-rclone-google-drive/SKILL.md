@@ -5,7 +5,7 @@ description: Configures, verifies, uploads, downloads, restore-checks, and retir
 
 # Infra · Manage Rclone Google Drive
 
-Read [[references/authentication-and-custody|Authentication and Custody]] before setup or credential work. Read [[references/backup-and-restore|Backup and Restore]] before moving backup artifacts. Read [[references/verification-and-retirement|Verification and Retirement]] before live acceptance, recovery, or retirement.
+Read [Authentication and Custody](references/authentication-and-custody.md) before setup or credential work. Read [Backup and Restore](references/backup-and-restore.md) before moving backup artifacts. Read [Verification and Retirement](references/verification-and-retirement.md) before live acceptance, recovery, or retirement.
 
 ## Workflow
 

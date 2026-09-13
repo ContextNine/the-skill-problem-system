@@ -53,6 +53,6 @@ vault refresh-schedule status
 
 ### Linux remote capability
 
-Remote access is optional and explicit. Follow [[linux-remote-vault-access|Linux Remote Vault Access]] through `$infra-i-onboard-machine`. The controller derives the exact source and client roots from the fleet registry, deploys the helper outside the mount, creates a user-only SSHFS unit, and enables it only after acceptance.
+Remote access is optional and explicit. Follow Linux Remote Vault Access through `$infra-i-onboard-machine`. The controller derives the exact source and client roots from the fleet registry, deploys the helper outside the mount, creates a user-only SSHFS unit, and enables it only after acceptance.
 
 `vault access status` reports SSH and mount safety, the exact source and read-write state, and the Mac host's File Provider and iCloud health. Missing, wrong-source, read-only, conflicted, dataless, paused, or stale-downloaded state fails closed. Pending outbound upload does not block access.

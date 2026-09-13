@@ -7,11 +7,11 @@ description: Coordinates complete approved dependency, coding-tool, skill-source
 
 ## Route the operation
 
-Read [[_system/agents/edit/skills/_infrastructure/infra-i-code-folder-and-computer-topology/SKILL|Code Folder and Computer Topology]], [[dependencies|Agent and Fleet Dependencies]], the package's `internal/defaults/dependencies.json`, and [[_system/docs/commands/Agent Update|Agent Update]]. The dependency reference owns the registry and lifecycle contract; use its routed lifecycle pages for the selected dependency. Resolve installed configuration with `fleet config`; never construct a private Vault path. This skill is the human-facing umbrella; `fleet update` is the sole fleet update CLI.
+Read [Code Folder and Computer Topology](../infra-i-code-folder-and-computer-topology/SKILL.md), [Agent and Fleet Dependencies](references/dependencies.md), the package's `internal/defaults/dependencies.json`, and Agent Update. The dependency reference owns the registry and lifecycle contract; use its routed lifecycle pages for the selected dependency. Resolve installed configuration with `fleet config`; never construct a private Vault path. This skill is the human-facing umbrella; `fleet update` is the sole fleet update CLI.
 
 - Use the default command for every approved update class on every enabled, agent-eligible machine.
 - Use selectors or repeatable `--target` only when the request narrows the operation.
-- Invoke [[_system/agents/edit/skills/_infrastructure/infra-i-update-fleet-coding-tools/SKILL|Update Fleet Coding Tools]] whenever `--coding-tools` is selected. It owns Codex provenance, exact T3 nightly alignment, native artifact acceptance, and service-manager handling.
+- Invoke [Update Fleet Coding Tools](../infra-i-update-fleet-coding-tools/SKILL.md) whenever `--coding-tools` is selected. It owns Codex provenance, exact T3 nightly alignment, native artifact acceptance, and service-manager handling.
 - Route manual application, privilege, login, privacy, or restart checkpoints to the selected dependency's lifecycle reference. Do not turn a checkpoint into an inferred installer command.
 - Never target a disabled machine, broaden “everything” to undeclared software, or include production deployment, credential rotation, major OS upgrades, firmware, or account authentication.
 

@@ -14,15 +14,15 @@ description: Document, audit, snapshot, diff, apply, publish, version, reuse, an
 
 ## Route References
 
-- Product/account/API confusion: [[references/google-product-map|Google Product Map]].
-- Consent implementation or debugging: [[references/consent-initialization|Consent Initialization]].
-- Event names, parameters, and duplicate prevention: [[references/event-contract|Event Contract]].
-- Export, import, publishing, or rollback: [[references/container-version-control|Container Version Control]].
-- OAuth, Admin API, GTM API, and scripts: [[references/api-and-automation|API and Automation]].
-- UTMs and first-touch cookies: [[references/utm-attribution|UTM Attribution]].
-- GA4/PostHog separation and client errors: [[references/posthog-error-boundary|PostHog Error Boundary]].
-- Porting the baseline to another app: [[references/reuse-and-migration|Reuse and Migration]].
-- Impression-specific evidence: [[references/impression-current-state|Impression Current State]].
+- Product/account/API confusion: [Google Product Map](references/google-product-map.md).
+- Consent implementation or debugging: [Consent Initialization](references/consent-initialization.md).
+- Event names, parameters, and duplicate prevention: [Event Contract](references/event-contract.md).
+- Export, import, publishing, or rollback: [Container Version Control](references/container-version-control.md).
+- OAuth, Admin API, GTM API, and scripts: [API and Automation](references/api-and-automation.md).
+- UTMs and first-touch cookies: [UTM Attribution](references/utm-attribution.md).
+- GA4/PostHog separation and client errors: [PostHog Error Boundary](references/posthog-error-boundary.md).
+- Porting the baseline to another app: [Reuse and Migration](references/reuse-and-migration.md).
+- Impression-specific evidence: [Impression Current State](references/impression-current-state.md).
 
 ## Operate
 

@@ -7,16 +7,16 @@ description: Synchronizes registered Code workspaces and primary-owned Codex and
 
 Read `$infra-i-code-folder-and-computer-topology` and every prerequisite it requires before operating.
 
-Read [[README-github-fleet-authentication|GitHub Fleet Authentication]] before changing GitHub remotes or diagnosing GitHub authentication.
+Read GitHub Fleet Authentication before changing GitHub remotes or diagnosing GitHub authentication.
 
-Read [[platform-runtime|Platform Runtime]] before running the workflow. Fleet renders that reference for the selected machine during installation.
+Read [Platform Runtime](references/platform-runtime.md) before running the workflow. Fleet renders that reference for the selected machine during installation.
 
 1. Run `fleet config validate`, then load `fleet/machines.json` and schema-v2 `fleet/workspaces.json` below the resolved config path. Workspace paths are relative to each selected machine's registered Code root. Keep missing or invalid configuration inactive.
-2. Read [[workspace-sync-commands|Workspace Sync Commands]] for modes, command syntax, safety gates, and post-sync checks.
-3. Read [[catalog-schema|Catalog Schema]] before changing catalog entries, profiles, machine filters, or clone policy.
-4. Read [[state-and-reconciliation|State and Reconciliation]] before adopting source moves, relocating target checkouts, or inspecting run history.
-5. Read [[agent-configuration-sync|Fleet Agent Configuration Sync]] before changing managed Codex or Claude files, eligibility, role overlays, or onboarding integration.
-6. Read [[plugin-reconciliation|Fleet Codex Plugin Reconciliation]] before changing plugin inventory, marketplace handling, ownership state, or readiness reporting.
+2. Read [Workspace Sync Commands](references/workspace-sync-commands.md) for modes, command syntax, safety gates, and post-sync checks.
+3. Read [Catalog Schema](references/catalog-schema.md) before changing catalog entries, profiles, machine filters, or clone policy.
+4. Read [State and Reconciliation](references/state-and-reconciliation.md) before adopting source moves, relocating target checkouts, or inspecting run history.
+5. Read [Fleet Agent Configuration Sync](references/agent-configuration-sync.md) before changing managed Codex or Claude files, eligibility, role overlays, or onboarding integration.
+6. Read [Fleet Codex Plugin Reconciliation](references/plugin-reconciliation.md) before changing plugin inventory, marketplace handling, ownership state, or readiness reporting.
 7. The scripts preflight every selected target before any apply. Use their explicit preview modes when the user asks for a dry run.
 
 The editable global instruction base and its colocated templates live in `edit/root-agents/`. `fleet sync` is the sole default-apply entrypoint. It resolves settings from `edit/settings/` and renders exact absolute Code and Vault roots for the selected machine.

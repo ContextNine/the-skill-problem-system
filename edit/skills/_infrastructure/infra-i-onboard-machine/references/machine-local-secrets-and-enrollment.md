@@ -5,7 +5,7 @@ status: enabled
 
 ## Machine-local secrets and enrollment
 
-Start with [[_system/agents/edit/skills/_infrastructure/infra-i-onboard-machine/references/machine-local-secrets|Machine-local Secrets]] for package-level ownership and focused credential references.
+Start with [Machine-local Secrets](machine-local-secrets.md) for package-level ownership and focused credential references.
 
 `_system/agents/edit/settings/fleet/machine-secrets.json` is the canonical non-secret vocabulary and routing registry. It says what each credential is for, where its protected custody lives, whether it is generated, reissued, guarded-copy, interactive, or service-only, and which exact enrollment and verification procedure owns it. It never contains a private value or a registry of desired private state.
 
@@ -40,7 +40,7 @@ Separate files would make lifecycle changes and cross-class audits harder and cr
 | GitHub Git SSH | `github_fleet_auth.py` | Dedicated target public key enrolled; exact SSH transport passes |
 | GitHub CLI OAuth | `gh auth login --web --git-protocol ssh` | API auth passes and no plaintext fallback exists |
 | Shared SOPS Age | `enroll_sops_key.py` | Recipient/digest, permissions, and repository decrypt pass |
-| Kubernetes operator kubeconfig | [[kubernetes-operator-kubeconfig|Kubernetes Operator Kubeconfig]] | Digest, mode, context, and read-only namespace query pass |
+| Kubernetes operator kubeconfig | [Kubernetes Operator Kubeconfig](kubernetes-operator-kubeconfig.md) | Digest, mode, context, and read-only namespace query pass |
 | GitLab management API | `gitlab-management-credential.py` in `ctx9/gitlab`, Primary machine only | Native round trip and ctx9 group deploy-token inventory pass |
 | ctx9 GitLab reads | `setup-fleet-read-credential.sh` in `ctx9/gitlab` | Exact group scopes, native custody, package read, and sanitized lock record pass |
 | Secret Bindings identities | Secret Bindings fleet installer | Unique channel, Age, and unlock identities plus broker acceptance pass |
@@ -49,7 +49,7 @@ Separate files would make lifecycle changes and cross-class audits harder and cr
 | Rclone Google Drive OAuth | `$infra-i-manage-rclone-google-drive` target-local configure flow | Exact `drive.file` policy, encrypted config, live dedicated-root read, and random sentinel round trip pass |
 | Rclone config unlock | Target-local generation into Keychain or Secret Service | `rclone config encryption check` passes only through the absolute password command |
 | Google OAuth desktop-client secret | Reviewed guarded enrollment into target-native custody | Desired client ID matches, no client secret persists in Rclone config, and target-local OAuth passes |
-| CodeFolderSync backup age | `codefoldersync_backup_age.py` through [[codefoldersync-backup-age-recovery|CodeFolderSync Backup Age Recovery]] | Both recovery machines decrypt the same generated non-secret fixture; only public recipients are distributed |
+| CodeFolderSync backup age | `codefoldersync_backup_age.py` through [CodeFolderSync Backup Age Recovery](codefoldersync-backup-age-recovery.md) | Both recovery machines decrypt the same generated non-secret fixture; only public recipients are distributed |
 | WireGuard or Tailscale | Selected provider onboarding route | Provider status and a new inbound SSH connection pass |
 
 The SOPS identity is an explicit guarded portable fleet authority retained for repositories that still need it. It is different from Secret Bindings' generated, nonportable machine Age identity. Kubeconfig is likewise an explicit operator capability, never an automatic all-machine secret.

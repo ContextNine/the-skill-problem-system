@@ -10,9 +10,9 @@ Use this skill for preparation and recordkeeping. Never submit, amend, or pay a 
 ## Required reading
 
 1. Use `$vault-i` to enter the Vault and complete its host checks.
-2. Read [[Finance & Biz]] for taxpayer ownership and record locations, then the applicable personal or company steps in [[Finance SOPs]].
+2. Read Finance & Biz for taxpayer ownership and record locations, then the applicable personal or company steps in Finance SOPs.
 3. Read [workflow](references/workflow.md) completely.
-4. Resolve and read the requested year's control note and the immediately preceding control note from the locations owned by [[Finance & Biz]].
+4. Resolve and read the requested year's control note and the immediately preceding control note from the locations owned by Finance & Biz.
 5. Use current official SARS sources for deadlines, rates, forms, and penalty rules. Tax rules and filing dates are time-sensitive.
 
 ## Create a new year

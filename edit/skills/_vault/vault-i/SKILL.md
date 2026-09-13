@@ -7,7 +7,7 @@ description: Locate and use Matt Derman's personal Workspace vault containing ta
 
 ## Host gate
 
-On Linux, run `vault access status` before reading or editing the Vault. Continue only when it succeeds and reports `"ok": true`; otherwise stop. Macs need no access ceremony. Read [[README-primary-worker-vault-sync|Primary and Worker Vault Coordination]] for the full host, iCloud, SSHFS, and Git model.
+On Linux, run `vault access status` before reading or editing the Vault. Continue only when it succeeds and reports `"ok": true`; otherwise stop. Macs need no access ceremony. Read Primary and Worker Vault Coordination for the full host, iCloud, SSHFS, and Git model.
 
 ## Enter the Installed Vault
 

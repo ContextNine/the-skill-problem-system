@@ -18,7 +18,7 @@ Start with `--dry-run` unless the user explicitly asks to process Gmail. Use `--
 
 Read `_system/agents/edit/settings/skills/config/finance-gmail-invoice-and-statement-collector/README.md` and private TOML first. Paths and Google Cloud setup project come from config.
 
-Read [[Finance & Biz]] before saving. It owns the canonical record locations and taxpayer boundaries; do not recreate former Drive finance folders.
+Read Finance & Biz before saving. It owns the canonical record locations and taxpayer boundaries; do not recreate former Drive finance folders.
 
 ## Requirements
 

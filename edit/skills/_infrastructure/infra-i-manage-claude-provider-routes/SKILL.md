@@ -5,7 +5,7 @@ description: Configures, installs, verifies, or repairs Claude Code launchers fo
 
 # Infra · Manage Claude Provider Routes
 
-Read [[README-claude-provider-routes|Claude Provider Routes]] before changing launchers, provider authentication, CLIProxyAPI routing, or fleet acceptance.
+Read [Claude Provider Routes](references/README-claude-provider-routes.md) before changing launchers, provider authentication, CLIProxyAPI routing, or fleet acceptance.
 
 - Canonical launchers, the installer, and focused tests live in `scripts/` here. Do not keep provider-launcher copies or SOPs in onboarding, terminal, or general Claude configuration skills.
 - Direct `claude` remains unchanged. Provider variables exist only in the launcher child process.

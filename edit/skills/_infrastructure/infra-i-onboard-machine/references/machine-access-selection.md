@@ -7,7 +7,7 @@ status: enabled
 
 Select exactly one provider for each target machine's personal fleet access: `wireguard` or `tailscale`. Neither is the default. The target's choice owns its canonical SSH route from every enabled source machine, including Codex, T3 Code, Claude Code, Screen Sharing, terminal, workspace-sync, notification, and reverse-forward connections. It does not replace a separate WireGuard tunnel used only for Kubernetes or business infrastructure.
 
-Enabled personal machines additionally follow [[fleet-shell-mesh|Fleet Shell Mesh]]: every machine can initiate regular OpenSSH connections to every other enabled machine over registered Tailscale MagicDNS. This symmetric shell reachability does not transfer primary-only Vault authority.
+Enabled personal machines additionally follow [Fleet Shell Mesh](fleet-shell-mesh.md): every machine can initiate regular OpenSSH connections to every other enabled machine over registered Tailscale MagicDNS. This symmetric shell reachability does not transfer primary-only Vault authority.
 
 The Git-backed private machine registry owns every non-secret reproducibility fact:
 

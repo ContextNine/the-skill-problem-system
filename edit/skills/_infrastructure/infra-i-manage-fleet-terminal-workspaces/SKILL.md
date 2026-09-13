@@ -5,15 +5,15 @@ description: Configures, audits, repairs, or explains fleet terminal environment
 
 # Infra · Manage Fleet Terminal Workspaces
 
-Read [[cmux-tmux-terminal-workspaces|Warp, cmux, and tmux Terminal Workspaces]] for architecture, deployment, verification, persistence, and rollback.
+Read [Warp, cmux, and tmux Terminal Workspaces](references/cmux-tmux-terminal-workspaces.md) for architecture, deployment, verification, persistence, and rollback.
 
-User-facing shortcuts are consolidated in [[terminal-keybindings]]. Daily commands remain in [[_system/docs/terminal/README|Terminal Docs]]. Keep deployment and recovery references inside this skill so distributed copies remain self-contained.
+User-facing shortcuts are consolidated in terminal-keybindings. Daily commands remain in Terminal Docs. Keep deployment and recovery references inside this skill so distributed copies remain self-contained.
 
 - Use `$infra-i-code-folder-and-computer-topology` and `fleet config` to load the canonical machine registry and private execution-chain observations. Do not duplicate machine IDs, aliases, homes, roots or routes in this skill.
-- Read [[README-warp-cmux-execution-chain|Warp and cmux Execution Chain]] when explaining machine boundaries or frontend routing.
+- Read [Warp and cmux Execution Chain](references/README-warp-cmux-execution-chain.md) when explaining machine boundaries or frontend routing.
 - Run `scripts/sync_terminal_profiles.py` for tmux, btop, Starship, workmux, and managed profile deployment. During new-machine onboarding, an explicitly named disabled target may be provisioned and verified with `--target MACHINE_ID --provision-disabled`; omitting the flag continues to reject disabled machines, and the flag never selects disabled machines implicitly.
 - Run `scripts/configure_warp_machine_workspaces.py` and `scripts/configure_cmux_machine_workspaces.py` for primary-host layouts. During onboarding, use cmux `--target MACHINE_ID` so an unrelated offline fleet member cannot block creation and verification of the reviewed target workspace; ordinary calls continue applying and verifying the complete enabled layout.
 - Keep every controller dry-run by default; use `--apply` only after reviewing exact targets and use `--verify` afterward.
-- Read [[README-workmux-notifications|Workmux Agent Notifications]] before touching notification hooks. Notifications remain retired and disabled unless the user explicitly asks to re-enable them.
+- Read [Workmux Agent Notifications](references/README-workmux-notifications.md) before touching notification hooks. Notifications remain retired and disabled unless the user explicitly asks to re-enable them.
 - This skill never owns general Codex or Claude user configuration. Its retired notification helper may merge or remove only its own hook keys; `$infra-i-sync-code-workspaces` remains authoritative for full user settings and instructions.
 - During new-machine work, return gate status to `$infra-i-onboard-machine`; this skill does not own machine registration, WireGuard, SSH enrollment, or registry enablement.

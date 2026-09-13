@@ -20,12 +20,12 @@ Never inspect this workbook with normal file readers or generic XLSX libraries. 
 - Read `_system/agents/edit/settings/skills/config/spreadsheets-housing-decision-model/README.md` and `private/config.json` first.
 - Read `personal/_finance/AGENTS.md`; the configured workbook is part of that Vault workspace. Do not recreate former Drive finance folders.
 - Workbook and finance folder come from config; set `WORKBOOK` from `.workbook` before commands.
-- Durable model map and assumptions: [[MODEL-REFERENCE]]
+- Durable model map and assumptions: [MODEL-REFERENCE](MODEL-REFERENCE.md)
 - Reusable Witan scripts: `scripts/read-summary.js` and `scripts/update-global-inputs.js`
 
 ## Standard workflow
 
-1. Read [[MODEL-REFERENCE]] completely.
+1. Read [MODEL-REFERENCE](MODEL-REFERENCE.md) completely.
 2. Run `scripts/read-summary.js` against workbook; never rely only on stored snapshot.
 3. Locate requested input/output cells with Witan search and read neighboring formulas.
 4. Trace requested Dashboard output to edited inputs.

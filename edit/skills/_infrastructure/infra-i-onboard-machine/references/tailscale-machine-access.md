@@ -52,8 +52,8 @@ ssh -o BatchMode=yes -o StrictHostKeyChecking=yes MACHINE.TAILNET.TS.NET true
 
 The helper accepts hashed source entries, refuses target-key conflicts, writes only the exact already trusted key, and records no private material. Do not learn the key from the untrusted route itself.
 
-After provider setup, complete [[fleet-shell-mesh|Fleet Shell Mesh]]. Every enabled machine must pin every other enabled machine's Tailscale host key, authorize its dedicated fleet-shell public key on every peer, and pass the complete directed strict-SSH matrix. Tailscale reachability alone is not fleet-shell acceptance.
+After provider setup, complete [Fleet Shell Mesh](fleet-shell-mesh.md). Every enabled machine must pin every other enabled machine's Tailscale host key, authorize its dedicated fleet-shell public key on every peer, and pass the complete directed strict-SSH matrix. Tailscale reachability alone is not fleet-shell acceptance.
 
-Use regular OpenSSH through the canonical alias. Do not make Tailscale SSH a hidden second identity. Tailscale coordination and NAT traversal can improve reachability, but they cannot wake a sleeping Mac; worker Macs must complete [[worker-mac-power-and-sleep]].
+Use regular OpenSSH through the canonical alias. Do not make Tailscale SSH a hidden second identity. Tailscale coordination and NAT traversal can improve reachability, but they cannot wake a sleeping Mac; worker Macs must complete [worker-mac-power-and-sleep](worker-mac-power-and-sleep.md).
 
 Route selection belongs to the SSH target, not the source and not the `-L` or `-R` forwarding option. Reverse forwarding works normally over Tailscale: `ssh -R ... PRIMARY_ID` resolves the primary's canonical alias first and carries the forward inside that Tailscale-backed SSH connection when Tailscale is selected.

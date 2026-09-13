@@ -41,7 +41,7 @@ For a macOS worker, the rendered Codex config enforces `approval_policy = "never
 
 Authentication, OAuth state, sessions, logs, caches, memories, trust databases outside `config.toml`, macOS privacy grants, and Claude's `~/.claude.json` never sync. Inline credential-like `env` values and credential-bearing URLs fail closed before any target mutation. Store shared secrets through their owning env/SOPS workflow and authenticate each machine locally.
 
-Plugin tables are not ordinary configuration. The Codex CLI owns them on each host, while [[plugin-reconciliation|Fleet Codex Plugin Reconciliation]] derives portable desired state from the registered primary and converges installations after repository reconciliation. Primary marketplace timestamps, revisions, cache roots, and runtime paths are never copied into a target config.
+Plugin tables are not ordinary configuration. The Codex CLI owns them on each host, while [Fleet Codex Plugin Reconciliation](plugin-reconciliation.md) derives portable desired state from the registered primary and converges installations after repository reconciliation. Primary marketplace timestamps, revisions, cache roots, and runtime paths are never copied into a target config.
 
 ### When it runs
 

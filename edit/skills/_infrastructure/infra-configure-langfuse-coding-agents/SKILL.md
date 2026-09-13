@@ -5,7 +5,7 @@ description: Configures Langfuse observability and authenticated data access for
 
 # Infra · Configure Langfuse Coding Agents
 
-Read [[setup-and-enrollment|Setup and Enrollment]] before installing, enabling, authenticating, or removing either integration.
+Read [Setup and Enrollment](references/setup-and-enrollment.md) before installing, enabling, authenticating, or removing either integration.
 
 The two capabilities are separate: observability plugins send Codex or Claude Code sessions to Langfuse; authenticated MCP or CLI access lets an agent query Langfuse data. Never treat a public docs MCP connection as project-data access.
 

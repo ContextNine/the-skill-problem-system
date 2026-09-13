@@ -5,7 +5,7 @@ status: enabled
 
 ## Primary Mac onboarding and acceptance
 
-Use this route when creating, rebuilding, replacing, or recovering the fleet's single primary Mac. Read [[shared-onboarding-and-acceptance|Shared Onboarding and Acceptance]] first.
+Use this route when creating, rebuilding, replacing, or recovering the fleet's single primary Mac. Read [Shared Onboarding and Acceptance](shared-onboarding-and-acceptance.md) first.
 
 The primary is the only Mac that owns Vault Git, commits and pushes the Vault, performs pointer-only media maintenance, runs `vault refresh`, and distributes personal agent configuration. A replacement is not accepted until that authority is singular and verified.
 
@@ -17,7 +17,7 @@ The primary is the only Mac that owns Vault Git, commits and pushes the Vault, p
 4. Verify the shared Vault `.git` file resolves to that external directory only on this Mac. Confirm no other active Mac retains a resolvable Vault Git directory.
 5. Set clone-local `vault.machine-id` to the reviewed primary registry ID. Update `primary_machine_id` only as an explicit role-transfer decision, keeping the previous primary disabled until the handoff is complete.
 6. Install and verify versioned Git hooks, pointer-only media mode, the media manifest, `origin`, and required local LFS bodies before treating GitHub as a durable metadata backup.
-7. Configure primary-side SSH, the explicitly selected personal machine-access provider, Screen Sharing, aliases, and operator dependencies through [[primary-mac-remote-access-prerequisites|Primary Machine Remote Access Prerequisites]] and owning infrastructure repositories. Configure any separate WireGuard cluster route independently; it must not silently become the canonical fleet SSH route.
+7. Configure primary-side SSH, the explicitly selected personal machine-access provider, Screen Sharing, aliases, and operator dependencies through [Primary Machine Remote Access Prerequisites](primary-mac-remote-access-prerequisites.md) and owning infrastructure repositories. Configure any separate WireGuard cluster route independently; it must not silently become the canonical fleet SSH route.
 8. Authenticate Codex, Claude, GitHub, and required providers locally. The primary `~/.codex/AGENTS.md`, `~/.codex/config.toml`, and `~/.claude/settings.json` become authoritative only after review and verification.
 9. Run `$infra-i-sync-code-workspaces` in preview and doctor modes against reachable reviewed workers; do not force a fleet rollout merely to accept the primary.
 10. Install and verify the primary-only refresh schedule after Vault Git, iCloud materialization, hooks, media state, and machine identity all pass.

@@ -9,10 +9,10 @@ Lead magnets share a delivery contract, not a component library. Audit the ownin
 
 Read the references needed for the task:
 
-- [[references/double-opt-in-and-delivery|Double Opt-in and Delivery]] for every gated resource.
-- [[references/full-vsl-page|Full VSL Page]] for long-form post-opt-in selling.
-- [[references/minimal-download-page|Minimal Download Page]] for intentionally small delivery pages.
-- [[references/impression-adapter|Impression Adapter]] or [[references/personal-monorepo-adapter|Personal Monorepo Adapter]] for repository-specific source locations.
+- [Double Opt-in and Delivery](references/double-opt-in-and-delivery.md) for every gated resource.
+- [Full VSL Page](references/full-vsl-page.md) for long-form post-opt-in selling.
+- [Minimal Download Page](references/minimal-download-page.md) for intentionally small delivery pages.
+- [Impression Adapter](references/impression-adapter.md) or [Personal Monorepo Adapter](references/personal-monorepo-adapter.md) for repository-specific source locations.
 
 ## Default workflow
 

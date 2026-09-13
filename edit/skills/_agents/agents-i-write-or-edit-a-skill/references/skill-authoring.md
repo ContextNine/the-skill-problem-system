@@ -181,7 +181,7 @@ Every non-standard runtime dependency for a global skill must be declared in `_s
 - a lifecycle document;
 - a deterministic verification command.
 
-Command-line dependencies belong in `dependencies.json`, not `agents/openai.yaml`. The latter only declares supported MCP tool dependencies. `fleet sync --dependencies` installs missing required packages and verifies them on enabled agent machines. Read [[_system/agents/edit/skills/_infrastructure/infra-i-update-fleet-dependencies/references/dependencies|Agent and fleet dependencies]] for the registry schema and lifecycle rules.
+Command-line dependencies belong in `dependencies.json`, not `agents/openai.yaml`. The latter only declares supported MCP tool dependencies. `fleet sync --dependencies` installs missing required packages and verifies them on enabled agent machines. Read [Agent and fleet dependencies](../../../_infrastructure/infra-i-update-fleet-dependencies/references/dependencies.md) for the registry schema and lifecycle rules.
 
 ### Local-only skills
 

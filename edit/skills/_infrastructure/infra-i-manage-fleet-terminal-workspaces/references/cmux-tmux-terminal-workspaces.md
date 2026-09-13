@@ -2,25 +2,25 @@
 
 Canonical architecture, deployment, operation, and recovery reference for Primary machine Warp-primary and cmux-fallback clients backed by persistent per-machine tmux sessions.
 
-Conceptual execution chain with explicit machine boundaries: [[README-warp-cmux-execution-chain|Warp, cmux, and Workmux Execution Chain]].
+Conceptual execution chain with explicit machine boundaries: [Warp, cmux, and Workmux Execution Chain](README-warp-cmux-execution-chain.md).
 
 ## Contents
 
-- [[#Architecture]]
-- [[#cmux, Ghostty, TTY, and exec]]
-- [[#Terminology]]
-- [[#Keyboard model]]
-- [[#Machine profiles]]
-- [[#Managed files]]
-- [[#Agent completion notifications]]
-- [[#Deploy terminal profiles]]
-- [[#Configure cmux layout]]
-- [[#Configure Warp layout]]
-- [[#Daily operation]]
-- [[#Persistence model and limits]]
-- [[#Verification]]
-- [[#Rollback]]
-- [[#Client reconnect policy]]
+- [Architecture](cmux-tmux-terminal-workspaces.md#architecture)
+- [cmux, Ghostty, TTY, and exec](cmux-tmux-terminal-workspaces.md#cmux-ghostty-tty-and-exec)
+- [Terminology](cmux-tmux-terminal-workspaces.md#terminology)
+- [Keyboard model](cmux-tmux-terminal-workspaces.md#keyboard-model)
+- [Machine profiles](cmux-tmux-terminal-workspaces.md#machine-profiles)
+- [Managed files](cmux-tmux-terminal-workspaces.md#managed-files)
+- [Agent completion notifications](cmux-tmux-terminal-workspaces.md#agent-completion-notifications)
+- [Deploy terminal profiles](cmux-tmux-terminal-workspaces.md#deploy-terminal-profiles)
+- [Configure cmux layout](cmux-tmux-terminal-workspaces.md#configure-cmux-layout)
+- [Configure Warp layout](cmux-tmux-terminal-workspaces.md#configure-warp-layout)
+- [Daily operation](cmux-tmux-terminal-workspaces.md#daily-operation)
+- [Persistence model and limits](cmux-tmux-terminal-workspaces.md#persistence-model-and-limits)
+- [Verification](cmux-tmux-terminal-workspaces.md#verification)
+- [Rollback](cmux-tmux-terminal-workspaces.md#rollback)
+- [Client reconnect policy](cmux-tmux-terminal-workspaces.md#client-reconnect-policy)
 
 ## Architecture
 
@@ -165,7 +165,7 @@ Deployed on each machine:
 
 ## Agent completion notifications
 
-Agent completion notifications are retired and disabled. The former per-machine durable queues intentionally accumulated while Warp and cmux were absent, then flooded Warp when it opened. The retained implementation, disabled-state rollout, and explicit re-enable path remain documented in [[README-workmux-notifications|Workmux Agent Notifications]].
+Agent completion notifications are retired and disabled. The former per-machine durable queues intentionally accumulated while Warp and cmux were absent, then flooded Warp when it opened. The retained implementation, disabled-state rollout, and explicit re-enable path remain documented in [Workmux Agent Notifications](README-workmux-notifications.md).
 
 Plugin commits:
 
@@ -176,7 +176,7 @@ Plugin commits:
 Package ownership:
 
 - macOS and Linux: `_system/agents/internal/defaults/dependencies.json` owns `tmux`, `btop`, `starship`, and macOS `terminal-notifier`. Secondary Mac remains disabled; its historical prebuilt details are observation-only.
-- Historical Linux package observations remain in [[linux-worker-image|Linux Worker Image]].
+- Historical Linux package observations remain in Linux Worker Image.
 - Secondary Mac uses `/usr/local/bin/brew` explicitly. Managed links expose Homebrew commands through `~/.local/bin` because its SSH PATH omits `/usr/local/bin`.
 
 ## Deploy terminal profiles
@@ -364,4 +364,4 @@ cmux ssh <ssh-alias> --name "<display-name>" --ssh-option RequestTTY=force -- <r
 cmux ssh <ssh-alias> --name "<display-name>" --ssh-option RequestTTY=force -- /usr/bin/env PATH=<remote-path> <remote-home>/.local/bin/workmux <machine-id>
 ```
 
-cmux targets automatic SSH aliases, so next connection chooses LAN or WireGuard. Live SSH connection does not migrate routes. Full SSH alias rebuild detail remains in [[primary-mac-remote-access-prerequisites|Primary machine Remote Access Prerequisites]].
+cmux targets automatic SSH aliases, so next connection chooses LAN or WireGuard. Live SSH connection does not migrate routes. Full SSH alias rebuild detail remains in Primary machine Remote Access Prerequisites.

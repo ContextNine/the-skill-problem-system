@@ -15,11 +15,11 @@ description: Audits and fixes technical, on-page, entity, indexing, performance,
 ## Audit
 
 1. Run `node scripts/audit-live-nextjs-seo.mjs https://example.com` and save its JSON findings in working notes.
-2. Follow [[references/audit-checklist|Audit Checklist]] for Search Console, SERP, crawling, metadata, schema, content, authority, and performance evidence.
-3. Follow [[references/nextjs-fix-patterns|Next.js Fix Patterns]] while tracing App Router metadata, route handlers, middleware, rendering gates, and multi-tenant behavior.
-4. Compare findings with [[references/known-failure-patterns|Known Failure Patterns]]; verify each against current state before reporting it.
+2. Follow [Audit Checklist](references/audit-checklist.md) for Search Console, SERP, crawling, metadata, schema, content, authority, and performance evidence.
+3. Follow [Next.js Fix Patterns](references/nextjs-fix-patterns.md) while tracing App Router metadata, route handlers, middleware, rendering gates, and multi-tenant behavior.
+4. Compare findings with [Known Failure Patterns](references/known-failure-patterns.md); verify each against current state before reporting it.
 5. Run Lighthouse mobile and desktop. Treat lab data as diagnostic, not field Core Web Vitals or a ranking score.
-6. Hand GTM, GA4, Consent Mode, and data-layer work to [[_system/agents/edit/skills/_marketing/marketing-google-marketing-measurement/SKILL|Google Marketing Measurement]]. Hand managed campaign URLs to [[_system/agents/edit/skills/_marketing/marketing-manage-utm-tracking-links/SKILL|Manage UTM Tracking Links]].
+6. Hand GTM, GA4, Consent Mode, and data-layer work to [Google Marketing Measurement](../marketing-google-marketing-measurement/SKILL.md). Hand managed campaign URLs to [Manage UTM Tracking Links](../marketing-manage-utm-tracking-links/SKILL.md).
 
 ## Fix Order
 
@@ -38,7 +38,7 @@ description: Audits and fixes technical, on-page, entity, indexing, performance,
 - Confirm HTTP/HTTPS/www behavior with redirect-disabled requests.
 - When an edge dashboard was used, reconcile live rules with repository automation by stable reference or deterministic description before the next automated apply.
 - Confirm sitemap contains only canonical indexable URLs and stable truthful timestamps.
-- Use [[references/verification-and-reporting|Verification and Reporting]] for acceptance gates and final report.
+- Use [Verification and Reporting](references/verification-and-reporting.md) for acceptance gates and final report.
 
 ## Guardrails
 
@@ -48,4 +48,4 @@ description: Audits and fixes technical, on-page, entity, indexing, performance,
 - Do not use campaign parameters or short links as canonicals or internal navigation targets.
 - Do not publish, deploy, submit sitemaps, request indexing, or mutate Google properties unless user authorizes that action.
 - Scope multi-tenant changes to target tenant unless shared behavior is explicitly requested and regression-tested.
-- Cite current primary guidance from [[references/primary-sources|Primary Sources]] when recommendations depend on changing search or framework behavior.
+- Cite current primary guidance from [Primary Sources](references/primary-sources.md) when recommendations depend on changing search or framework behavior.

@@ -8,7 +8,7 @@ license: MIT
 
 Create a clean, user-owned skill repository from the public release.
 
-Read [[install|Install]] before changing installation behavior, [[configuration|Configuration]] before changing editable or installed paths, and [[distribution|Distribution]] before changing packaging or public release behavior.
+Read [Install](references/install.md) before changing installation behavior, [Configuration](references/configuration.md) before changing editable or installed paths, and [Distribution](references/distribution.md) before changing packaging or public release behavior.
 
 ## Workflow
 

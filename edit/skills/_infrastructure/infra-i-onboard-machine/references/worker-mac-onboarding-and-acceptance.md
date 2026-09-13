@@ -5,7 +5,7 @@ status: enabled
 
 ## Worker Mac onboarding and acceptance
 
-Read [[shared-onboarding-and-acceptance|Shared Onboarding and Acceptance]] first. This route owns the Screen-Sharing-first macOS procedure, worker bootstrap script, GUI consent, unattended operating baseline, iCloud Vault boundary, and reboot acceptance.
+Read [Shared Onboarding and Acceptance](shared-onboarding-and-acceptance.md) first. This route owns the Screen-Sharing-first macOS procedure, worker bootstrap script, GUI consent, unattended operating baseline, iCloud Vault boundary, and reboot acceptance.
 
 Read the private `Machine Conventions/Worker Mac/Worker Mac.md` note for Matt-specific application and account choices. Keep changing personal choices there rather than duplicating them here.
 
@@ -46,9 +46,9 @@ The agent resumes automatically after any necessary user interaction. A password
 
 ### 2. Register and seed from the primary
 
-Invoke the topology skill from the primary Vault clone. The agent must verify the clone-local machine ID is the registry primary, create the private machine note, configure the reviewed LAN, selected `-mesh`, and canonical aliases through [[machine-access-selection|Machine Access Selection]], and add a complete but disabled macOS worker entry before provisioning. Set `vault_sync.enabled: true`, `checkout: icloud`, and `repo_path` to the target's iCloud Vault folder. Do not define `git_dir`. Keep top-level `enabled: false`. Commit and push the reviewed registry, machine note, and startup opt-in on the primary before finish so iCloud can deliver the reviewed files to the target.
+Invoke the topology skill from the primary Vault clone. The agent must verify the clone-local machine ID is the registry primary, create the private machine note, configure the reviewed LAN, selected `-mesh`, and canonical aliases through [Machine Access Selection](machine-access-selection.md), and add a complete but disabled macOS worker entry before provisioning. Set `vault_sync.enabled: true`, `checkout: icloud`, and `repo_path` to the target's iCloud Vault folder. Do not define `git_dir`. Keep top-level `enabled: false`. Commit and push the reviewed registry, machine note, and startup opt-in on the primary before finish so iCloud can deliver the reviewed files to the target.
 
-Use [[bootstrap_worker_mac.py]] from the primary:
+Use [bootstrap_worker_mac.py](../scripts/bootstrap_worker_mac.py) from the primary:
 
 ```bash
 python3 "$(vault root)/_system/agents/edit/skills/_infrastructure/infra-i-onboard-machine/scripts/bootstrap_worker_mac.py" status MACHINE_ID
@@ -56,9 +56,9 @@ python3 "$(vault root)/_system/agents/edit/skills/_infrastructure/infra-i-onboar
 python3 "$(vault root)/_system/agents/edit/skills/_infrastructure/infra-i-onboard-machine/scripts/bootstrap_worker_mac.py" seed MACHINE_ID
 ```
 
-The dry run is the default. Seed verifies the exact disabled macOS worker over its `-lan` alias, preserves qualifying migrated applications, and installs or validates Git, Git LFS, GitHub CLI, Bitwarden, Google Chrome, ChatGPT desktop, and Codex CLI once Command Line Tools and Homebrew exist. Seed does not edit Codex or Claude settings. After authentication, `$infra-i-sync-code-workspaces` applies the single [[agent-configuration-sync|Fleet Agent Configuration Sync]] contract, including the required worker-Mac policy overlay; final verification rejects any weaker state. Chrome, ChatGPT desktop, and Codex CLI are pre-authentication requirements, not deferred finish-phase extras. Through Screen Sharing, make Chrome the macOS default browser and verify that Launch Services assigns both `http` and `https` to `com.google.chrome`; a stale Chrome settings label is not verification.
+The dry run is the default. Seed verifies the exact disabled macOS worker over its `-lan` alias, preserves qualifying migrated applications, and installs or validates Git, Git LFS, GitHub CLI, Bitwarden, Google Chrome, ChatGPT desktop, and Codex CLI once Command Line Tools and Homebrew exist. Seed does not edit Codex or Claude settings. After authentication, `$infra-i-sync-code-workspaces` applies the single Fleet Agent Configuration Sync contract, including the required worker-Mac policy overlay; final verification rejects any weaker state. Chrome, ChatGPT desktop, and Codex CLI are pre-authentication requirements, not deferred finish-phase extras. Through Screen Sharing, make Chrome the macOS default browser and verify that Launch Services assigns both `http` and `https` to `com.google.chrome`; a stale Chrome settings label is not verification.
 
-Complete [[worker-mac-power-and-sleep|Worker Mac Power and Sleep]]. Installation, Power Protect on Apple silicon, login launch, the stored closed-display policy, a fresh indefinite session, native sleep-prevention evidence, and post-reboot inbound acceptance are separate gates.
+Complete [Worker Mac Power and Sleep](worker-mac-power-and-sleep.md). Installation, Power Protect on Apple silicon, login launch, the stored closed-display policy, a fresh indefinite session, native sleep-prevention evidence, and post-reboot inbound acceptance are separate gates.
 
 ### 3. Target-local authentication checkpoint
 
@@ -71,7 +71,7 @@ gh auth status --hostname github.com
 gh api user --jq .login
 ```
 
-Then return to Primary machine and use the preview-first enrollment workflow in [[README-github-fleet-authentication|GitHub Fleet Authentication]]. The target generates and retains `~/.ssh/id_ed25519_github_<machine-id>`; Matt separately approves only its public fingerprint. Screen Sharing is permitted for this initial OAuth checkpoint, never for routine workspace sync.
+Then return to Primary machine and use the preview-first enrollment workflow in GitHub Fleet Authentication. The target generates and retains `~/.ssh/id_ed25519_github_<machine-id>`; Matt separately approves only its public fingerprint. Screen Sharing is permitted for this initial OAuth checkpoint, never for routine workspace sync.
 
 Account and provider selection is always a user action. A macOS account name, autofilled address, browser session, Bitwarden entry, or saved-account suggestion is not proof of which identity should be used. The agent must stop before selecting, typing, or submitting an account and ask the user to perform the login unless the exact mapping is explicitly documented and still confirmed. Never click a saved suggestion speculatively.
 
@@ -106,7 +106,7 @@ Finish explicitly provisions the disabled worker with `vault worker-sync bootstr
 
 Git LFS bodies are not available from GitHub for this private Vault. Worker media arrives only through iCloud. Do not copy the primary's `~/.local/share/vault-git/Vault.git/lfs`, run Vault Git or `git lfs pull`, create a worker LFS cache for the Vault, or place Git metadata in iCloud. Never prune the primary cache without another verified media backup.
 
-Before finish, add the disabled machine's opt-in under the private [[Mac Startup]] config:
+Before finish, add the disabled machine's opt-in under the private Mac Startup config:
 
 ```json
 {
@@ -126,11 +126,11 @@ Managed startup opens only Bitwarden. Keep its own vault-lock policy enabled. Th
 
 ### 5. Personal machine access and fleet integration
 
-Follow [[machine-access-selection|Machine Access Selection]], then the selected [[wireguard-machine-access|WireGuard Machine Access]] or [[tailscale-machine-access|Tailscale Machine Access]] route. Treat migrated provider identities as unverified; never reuse another machine's identity. Authentication, account selection, and protected VPN approval remain user checkpoints.
+Follow [Machine Access Selection](machine-access-selection.md), then the selected [WireGuard Machine Access](wireguard-machine-access.md) or [Tailscale Machine Access](tailscale-machine-access.md) route. Treat migrated provider identities as unverified; never reuse another machine's identity. Authentication, account selection, and protected VPN approval remain user checkpoints.
 
 After the explicit `MACHINE_ID-mesh` and canonical routes work, render source-aware SSH access across the enabled fleet. On the worker, require `ssh -G PRIMARY_ID` to show the primary target's selected provider host, the worker's fleet-shell identity, `batchmode yes`, and password plus keyboard-interactive authentication disabled. Start a fresh canonical reverse tunnel to `PRIMARY_ID`, prove the primary-loopback listener reaches the worker-loopback target, close the tunnel, and prove the listener disappears.
 
-Then complete every applicable gate from [[shared-onboarding-and-acceptance|Shared Onboarding and Acceptance]]: route-specific and automatic SSH, native Screen Sharing registry entry, Warp and cmux workspaces, terminal profile, T3 Code SSH-launch environment, Codex/ChatGPT computer-use permissions, agent configuration, topology records, and intentionally excluded items. Provision and verify the terminal profile while the registry entry remains disabled with `sync_terminal_profiles.py --target MACHINE_ID --provision-disabled --apply` and then `--verify`; enable the registry only after the rest of acceptance passes.
+Then complete every applicable gate from [Shared Onboarding and Acceptance](shared-onboarding-and-acceptance.md): route-specific and automatic SSH, native Screen Sharing registry entry, Warp and cmux workspaces, terminal profile, T3 Code SSH-launch environment, Codex/ChatGPT computer-use permissions, agent configuration, topology records, and intentionally excluded items. Provision and verify the terminal profile while the registry entry remains disabled with `sync_terminal_profiles.py --target MACHINE_ID --provision-disabled --apply` and then `--verify`; enable the registry only after the rest of acceptance passes.
 
 ### 6. Reboot acceptance and enablement
 
@@ -140,6 +140,6 @@ Restart while “Reopen windows when logging back in” is selected. Do not enab
 python3 "$(vault root)/_system/agents/edit/skills/_infrastructure/infra-i-onboard-machine/scripts/bootstrap_worker_mac.py" verify MACHINE_ID --json
 ```
 
-Acceptance requires automatic login to the exact operator account with FileVault off; automatic logout disabled; `sysadminctl` reporting `screenLock is off`; the complete [[worker-mac-power-and-sleep|Worker Mac Power and Sleep]] gate; wake-on-network and restart-after-power-loss enabled; selected-provider native startup, reconnection, and direct/relay or handshake evidence; Bitwarden running; Chrome registered as the default HTTP/HTTPS browser; previous windows restored by macOS; source-aware `-lan`, `-mesh`, and canonical SSH aliases; a passwordless reverse tunnel to the canonical primary alias; Screen Sharing; Homebrew/Git/GitHub/Node/npm/Codex and signed application checks; target-local GitHub and Codex authentication; root Codex policy set to `never` approvals and `danger-full-access`; Computer Use bridge enabled with working Accessibility and Screen & System Audio Recording grants; **Locked use** enabled with its Apple authorization plug-in; a successful scoped Computer Use action after Screen Sharing disconnects while macOS independently reports the console locked; a fully downloaded iCloud Vault; correct `~/.config/vault/machine-id`; a dangling shared `.git` pointer; failed Vault Git resolution; no `<resolved Code root>/vault`; clean skill sync; an unloaded and worker-ineligible refresh schedule; and the generic Warp/cmux/T3 gates. A running app process, outbound-only traffic, a VPN Connected label, or an unlocked-session smoke test is never sufficient. Reboot, close the lid, wait past former thresholds, then prove a fresh inbound `MACHINE_ID-mesh` connection before the canonical alias and confirm no new system-sleep or provider-suspension event. Disconnect Screen Sharing, prove the locked-use path, then reconnect and confirm SSH and Screen Sharing still work. Record evidence and exclusions in the private machine note, then set `enabled: true`. If a post-enable check fails, disable the entry again and leave the exact next manual action visible.
+Acceptance requires automatic login to the exact operator account with FileVault off; automatic logout disabled; `sysadminctl` reporting `screenLock is off`; the complete [Worker Mac Power and Sleep](worker-mac-power-and-sleep.md) gate; wake-on-network and restart-after-power-loss enabled; selected-provider native startup, reconnection, and direct/relay or handshake evidence; Bitwarden running; Chrome registered as the default HTTP/HTTPS browser; previous windows restored by macOS; source-aware `-lan`, `-mesh`, and canonical SSH aliases; a passwordless reverse tunnel to the canonical primary alias; Screen Sharing; Homebrew/Git/GitHub/Node/npm/Codex and signed application checks; target-local GitHub and Codex authentication; root Codex policy set to `never` approvals and `danger-full-access`; Computer Use bridge enabled with working Accessibility and Screen & System Audio Recording grants; **Locked use** enabled with its Apple authorization plug-in; a successful scoped Computer Use action after Screen Sharing disconnects while macOS independently reports the console locked; a fully downloaded iCloud Vault; correct `~/.config/vault/machine-id`; a dangling shared `.git` pointer; failed Vault Git resolution; no `<resolved Code root>/vault`; clean skill sync; an unloaded and worker-ineligible refresh schedule; and the generic Warp/cmux/T3 gates. A running app process, outbound-only traffic, a VPN Connected label, or an unlocked-session smoke test is never sufficient. Reboot, close the lid, wait past former thresholds, then prove a fresh inbound `MACHINE_ID-mesh` connection before the canonical alias and confirm no new system-sleep or provider-suspension event. Disconnect Screen Sharing, prove the locked-use path, then reconnect and confirm SSH and Screen Sharing still work. Record evidence and exclusions in the private machine note, then set `enabled: true`. If a post-enable check fails, disable the entry again and leave the exact next manual action visible.
 
-After acceptance, follow [[Vault Git Sync#Worktree coordination|Worktree coordination]]. The worker edits its local iCloud Vault normally without waiting for outbound upload. The primary alone reviews, commits, and pushes changes visible in its worktree.
+After acceptance, follow Worktree coordination. The worker edits its local iCloud Vault normally without waiting for outbound upload. The primary alone reviews, commits, and pushes changes visible in its worktree.

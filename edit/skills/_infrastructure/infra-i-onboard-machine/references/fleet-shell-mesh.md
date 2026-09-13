@@ -86,4 +86,4 @@ ssh -o BatchMode=yes \
   USER@TARGET.TAILNET.TS.NET true
 ```
 
-Record the directed matrix, fingerprints, accepted exceptions, and remaining failures in private machine notes. Full-mesh shell access does not itself broaden Vault authority: only the registered owner may run Vault Git or `vault refresh`. Linux remains Code-only unless schema v7 separately enrolls that machine as a healthy `remote-sshfs` client through [[linux-remote-vault-access|Linux Remote Vault Access]].
+Record the directed matrix, fingerprints, accepted exceptions, and remaining failures in private machine notes. Full-mesh shell access does not itself broaden Vault authority: only the registered owner may run Vault Git or `vault refresh`. Linux remains Code-only unless schema v7 separately enrolls that machine as a healthy `remote-sshfs` client through [Linux Remote Vault Access](linux-remote-vault-access.md).

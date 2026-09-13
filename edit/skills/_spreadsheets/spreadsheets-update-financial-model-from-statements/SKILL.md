@@ -59,6 +59,6 @@ If TLS validation fails, never disable certificate checks or trust an intercepte
 - Edit `rules/transaction_overrides.csv` for one transaction only.
 - Adopt recurring candidates by adding match key and effective dates to `rules/recurring_rules.csv`, then add reviewed workbook row to `rules/recurring_commitments.csv`.
 
-See [[REFERENCE]] for schemas, accounting rules, and failure handling.
+See [REFERENCE](REFERENCE.md) for schemas, accounting rules, and failure handling.
 
-Read [[OVERVIEW]] when explaining folder layout, workbook sheets, file ownership, or future update flow to Matt.
+Read [OVERVIEW](OVERVIEW.md) when explaining folder layout, workbook sheets, file ownership, or future update flow to Matt.

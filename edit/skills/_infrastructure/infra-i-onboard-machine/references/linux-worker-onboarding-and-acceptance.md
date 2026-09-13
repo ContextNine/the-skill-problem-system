@@ -5,14 +5,14 @@ status: enabled
 
 ## Linux worker onboarding and acceptance
 
-Read [[shared-onboarding-and-acceptance|Shared Onboarding and Acceptance]] first. Use this route from the registered primary when enrolling a new or rebuilt Linux development worker.
+Read [Shared Onboarding and Acceptance](shared-onboarding-and-acceptance.md) first. Use this route from the registered primary when enrolling a new or rebuilt Linux development worker.
 
 Prerequisites:
 
-- [[primary-mac-remote-access-prerequisites|Primary Machine Remote Access Prerequisites]] passes.
+- [Primary Machine Remote Access Prerequisites](primary-mac-remote-access-prerequisites.md) passes.
 - `$infra-i-code-folder-and-computer-topology` supplies current fleet and network facts.
 - Resolve `codex-machine-image` through topology repository config and read its owning setup docs. Resolve `k3s-infrastructure` only when the selected WireGuard route uses its private enrollment adapter.
-- [[linux-worker-image|Linux Worker Image]] owns Linux command profiles; the image repository's `image.lock` owns boot-critical versions.
+- Linux Worker Image owns Linux command profiles; the image repository's `image.lock` owns boot-critical versions.
 - `$infra-i-sync-code-workspaces` owns Code repositories and personal Codex and Claude configuration.
 - `$infra-i-manage-fleet-terminal-workspaces` owns terminal profiles and final Warp/cmux layout.
 
@@ -32,7 +32,7 @@ LAN_IP=<reserved home address>
 MESH_HOST=<selected WireGuard address or Tailscale MagicDNS FQDN>
 ```
 
-Select `wireguard` or `tailscale` through [[machine-access-selection|Machine Access Selection]]. Do not reuse an old machine alias or provider identity until the old device is deliberately retired.
+Select `wireguard` or `tailscale` through [Machine Access Selection](machine-access-selection.md). Do not reuse an old machine alias or provider identity until the old device is deliberately retired.
 
 ## 2. Install operating system
 
@@ -47,7 +47,7 @@ Select `wireguard` or `tailscale` through [[machine-access-selection|Machine Acc
 sudo codex-wifi-setup
 ```
 
-First boot generates the machine ID and hostname. When WireGuard is selected and the image's enrollment adapter is enabled, it also generates the target-local WireGuard identity and enrollment request; `codex-machine-enroll.timer` retries until success and deletes the installed enrollment token. When Tailscale is selected, keep WireGuard enrollment disabled and follow [[tailscale-machine-access|Tailscale Machine Access]] after base networking and SSH work.
+First boot generates the machine ID and hostname. When WireGuard is selected and the image's enrollment adapter is enabled, it also generates the target-local WireGuard identity and enrollment request; `codex-machine-enroll.timer` retries until success and deletes the installed enrollment token. When Tailscale is selected, keep WireGuard enrollment disabled and follow [Tailscale Machine Access](tailscale-machine-access.md) after base networking and SSH work.
 
 ## 3. Discover and reach machine
 
@@ -167,7 +167,7 @@ sudo apt-get install -y google-cloud-cli
 
 Claude native install follows `latest` and updates automatically. Run `claude update` for an immediate manual update. `--http1.1` avoids observed HTTP/2 write failures without changing Anthropic installer contents or checksum verification.
 
-Install canonical provider launchers after native Claude Code on every active development machine. Configure and authenticate providers separately through `$infra-i-manage-claude-provider-routes` and [[README-claude-provider-routes|Claude Provider Routes]]:
+Install canonical provider launchers after native Claude Code on every active development machine. Configure and authenticate providers separately through `$infra-i-manage-claude-provider-routes` and Claude Provider Routes:
 
 ```bash
 launcher_installer="$(vault root)/_system/agents/edit/skills/_infrastructure/infra-i-manage-claude-provider-routes/scripts/install-claude-provider-launchers.sh"
@@ -192,7 +192,7 @@ Stop on any missing command. Install `project_optional` tools only when owning r
 
 ## 6. Configure secure GitHub OAuth and Git
 
-Fleet SSH authenticates Primary machine into the remote shell. GitHub authentication is separate. Read [[README-github-fleet-authentication|GitHub Fleet Authentication]]: `gh` API calls use account OAuth in Secret Service, while Git uses a dedicated target-local Ed25519 authentication key and explicit SSH remotes. Never create a repository deploy key as fallback or copy any private key onto the worker.
+Fleet SSH authenticates Primary machine into the remote shell. GitHub authentication is separate. Read GitHub Fleet Authentication: `gh` API calls use account OAuth in Secret Service, while Git uses a dedicated target-local Ed25519 authentication key and explicit SSH remotes. Never create a repository deploy key as fallback or copy any private key onto the worker.
 
 Passwordless tty auto-login does not unlock a password-protected keyring. Keep Secret Service on the existing user D-Bus and unlock it through a target-local terminal after each reboot. Preserve the collection password outside scripts and shell history.
 
@@ -245,7 +245,7 @@ git -C /path/to/repo fetch origin
 git -C /path/to/repo push --dry-run origin HEAD
 ```
 
-Do not remove generic keys, credential helpers, or old account records during onboarding. Rotation and revocation are separate reviewed operations in [[README-github-fleet-authentication|GitHub Fleet Authentication]]. Keep Primary machine-to-machine fleet access on Primary machine and the worker's `authorized_keys`; it serves the opposite SSH direction.
+Do not remove generic keys, credential helpers, or old account records during onboarding. Rotation and revocation are separate reviewed operations in GitHub Fleet Authentication. Keep Primary machine-to-machine fleet access on Primary machine and the worker's `authorized_keys`; it serves the opposite SSH direction.
 
 Continue provider authentication:
 
@@ -291,7 +291,7 @@ Keep unit file for image diagnostics. Do not expose port `3773` when SSH-launch 
 
 ## 8. Render source-aware fleet SSH aliases
 
-Store the confirmed LAN host and provider route through `vault machine access configure`, then use the owned renderer from [[machine-access-selection|Machine Access Selection]]. Run it from the registered primary; the default covers the primary and every enabled worker:
+Store the confirmed LAN host and provider route through `vault machine access configure`, then use the owned renderer from [Machine Access Selection](machine-access-selection.md). Run it from the registered primary; the default covers the primary and every enabled worker:
 
 ```bash
 vault machine access render --dry-run
@@ -314,7 +314,7 @@ Open a fresh passwordless reverse tunnel from the Linux worker to `PRIMARY_ID`, 
 
 ## 9. Reconcile Code workspaces, agent configuration, and repo-owned skills
 
-Linux workers do not receive a Vault clone, sparse checkout, or Vault Git metadata. A code-only worker has no Vault path. An explicitly registered `remote-sshfs` worker may later mount a complete iCloud worktree from its registered Mac host through [[linux-remote-vault-access|Linux Remote Vault Access]]. After target-local GitHub authentication, run from the primary while the target remains disabled:
+Linux workers do not receive a Vault clone, sparse checkout, or Vault Git metadata. A code-only worker has no Vault path. An explicitly registered `remote-sshfs` worker may later mount a complete iCloud worktree from its registered Mac host through [Linux Remote Vault Access](linux-remote-vault-access.md). After target-local GitHub authentication, run from the primary while the target remains disabled:
 
 ```bash
 WORKSPACE_SKILL_DIR="$(vault root)/_system/agents/edit/skills/_infrastructure/infra-i-sync-code-workspaces"
@@ -322,7 +322,7 @@ python3 "$WORKSPACE_SKILL_DIR/scripts/sync_code_workspaces.py" reconcile --targe
 python3 "$WORKSPACE_SKILL_DIR/scripts/sync_code_workspaces.py" reconcile --target WORKER_ID --provision-disabled --apply
 ```
 
-This command also previews or applies every managed personal Codex and Claude file. The file set, secret boundary, home-path rebasing, backup behavior, and configuration-only repair command live only in [[agent-configuration-sync|Fleet Agent Configuration Sync]].
+This command also previews or applies every managed personal Codex and Claude file. The file set, secret boundary, home-path rebasing, backup behavior, and configuration-only repair command live only in Fleet Agent Configuration Sync.
 
 Verify repository-owned skills inside each reconciled code repository. Skill and instruction distribution never depends on the optional Vault mount.
 
@@ -330,11 +330,11 @@ Reconcile clones missing catalog entries, relocates unique matching checkouts, a
 
 ### Optional full remote Vault capability
 
-After the full-mesh SSH gate passes, inspect the machine's schema-v7 Vault mode. When it is `remote-sshfs`, complete [[linux-remote-vault-access|Linux Remote Vault Access]] before final instruction sync and enablement. When it is `none`, retain the code-only hard stop. Never infer this capability from Linux, SSH reachability, a directory named Vault, or the presence of the `$vault-i` skill.
+After the full-mesh SSH gate passes, inspect the machine's schema-v7 Vault mode. When it is `remote-sshfs`, complete [Linux Remote Vault Access](linux-remote-vault-access.md) before final instruction sync and enablement. When it is `none`, retain the code-only hard stop. Never infer this capability from Linux, SSH reachability, a directory named Vault, or the presence of the `$vault-i` skill.
 
 ## 10. Create cmux workspace
 
-First deploy and verify target terminal profile using [[cmux-tmux-terminal-workspaces|cmux and tmux Terminal Workspaces]]. New/rebuilt machines are not complete until `tmux`, `btop`, `starship`, `workmux`, managed configs, and pinned plugins verify.
+First deploy and verify target terminal profile using cmux and tmux Terminal Workspaces. New/rebuilt machines are not complete until `tmux`, `btop`, `starship`, `workmux`, managed configs, and pinned plugins verify.
 
 On Primary machine, add machine profile to canonical terminal-workspace controllers, then run Warp and cmux controller dry-run/apply/verify. cmux downloads verified architecture-matching `cmuxd-remote`, uploads it under remote `~/.cmux`, starts persistent slot daemon, and creates named remote PTY. Remote does not need standalone cmux app.
 
@@ -372,7 +372,7 @@ In T3 Code Nightly on Primary machine:
 
 T3 chooses LAN or the selected mesh provider only when its SSH environment launches or re-ensures connection. Existing live tunnels do not migrate routes. Close/reconnect after changing networks or switching provider.
 
-T3 desktop `0.0.32-nightly.20260805.1006` bounds each forwarded HTTP readiness probe to one second. Before blaming SSH or the alias, measure the selected route: if a fresh request through an SSH local forward takes more than one second, add the environment on the lower-latency LAN or wait for a T3 build with a larger probe budget. Keep the remote backend loopback-only; never work around this gate by exposing port `3773` or enabling the direct service. Full diagnosis and safe runtime cleanup are in [[primary-mac-remote-access-prerequisites#T3 readiness latency gate|Primary machine Remote Access Prerequisites]].
+T3 desktop `0.0.32-nightly.20260805.1006` bounds each forwarded HTTP readiness probe to one second. Before blaming SSH or the alias, measure the selected route: if a fresh request through an SSH local forward takes more than one second, add the environment on the lower-latency LAN or wait for a T3 build with a larger probe budget. Keep the remote backend loopback-only; never work around this gate by exposing port `3773` or enabling the direct service. Full diagnosis and safe runtime cleanup are in [Primary machine Remote Access Prerequisites](primary-mac-remote-access-prerequisites.md#t3-readiness-latency-gate).
 
 ## 12. Reboot acceptance test
 
@@ -402,7 +402,7 @@ Then:
 2. Reconnect T3 environment and start Codex thread.
 3. Test `SSH_ALIAS-lan`, `SSH_ALIAS-mesh`, and automatic alias, then repeat the canonical reverse-forward proof from the rebooted worker to `PRIMARY_ID`.
 4. Confirm no background direct T3 listener: `ssh SSH_ALIAS 'ss -lnt | rg ":3773" || true'`.
-5. For an enrolled `remote-sshfs` client, repeat the mount, exact-source, full-tree, Gitless-pointer, read-write, status, and automatic reconnect checks in [[linux-remote-vault-access|Linux Remote Vault Access]]. For a code-only worker, confirm no Vault root or mount exists.
+5. For an enrolled `remote-sshfs` client, repeat the mount, exact-source, full-tree, Gitless-pointer, read-write, status, and automatic reconnect checks in [Linux Remote Vault Access](linux-remote-vault-access.md). For a code-only worker, confirm no Vault root or mount exists.
 
 ## Optional daemons and watchdogs
 
@@ -433,7 +433,7 @@ Normal agent cleanup still closes the exact named session before task completion
 
 ## 13. Record topology
 
-Update [[machine-requirements-and-topology|Machine Requirements and Topology]] with:
+Update Machine Requirements and Topology with:
 
 - friendly name and role;
 - Bonjour/static hostname;
@@ -478,7 +478,7 @@ Enrollment-token rotation invalidates uninstalled older images. Rotate through k
 - Reused machine/key conflict `409`: revoke retired peer or repair registry; never clone private key.
 - Wrong SSH host key: stop and identify host. Remove known-host entry only after confirming reinstall/replacement.
 - Bad dependency install: restore package source, rerun profile idempotently, then pass command gate.
-- T3 SSH failure: verify `ssh SSH_ALIAS 'sh -lc "command -v node codex t3"'`, align the remote user-scoped T3 version with the desktop, and apply the readiness latency gate in [[primary-mac-remote-access-prerequisites#T3 readiness latency gate|Primary machine Remote Access Prerequisites]] before changing aliases or remote services.
+- T3 SSH failure: verify `ssh SSH_ALIAS 'sh -lc "command -v node codex t3"'`, align the remote user-scoped T3 version with the desktop, and apply the readiness latency gate in [Primary machine Remote Access Prerequisites](primary-mac-remote-access-prerequisites.md#t3-readiness-latency-gate) before changing aliases or remote services.
 - LAN route failure: verify DHCP reservation and `SSH_ALIAS-lan`; the canonical alias should still fall back to the selected `-mesh` route.
 - Secret Service failure: stop GitHub rollout. Never accept `gh` plaintext credential fallback. Confirm user D-Bus socket, keyring daemon, DISPLAY, collection password, and noVNC unlock.
 - Retire machine: revoke the selected provider identity, remove its service and T3 environment, then update aliases and topology. Retire a separate Kubernetes WireGuard peer only when that route is also being removed.

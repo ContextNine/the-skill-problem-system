@@ -18,7 +18,7 @@ After enrollment:
 1. Configure the route with `vault machine access configure MACHINE_ID wireguard --host ADDRESS --client-variant native-app|wg-quick`.
 2. Render source-aware aliases across every enabled machine and verify `MACHINE_ID-mesh`, then the canonical alias from every other enabled source.
 3. Disconnect Screen Sharing and existing SSH streams, wait beyond the NAT idle window, and open a brand-new inbound `MACHINE_ID-mesh` connection.
-4. On a worker Mac, first complete [[worker-mac-power-and-sleep]]. Confirm no matching system-sleep or WireGuard Network Extension suspension event occurred.
+4. On a worker Mac, first complete [worker-mac-power-and-sleep](worker-mac-power-and-sleep.md). Confirm no matching system-sleep or WireGuard Network Extension suspension event occurred.
 5. Run `vault machine access inspect MACHINE_ID --provider wireguard`. On Linux this reports sanitized handshake age and 25-second-keepalive counts without printing keys or endpoints; on the native macOS client it reports connected-tunnel counts plus fresh inbound SSH evidence. Record the accepted evidence and latency in the private machine note.
 6. When the primary selects WireGuard, open a new canonical reverse tunnel from every enabled worker to the primary. Prove its primary-loopback listener reaches the worker-loopback target, then close it and prove cleanup. Reverse forwarding uses the primary target's selected provider; `-R` never changes route selection.
 

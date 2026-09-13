@@ -7,7 +7,7 @@ status: enabled
 
 This is the optional Linux capability route owned by `$infra-i-onboard-machine`. It mounts one registered Mac's complete, materialized iCloud Vault at the Linux worker's registered Vault root through SSHFS. It does not create a clone, sparse checkout, copied publication tree, Git proxy, or Git coordinator.
 
-Use it only when the schema-v7 machine registry selects `vault.checkout_mode: remote-sshfs`. A Linux machine in mode `none` remains a Code-only worker and follows [[README-vault-host-boundary|Vault Host Boundary]].
+Use it only when the schema-v7 machine registry selects `vault.checkout_mode: remote-sshfs`. A Linux machine in mode `none` remains a Code-only worker and follows Vault Host Boundary.
 
 ### Invariants
 
@@ -144,4 +144,4 @@ Before enablement and again after reboot, prove:
 - Conflict or dataless item: stop, materialize and compare deliberately on the Mac host; do not delete, reset, or choose a winner automatically.
 - Source replacement or alias change: update the registry, re-render full-mesh SSH, rerun preview/apply/verify, and repeat reboot acceptance.
 
-The iCloud host must continue passing [[worker-mac-power-and-sleep|Worker Mac Power and Sleep]]. Remote Vault availability depends on a fresh unattended inbound connection, not only a running process or outbound network activity.
+The iCloud host must continue passing [Worker Mac Power and Sleep](worker-mac-power-and-sleep.md). Remote Vault availability depends on a fresh unattended inbound connection, not only a running process or outbound network activity.

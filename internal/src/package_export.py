@@ -12,6 +12,7 @@ import shutil
 import tempfile
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 from package_layout import AGENTS_ROOT, EXPORT_ROOT, VAULT_ROOT
 import working_repo_skills
@@ -48,6 +49,7 @@ FORBIDDEN_PARTS = {
 }
 FORBIDDEN_SUFFIXES = {".pyc", ".pyo"}
 ICLOUD_DUPLICATE_RE = re.compile(r"^.+ \d+(?:\.[^.]+)?$")
+WIKILINK_RE = re.compile(r"\[\[([^\]\n]+)\]\]")
 EXCLUSIONS_PATH = AGENTS_ROOT / "edit/settings/public-skill-repo-export-exclusions.json"
 LEGACY_PUBLIC_ROOTS = (Path("_system/agents"),)
 
@@ -162,6 +164,159 @@ def frontmatter_name(skill_file: Path) -> str | None:
         if line.startswith("name:"):
             return line.split(":", 1)[1].strip().strip("\"'")
     return None
+
+
+def _markdown_without_fenced_code(text: str) -> str:
+    """Return Markdown prose while preserving line positions and omitting fenced code."""
+    result: list[str] = []
+    fence: str | None = None
+    for line in text.splitlines(keepends=True):
+        stripped = line.lstrip()
+        marker = next((item for item in ("```", "~~~") if stripped.startswith(item)), None)
+        if marker:
+            fence = None if fence == marker else marker if fence is None else fence
+            result.append("\n" if line.endswith("\n") else "")
+        elif fence is None:
+            result.append(line)
+        else:
+            result.append("\n" if line.endswith("\n") else "")
+    return "".join(result)
+
+
+def _owning_skill(path: Path, stage: Path) -> Path | None:
+    for parent in (path.parent, *path.parents):
+        if parent == stage.parent:
+            break
+        if (parent / "SKILL.md").is_file():
+            return parent
+        if parent == stage:
+            break
+    return None
+
+
+def _candidate_files(base: Path) -> list[Path]:
+    candidates = [base]
+    if base.suffix == "":
+        candidates.append(base.with_suffix(".md"))
+        candidates.append(base / "README.md")
+    return candidates
+
+
+def _resolve_public_wikilink(stage: Path, current: Path, raw_target: str) -> tuple[Path | None, str | None]:
+    target, separator, heading = raw_target.partition("#")
+    target = target.strip()
+    heading = heading.strip() if separator else None
+    if not target:
+        return current, heading
+    if target.startswith("_system/agents/"):
+        target = target.removeprefix("_system/agents/")
+    target_path = Path(target)
+    skill = _owning_skill(current, stage)
+    bases: list[Path] = []
+    if target.startswith(("edit/", "internal/", "skills/")):
+        bases.append(stage / target_path)
+    bases.append(current.parent / target_path)
+    if skill is not None:
+        bases.append(skill / target_path)
+    for base in bases:
+        for candidate in _candidate_files(base):
+            resolved = candidate.resolve(strict=False)
+            if (resolved == stage or stage in resolved.parents) and candidate.is_file():
+                return candidate, heading
+    if "/" not in target:
+        search_root = skill or stage
+        names = {target, f"{target}.md"}
+        matches = [
+            item for item in search_root.rglob("*")
+            if item.is_file() and item.name in names
+        ]
+        if len(matches) == 1:
+            return matches[0], heading
+    return None, heading
+
+
+def _heading_slug(value: str) -> str:
+    lowered = value.casefold().strip()
+    lowered = re.sub(r"[^\w\s-]", "", lowered)
+    return re.sub(r"[\s-]+", "-", lowered).strip("-")
+
+
+def _rewrite_prose_wikilinks(stage: Path, current: Path, prose: str) -> str:
+    def replace(match: re.Match[str]) -> str:
+        raw = match.group(1)
+        target, divider, label = raw.partition("|")
+        target = target.strip()
+        display = label.strip() if divider else target.rsplit("/", 1)[-1].lstrip("#")
+        resolved, heading = _resolve_public_wikilink(stage, current, target)
+        if resolved is None:
+            return display
+        relative = Path(os.path.relpath(resolved, current.parent)).as_posix()
+        destination = quote(relative, safe="/._-")
+        if heading:
+            destination += f"#{_heading_slug(heading)}"
+        return f"[{display}]({destination})"
+
+    return WIKILINK_RE.sub(replace, prose)
+
+
+def rewrite_public_markdown_links(stage: Path) -> None:
+    """Convert Obsidian wikilinks in public prose to portable Markdown or plain labels."""
+    stage = stage.resolve()
+    for path in sorted(stage.rglob("*.md")):
+        text = path.read_text(encoding="utf-8")
+        lines = text.splitlines(keepends=True)
+        rewritten: list[str] = []
+        fence: str | None = None
+        for line in lines:
+            stripped = line.lstrip()
+            marker = next((item for item in ("```", "~~~") if stripped.startswith(item)), None)
+            if marker:
+                fence = None if fence == marker else marker if fence is None else fence
+                rewritten.append(line)
+            elif fence is None:
+                rewritten.append(_rewrite_prose_wikilinks(stage, path, line))
+            else:
+                rewritten.append(line)
+        path.write_text("".join(rewritten), encoding="utf-8")
+
+
+def validate_retained_skill_exclusions(
+    stage: Path,
+    exclusions: list[dict[str, str]],
+) -> None:
+    """Fail when a retained skill still names a file removed by a user exclusion."""
+    for item in exclusions:
+        relative = Path(item["path"])
+        if relative.parts[:1] != ("skills",) or len(relative.parts) < 4:
+            continue
+        skill_root = stage / "edit" / Path(*relative.parts[:3])
+        if not (skill_root / "SKILL.md").is_file():
+            continue
+        omitted = Path(*relative.parts[3:])
+        aliases = {omitted.as_posix()}
+        if omitted.suffix == ".md":
+            aliases.add(omitted.with_suffix("").as_posix())
+        markdown = [
+            path.read_text(encoding="utf-8")
+            for path in sorted(skill_root.rglob("*.md"))
+        ]
+        searchable = (
+            "\n".join(markdown)
+            if omitted.parts[:1] == ("scripts",)
+            else "\n".join(_markdown_without_fenced_code(text) for text in markdown)
+        )
+        if any(alias in searchable for alias in aliases):
+            raise ExportError(
+                f"public exclusion {item['rule']!r} removed required skill file "
+                f"{item['path']!r} referenced by {skill_root.relative_to(stage)}"
+            )
+
+
+def validate_no_public_wikilinks(stage: Path) -> None:
+    for path in sorted(stage.rglob("*.md")):
+        prose = _markdown_without_fenced_code(path.read_text(encoding="utf-8"))
+        if WIKILINK_RE.search(prose):
+            raise ExportError(f"public Markdown retains an Obsidian wikilink: {path.relative_to(stage)}")
 
 
 def github_repo(skill_file: Path) -> str | None:
@@ -446,7 +601,10 @@ def materialize(
         )
     copy_file(stage / "AGENTS.md", stage / "CLAUDE.md")
     inventory = discover_skills(stage, manifest, exclusions, exclusion_log)
+    validate_retained_skill_exclusions(stage, exclusion_log)
     validate_exported_templates(stage)
+    rewrite_public_markdown_links(stage)
+    validate_no_public_wikilinks(stage)
     write_notices(stage, inventory, manifest)
     owned = sorted(
         path.relative_to(stage).as_posix()
@@ -581,6 +739,29 @@ def export_changes(destination: Path, stage: Path) -> list[dict[str, str]]:
     return changes
 
 
+def annotate_excluded_removals(
+    changes: list[dict[str, str]],
+    exclusions: list[dict[str, str]],
+) -> None:
+    """Attach the responsible user rule to removed files in dry-run output."""
+    omitted = [(Path(item["path"]), item["rule"]) for item in exclusions]
+    for change in changes:
+        public_path = Path(change["path"])
+        if change["status"] != "removed" or public_path.parts[:1] != ("edit",):
+            continue
+        editable_path = Path(*public_path.parts[1:])
+        rule = next(
+            (
+                candidate_rule
+                for candidate, candidate_rule in omitted
+                if editable_path == candidate or candidate in editable_path.parents
+            ),
+            None,
+        )
+        if rule:
+            change["exclusion_rule"] = rule
+
+
 def export(destination: Path, *, apply: bool, manifest_path: Path | None = None) -> dict[str, Any]:
     destination = destination.expanduser().resolve()
     source = AGENTS_ROOT.resolve()
@@ -593,6 +774,7 @@ def export(destination: Path, *, apply: bool, manifest_path: Path | None = None)
         scan(stage)
         prevent_silent_skill_removal(destination, stage, manifest, exclusions)
         changes = export_changes(destination, stage)
+        annotate_excluded_removals(changes, exclusions)
         if apply:
             destination.mkdir(parents=True, exist_ok=True)
             replace_owned(destination, stage)

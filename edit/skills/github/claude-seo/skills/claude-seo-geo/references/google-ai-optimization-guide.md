@@ -57,7 +57,7 @@ Their example contrasts "7 Tips for First-Time Homebuyers" (commodity) with
 (lived experience).
 
 > **Cross-reference:** the llms.txt myth is independently confirmed by
-> [[llmstxt-evidence]] (Mueller, Illyes, SE Ranking 300k-domain study,
+> [llmstxt-evidence](llmstxt-evidence.md) (Mueller, Illyes, SE Ranking 300k-domain study,
 > OtterlyAI server-log audit). Both files must stay aligned.
 
 ## The "creating helpful content" companion guide

@@ -8,14 +8,14 @@ Primary machine is authority for shared age identities. Canonical active identit
 
 ## Contents
 
-- [[#Enroll machine]]
-- [[#Verify fleet]]
-- [[#Rotate identity]]
-- [[#Failure rules]]
+- [Enroll machine](sops-key-enrollment-and-rotation.md#enroll-machine)
+- [Verify fleet](sops-key-enrollment-and-rotation.md#verify-fleet)
+- [Rotate identity](sops-key-enrollment-and-rotation.md#rotate-identity)
+- [Failure rules](sops-key-enrollment-and-rotation.md#failure-rules)
 
 ## Enroll machine
 
-Confirm target identity through [[machine-requirements-and-topology|Machine Requirements and Topology]], then run from Primary machine:
+Confirm target identity through Machine Requirements and Topology, then run from Primary machine:
 
 ```bash
 SKILL_DIR="$(vault root)/_system/agents/edit/skills/_infrastructure/infra-i-onboard-machine"

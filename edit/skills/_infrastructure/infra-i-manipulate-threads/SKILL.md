@@ -45,13 +45,13 @@ If the request originates in Codex and targets Codex, acceptance requires Codex-
 
 ## Choose the Workflow
 
-- Read [[references/codex-between-machines|Codex Between Machines]] for direct moves/copies, native handoff, pin state, and sidebar acceptance.
-- Read [[references/t3-code-bridge|T3 Code Bridge]] for Codex ↔ T3 Code workflows.
-- Read [[references/exact-state-and-recovery|Exact State And Recovery]] for bundle imports, bulk sets, archives, exact IDs, selectors, and rollback.
+- Read [Codex Between Machines](references/codex-between-machines.md) for direct moves/copies, native handoff, pin state, and sidebar acceptance.
+- Read [T3 Code Bridge](references/t3-code-bridge.md) for Codex ↔ T3 Code workflows.
+- Read [Exact State And Recovery](references/exact-state-and-recovery.md) for bundle imports, bulk sets, archives, exact IDs, selectors, and rollback.
 
 Use the bundled exact-state scripts for “move” and “copy.” Use native task tools for “handoff,” titles, pins, archives, and project placement that does not relocate thread state. Never substitute native handoff for a move merely because matching saved projects exist.
 
-When old and new SSH aliases reach the same physical Codex home, do not copy the transcript. Use the alias re-key workflow in [[references/codex-between-machines|Codex Between Machines]] to clone saved-project metadata and re-associate only the selected desktop thread assignments. A local-to-remote copy still needs a destination-native remote thread and exact-state history transplant.
+When old and new SSH aliases reach the same physical Codex home, do not copy the transcript. Use the alias re-key workflow in [Codex Between Machines](references/codex-between-machines.md) to clone saved-project metadata and re-associate only the selected desktop thread assignments. A local-to-remote copy still needs a destination-native remote thread and exact-state history transplant.
 
 ## Completion Report
 

@@ -23,10 +23,10 @@ node "$SKILL_DIR/scripts/public-search-audit.mjs" https://example.com --pages /,
 
 ## Routes
 
-- End-to-end reasoning and severity: [[references/diagnostic-sequence|Diagnostic Sequence]].
-- Search Console properties, API, inspection, and safe auth: [[references/google-search-console|Google Search Console]].
-- Lighthouse, PageSpeed Insights, CrUX, and performance budgets: [[references/performance-and-lighthouse|Performance and Lighthouse]].
-- Candidate skills, MCP servers, crawlers, providers, and adoption rules: [[references/tooling-and-providers|Tooling and Providers]].
+- End-to-end reasoning and severity: [Diagnostic Sequence](references/diagnostic-sequence.md).
+- Search Console properties, API, inspection, and safe auth: [Google Search Console](references/google-search-console.md).
+- Lighthouse, PageSpeed Insights, CrUX, and performance budgets: [Performance and Lighthouse](references/performance-and-lighthouse.md).
+- Candidate skills, MCP servers, crawlers, providers, and adoption rules: [Tooling and Providers](references/tooling-and-providers.md).
 - UTM construction and GA4/GTM measurement: use `$marketing-google-marketing-measurement`; SEO and analytics answer different questions.
 - Tracked short links: build the destination URL with that measurement skill, then shorten it with the owning Shlink instance. Preserve the complete query string.
 

@@ -7,7 +7,7 @@ description: Updates installed T3 Code nightly CLI/server or macOS desktop, Code
 
 ## Shared command
 
-This skill is the coding-tool specialist used by [[_system/agents/edit/skills/_infrastructure/infra-i-update-fleet-dependencies/SKILL|Update Fleet Dependencies]]. Execute through the shared implementation:
+This skill is the coding-tool specialist used by [Update Fleet Dependencies](../infra-i-update-fleet-dependencies/SKILL.md). Execute through the shared implementation:
 
 ```bash
 fleet update --coding-tools --dry-run
@@ -18,7 +18,7 @@ The command owns the immutable cross-machine plan, default apply, sync, final ve
 
 ## Dependency and target resolution
 
-Read [[_system/agents/edit/skills/_infrastructure/infra-i-code-folder-and-computer-topology/SKILL|Code Folder and Computer Topology]] and every prerequisite it requires before connecting to or changing a machine.
+Read [Code Folder and Computer Topology](../infra-i-code-folder-and-computer-topology/SKILL.md) and every prerequisite it requires before connecting to or changing a machine.
 
 - Resolve and validate `fleet/machines.json` with `fleet config`; never hardcode the private Vault source path. If it is absent or invalid, keep fleet updates inactive and show setup guidance from the topology skill.
 - Resolve the current machine from clone-local `vault.machine-id` on Git checkouts or `~/.config/vault/machine-id` on a Gitless iCloud worker; never infer it from hostname.
@@ -46,7 +46,7 @@ T3 Code follows nightly builds.
 3. For an existing global npm installation, update the same prefix with `npm install -g t3@<resolved-version>`. Use the existing package manager if provenance shows pnpm, Yarn, or Bun instead.
 4. For an npx-only installation, refresh and verify the exact nightly without launching the server: `npx --yes t3@<resolved-version> --version`.
 5. Use privilege elevation only when the existing global installation is root-owned and the invocation's authorization permits it; otherwise report `blocked (existing install requires elevation)`.
-6. For an installed macOS nightly app, follow [[_system/agents/edit/skills/_infrastructure/infra-i-update-fleet-coding-tools/references/native-artifact-updates|Native Artifact Updates]]. Use its configured GitHub nightly channel and the same exact version resolved above.
+6. For an installed macOS nightly app, follow [Native Artifact Updates](references/native-artifact-updates.md). Use its configured GitHub nightly channel and the same exact version resolved above.
 7. If an active T3 server was started by an existing manager such as systemd, launchd, or T3 desktop's managed SSH launcher, restart it only through that confirmed existing control path and verify it is running/listening. Do not enable a disabled service, create a manager, or guess how an unmanaged process should restart.
 8. Verify a global installation with `t3 --version`; verify an npx-only installation with the exact-version command above; verify a desktop installation from `CFBundleShortVersionString`, its signature, and bundle identifier.
 
@@ -55,7 +55,7 @@ T3 Code follows nightly builds.
 - Prefer `codex update` when `codex help update` confirms the installed CLI supports its self-updater.
 - Treat a user-owned `~/.local/bin/codex` resolving through `$CODEX_HOME/packages/standalone/current` as the official standalone channel. If its self-updater is unavailable, rerun `curl -fsSL https://chatgpt.com/codex/install.sh | CODEX_NON_INTERACTIVE=1 sh`; do not reconstruct or replace its managed release layout manually.
 - For other confirmed provenance, Homebrew cask uses `brew upgrade --cask codex`; global npm uses the same prefix with `npm install -g @openai/codex@latest`.
-- A root-owned `/usr/local/bin/codex` with `/etc/codex-machine-image-version` is a legacy image channel, not the current desired state. Use [[_system/agents/edit/skills/_infrastructure/infra-i-update-fleet-coding-tools/references/native-artifact-updates|Native Artifact Updates]] only for recovery when explicit migration to the official standalone channel is outside the request.
+- A root-owned `/usr/local/bin/codex` with `/etc/codex-machine-image-version` is a legacy image channel, not the current desired state. Use [Native Artifact Updates](references/native-artifact-updates.md) only for recovery when explicit migration to the official standalone channel is outside the request.
 - If provenance is unsupported or unknown, leave it unchanged and report the blocker instead of reinstalling it.
 - Verify with `codex --version` and `command -v codex`.
 

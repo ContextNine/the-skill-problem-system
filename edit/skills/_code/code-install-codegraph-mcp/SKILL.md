@@ -20,15 +20,15 @@ Install and configure CodeGraph from https://github.com/colbymchenry/codegraph f
 ## Workflow
 
 1. Open the maintained upstream README, release history, installer, and telemetry documentation. Confirm the current release, supported platforms, CLI flags, and files changed. Do not use an unreviewed installer or stale fork.
-2. Check `codegraph --version`, `codegraph telemetry status`, and the process table before changing anything. Install or verify the declared dependency on the current machine when the user requested installation:
+2. Check `codegraph --version`, `codegraph telemetry status`, and the process table before changing anything. When installation is requested, use a reviewed checkout of the official repository at the release pinned in the typed dependency registry. Confirm that the release checksums in `_system/agents/internal/defaults/dependencies.json` match upstream before running its installer. Never pipe a remote script directly into a shell:
 
 ```bash
-fleet sync --dependency codegraph --local-only
+CODEGRAPH_VERSION=v1.6.0 sh /absolute/path/to/codegraph/install.sh
 codegraph telemetry off
 codegraph --version
 ```
 
-If the user requested only the CLI, stop here. Confirm that no CodeGraph process remains.
+Use the current pinned version rather than copying the example version blindly. The upstream installer verifies the release archive checksum and installs the CLI under `~/.codegraph`, with a launcher in `~/.local/bin`. If the user requested only the CLI, stop here. Confirm that no CodeGraph process remains.
 
 3. In the selected repository, inspect Git status, `AGENTS.md`, `.codex/config.toml`, `.gitignore`, and any existing `codegraph.json` or `.codegraph/` directory. Print CodeGraph's proposed Codex config before writing it:
 

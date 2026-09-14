@@ -4,6 +4,7 @@ The following skill sources are redistributed under their original licenses.
 
 - https://github.com/AgriciDaniel/claude-seo: MIT, https://github.com/agricidaniel/claude-seo/blob/main/LICENSE
 - https://github.com/MohamedAbdallah-14/prompt-to-asset: MIT, https://github.com/MohamedAbdallah-14/prompt-to-asset/blob/main/LICENSE
+- https://github.com/ToolMonsters/install-check
 - https://github.com/alpic-ai/skybridge: MIT, https://github.com/alpic-ai/skybridge/blob/main/LICENSE
 - https://github.com/amruthpillai/reactive-resume: MIT, https://github.com/amruthpillai/reactive-resume/blob/main/LICENSE
 - https://github.com/coreyhaines31/marketingskills: MIT, https://github.com/coreyhaines31/marketingskills/blob/main/LICENSE

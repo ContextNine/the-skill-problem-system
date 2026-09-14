@@ -1838,13 +1838,13 @@
           "macos": {
             "manager": "ctx9-component",
             "package": "secret-bindings",
-            "private_catalog_url": "https://gitlab.com/api/v4/projects/85404252/packages/generic/secret-bindings-machine/1.5.0/components.json",
+            "private_catalog_url": "https://gitlab.com/api/v4/projects/85404252/packages/generic/secret-bindings-machine/1.5.1/components.json",
             "credential_binding": "ctx9-gitlab-group-read"
           },
           "linux": {
             "manager": "ctx9-component",
             "package": "secret-bindings",
-            "private_catalog_url": "https://gitlab.com/api/v4/projects/85404252/packages/generic/secret-bindings-machine/1.5.0/components.json",
+            "private_catalog_url": "https://gitlab.com/api/v4/projects/85404252/packages/generic/secret-bindings-machine/1.5.1/components.json",
             "credential_binding": "ctx9-gitlab-group-read"
           }
         },
@@ -1854,7 +1854,7 @@
             "--version",
             "--json"
           ],
-          "exact": "1.5.0"
+          "exact": "1.5.1"
         }
       }
     },

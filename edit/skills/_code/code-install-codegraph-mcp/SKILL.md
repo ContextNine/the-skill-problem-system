@@ -10,7 +10,7 @@ Install and configure CodeGraph from https://github.com/colbymchenry/codegraph f
 ## Safety
 
 - Resolve the exact target repository first. Use `$infra-i-code-folder-and-computer-topology` only when its path or owning machine is unclear.
-- Do not target the Obsidian Vault unless the user explicitly overrides a warning about indexing private notes and modifying managed agent configuration.
+- Do not target the Obsidian Vault unless the user explicitly asks to index its supported code and accepts modifying managed agent configuration. CodeGraph does not index Markdown, so it cannot search the Vault's notes or documentation.
 - Read the target repository's `AGENTS.md` and README breadcrumbs before mutation. Preserve unrelated work and stop if CodeGraph would overlap dirty `AGENTS.md` or `.codex/config.toml` changes.
 - State before setup that a local Codex install updates `AGENTS.md` and `.codex/config.toml`, while `codegraph init` creates the local `.codegraph/` index.
 - Default to Codex with project-local configuration. Use global configuration, `all`, or another agent only when the user requests it.
@@ -42,7 +42,7 @@ codegraph install --target codex --location local --print-config codex
 codegraph install --target codex --location local --yes
 ```
 
-5. CodeGraph honors `.gitignore` and its built-in dependency, build, cache, and size exclusions. Add `codegraph.json` only when tracked generated or vendored paths need `exclude`, or lower-priority helper trees need `deprioritize`. Do not add speculative configuration.
+5. CodeGraph honors `.gitignore` and its built-in dependency, build, cache, and size exclusions. Add `codegraph.json` only when tracked generated or vendored paths need `exclude`, or lower-priority helper trees need `deprioritize`. `exclude` removes paths from the graph; `deprioritize` keeps them findable but lowers their rank. Prefer `deprioritize` when vendored code is the only source available to inspect. Do not add speculative configuration.
 
 6. Initialize and build the graph only after the user selected the repository:
 

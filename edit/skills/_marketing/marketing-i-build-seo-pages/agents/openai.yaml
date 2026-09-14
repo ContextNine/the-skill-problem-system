@@ -1,0 +1,5 @@
+interface:
+  short_description: "Research and build one evidence-backed SEO page"
+  default_prompt: "Use $marketing-i-build-seo-pages to research and draft this SEO page for review."
+policy:
+  allow_implicit_invocation: true

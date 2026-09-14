@@ -5,9 +5,10 @@ Users normally edit the sibling `edit/` directory. This directory contains the i
 - `src/`: Fleet CLI, renderer, installer, sync, update, and export code.
 - `schemas/` and `defaults/`: validation and public-safe starter data.
 - `tests/`: integration and package tests.
-- `docs/`: implementation routing only. Operating procedures live in their owning skills.
 - `release/`: public repository mappings, installer, README, license, and version metadata.
 - `generated/`: catalog links, overlays, snapshots, locks, and backups. Never edit these as source.
+
+Operating procedures live in their owning skills. The Fleet templating contract is owned by `$agents-i-write-or-edit-a-skill` in `references/fleet-templating.md`.
 
 Validate source changes with:
 

@@ -1,0 +1,5 @@
+interface:
+  short_description: "Choose the right Claude or Codex slide workflow"
+  default_prompt: "Use $creative-i-pptx-or-slides to choose the best available workflow and create or edit this presentation."
+policy:
+  allow_implicit_invocation: true

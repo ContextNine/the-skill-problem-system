@@ -77,7 +77,7 @@ python3 "$(vault root)/_system/tools/gmail-invoice-collector/collect_invoices.py
 
 ## Output
 
-Reports are written to configured `report_root` outside vault.
+Reports are written to the configured vault-relative `report_root` under ignored `_system/local/state`. The collector never creates generated output in `~/Downloads`.
 
 After a run, tell the user:
 

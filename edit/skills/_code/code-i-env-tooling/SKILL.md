@@ -13,7 +13,7 @@ description: Manages typed repository environment contracts with Secret Bindings
 
 ## Schema v4 contract
 
-Every managed runtime repository owns `.context9/secret-bindings.yaml` with explicit environment sets and run profiles. Every environment set has one tracked `.env.base`:
+Every managed runtime repository owns `.ctx9/secret-bindings.yaml` with explicit environment sets and run profiles. Every environment set has one tracked `.env.base`:
 
 - A non-empty assignment is authoritative public Git configuration.
 - An empty assignment declares a protected slot.

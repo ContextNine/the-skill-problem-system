@@ -21,7 +21,7 @@ Run once for each current entity. The command refuses to overwrite an existing f
 
 ```bash
 python3 scripts/scaffold_tax_year.py --vault-root "$(vault root)" --context personal --year YYYY --taxpayer "M J Derman" --kind individual
-python3 scripts/scaffold_tax_year.py --vault-root "$(vault root)" --context outsource-think --year YYYY --taxpayer "Friday Studios (Pty) Ltd" --kind company --year-end-month 3 --year-end-day 31
+python3 scripts/scaffold_tax_year.py --vault-root "$(vault root)" --context <finance-context> --year YYYY --taxpayer "Registered taxpayer" --kind company --year-end-month 3 --year-end-day 31
 ```
 
 Use `--dry-run` first. Add a new context only after its `_finance/AGENTS.md` defines its legal taxpayer, period, returns, and source folders.

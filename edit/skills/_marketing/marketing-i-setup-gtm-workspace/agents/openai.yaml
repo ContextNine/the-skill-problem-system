@@ -1,0 +1,5 @@
+interface:
+  short_description: "Set up a Vault GTM and relationship CRM workspace"
+  default_prompt: "Use $marketing-i-setup-gtm-workspace to create or standardize this context's GTM, relationship CRM, and import structure without moving existing records."
+policy:
+  allow_implicit_invocation: true

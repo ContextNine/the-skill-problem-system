@@ -68,7 +68,7 @@ claude-openrouter moonshotai/kimi-k3 -p --max-turns 1 "Explain this repository"
 
 | Concern | Canonical location |
 | --- | --- |
-| Skill, scripts, tests, and this SOP | `_system/agents/edit/skills/_infrastructure/infra-i-manage-claude-provider-routes/` |
+| Skill, scripts, tests, and this SOP | `_system/agents/edit/skills/_code/code-i-use-claude-code-proxy-or-openrouter/` |
 | Installed commands | `~/.local/bin/claude-*` |
 | Isolated OpenRouter and Featherless Claude state | `~/.config/ctx9/claude-provider-routes/claude/<provider>/` |
 | Kimi Platform, OpenRouter, and Featherless credentials on macOS | Keychain services `ctx9-claude-provider-<provider>` |
@@ -87,7 +87,7 @@ Onboarding links here and installs these scripts. It does not keep another launc
 From Primary machine:
 
 ```bash
-launcher_installer="$(vault root)/_system/agents/edit/skills/_infrastructure/infra-i-manage-claude-provider-routes/scripts/install-claude-provider-launchers.sh"
+launcher_installer="$(vault root)/_system/agents/edit/skills/_code/code-i-use-claude-code-proxy-or-openrouter/scripts/install-claude-provider-launchers.sh"
 "$launcher_installer"
 "$launcher_installer" linux-worker
 "$launcher_installer" worker-mac
@@ -183,10 +183,10 @@ Observed 2026-08-06:
 
 Observed 2026-08-31:
 
-- Canonical ownership moved from machine onboarding into `$infra-i-manage-claude-provider-routes` without changing the installed Codex or Kimi launcher behavior.
-- Mattbook installed `claude-provider`, `claude-provider-auth`, `claude-openrouter`, and `claude-featherless` under `~/.local/bin`; installed digests match canonical source.
+- Canonical ownership moved from machine onboarding into `$code-i-use-claude-code-proxy-or-openrouter` without changing the installed Codex or Kimi launcher behavior.
+- Verify the selected machine's installed `claude-provider`, `claude-provider-auth`, `claude-openrouter`, and `claude-featherless` launchers against canonical source.
 - Focused tests passed for OpenRouter environment isolation, missing-credential refusal, Featherless loopback translation startup, exact model-slug forwarding, argument forwarding, credential status, and installer symlinks.
-- OpenRouter and Featherless credentials are not enrolled on Mattbook, so live provider requests remain pending explicit target-local enrollment.
+- Live provider requests remain gated on target-local credential enrollment and verification.
 
 ### Paths
 

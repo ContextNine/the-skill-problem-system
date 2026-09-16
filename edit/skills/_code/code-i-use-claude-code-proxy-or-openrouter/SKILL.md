@@ -1,9 +1,9 @@
 ---
-name: infra-i-manage-claude-provider-routes
-description: Configures, installs, verifies, or repairs Claude Code launchers for alternate model providers. Use when the user asks for claude-kimi, claude-codex, claude-openrouter, claude-featherless, a Claude provider route, an alternate Claude Code model, or a model slug passed to Claude Code.
+name: code-i-use-claude-code-proxy-or-openrouter
+description: Use when the user asks to run Claude Code through a proxy, OpenRouter, Kimi, Codex OAuth, Featherless, an alternate model provider, or a model slug.
 ---
 
-# Infra · Manage Claude Provider Routes
+# Code · Use Claude Code proxy or OpenRouter
 
 Read [Claude Provider Routes](references/README-claude-provider-routes.md) before changing launchers, provider authentication, CLIProxyAPI routing, or fleet acceptance.
 

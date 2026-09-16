@@ -167,10 +167,10 @@ sudo apt-get install -y google-cloud-cli
 
 Claude native install follows `latest` and updates automatically. Run `claude update` for an immediate manual update. `--http1.1` avoids observed HTTP/2 write failures without changing Anthropic installer contents or checksum verification.
 
-Install canonical provider launchers after native Claude Code on every active development machine. Configure and authenticate providers separately through `$infra-i-manage-claude-provider-routes` and Claude Provider Routes:
+Install canonical provider launchers after native Claude Code on every active development machine. Configure and authenticate providers separately through `$code-i-use-claude-code-proxy-or-openrouter` and Claude Provider Routes:
 
 ```bash
-launcher_installer="$(vault root)/_system/agents/edit/skills/_infrastructure/infra-i-manage-claude-provider-routes/scripts/install-claude-provider-launchers.sh"
+launcher_installer="$(vault root)/_system/agents/edit/skills/_code/code-i-use-claude-code-proxy-or-openrouter/scripts/install-claude-provider-launchers.sh"
 "$launcher_installer" SSH_ALIAS
 ```
 
@@ -198,8 +198,8 @@ Passwordless tty auto-login does not unlock a password-protected keyring. Keep S
 
 ```bash
 git config --global user.name "Fleet User"
-git config --global user.email "derman.matthew@gmail.com"
-git config --global init.defaultBranch main
+git config --global user.email "YOUR_EMAIL"
+git config --global init.defaultBranch master
 
 export XDG_RUNTIME_DIR="/run/user/$(id -u)"
 export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
@@ -233,7 +233,7 @@ Complete device flow in trusted Primary machine browser. Pause immediately befor
 Return to Primary machine and use the preview-first fleet-auth helper to generate the worker's dedicated key locally, approve its public fingerprint, and verify native agent custody. Then verify SSH access with an owning organization repository plus an unrelated accessible repository:
 
 ```bash
-git ls-remote git@github.com:FridayStudios/Impression.git HEAD
+git ls-remote git@github.com:OWNER/ACCESSIBLE_REPO.git HEAD
 gh repo list --limit 2 --json nameWithOwner >/dev/null
 ```
 

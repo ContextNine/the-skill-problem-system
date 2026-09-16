@@ -22,7 +22,7 @@ def desired(enabled: bool = True) -> dict[str, object]:
         "schema_version": 1,
         "enabled": enabled,
         "remote_name": "ctx9_codefoldersync_backups",
-        "allowed_machines": ["mattbook", "wootbook", "workermacair"],
+        "allowed_machines": ["primary-mac", "worker-linux", "worker-mac"],
         "google_drive": {
             "oauth_client_id": "public-client-id",
             "scope": "drive.file",
@@ -51,6 +51,7 @@ class DesiredStateTests(unittest.TestCase):
 
     def test_disabled_placeholder_state_has_explicit_gates(self) -> None:
         value = desired(enabled=False)
+        value["allowed_machines"] = []
         value["google_drive"]["oauth_client_id"] = None  # type: ignore[index]
         value["google_drive"]["shared_drive_id"] = None  # type: ignore[index]
         value["google_drive"]["root_folder_id"] = None  # type: ignore[index]
@@ -58,6 +59,7 @@ class DesiredStateTests(unittest.TestCase):
             rclone_google_drive.desired_missing(rclone_google_drive.validate_desired(value)),
             [
                 "enabled",
+                "allowed_machines",
                 "google_drive.oauth_client_id",
                 "google_drive.shared_drive_id",
                 "google_drive.root_folder_id",
@@ -65,11 +67,11 @@ class DesiredStateTests(unittest.TestCase):
         )
 
     def test_password_command_is_an_absolute_space_separated_argument_list(self) -> None:
-        encoded = rclone_google_drive.password_command("wootbook")
+        encoded = rclone_google_drive.password_command("worker-linux")
         fields = next(csv.reader(io.StringIO(encoded), delimiter=" ", quotechar='"'))
         self.assertTrue(Path(fields[0]).is_absolute())
         self.assertTrue(Path(fields[1]).is_absolute())
-        self.assertEqual(fields[2], "wootbook")
+        self.assertEqual(fields[2], "worker-linux")
 
 
 class BundleTests(unittest.TestCase):
@@ -79,7 +81,7 @@ class BundleTests(unittest.TestCase):
         witness = {
             "schema_version": 1,
             "snapshot_id": "snapshot-1",
-            "machine_id": "mattbook",
+            "machine_id": "primary-mac",
             "artifacts": [
                 {
                     "name": artifact.name,
@@ -94,7 +96,7 @@ class BundleTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             self.create_bundle(root)
-            report = rclone_google_drive.validate_bundle(root, "snapshot-1", "mattbook")
+            report = rclone_google_drive.validate_bundle(root, "snapshot-1", "primary-mac")
             self.assertEqual(report["artifact_count"], 1)
             self.assertEqual(report["file_count"], 2)
 
@@ -104,7 +106,7 @@ class BundleTests(unittest.TestCase):
             self.create_bundle(root)
             (root / "manifest.json").write_text("{}\n", encoding="utf-8")
             with self.assertRaisesRegex(rclone_google_drive.BackupError, "unbound"):
-                rclone_google_drive.validate_bundle(root, "snapshot-1", "mattbook")
+                rclone_google_drive.validate_bundle(root, "snapshot-1", "primary-mac")
 
     def test_rejects_tampered_ciphertext(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -112,7 +114,7 @@ class BundleTests(unittest.TestCase):
             self.create_bundle(root)
             (root / "code.tar.zst.age").write_bytes(b"changed")
             with self.assertRaisesRegex(rclone_google_drive.BackupError, "does not match"):
-                rclone_google_drive.validate_bundle(root, "snapshot-1", "mattbook")
+                rclone_google_drive.validate_bundle(root, "snapshot-1", "primary-mac")
 
     def test_remote_paths_reject_nested_components(self) -> None:
         with self.assertRaisesRegex(rclone_google_drive.BackupError, "unsafe"):
@@ -121,4 +123,3 @@ class BundleTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

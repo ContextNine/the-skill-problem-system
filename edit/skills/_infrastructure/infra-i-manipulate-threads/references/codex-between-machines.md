@@ -44,7 +44,7 @@ When a canonical alias replaces `-lan`, `-mesh`, an IP address, or another trans
 
 1. Confirm both aliases resolve to the same machine and Codex home.
 2. Inventory the old and new Codex host IDs, saved projects, selected thread assignments, pins, and archive state.
-3. Preview `scripts/codex_alias_rekey.py` for only the selected threads. It clones each matching saved project under the replacement host ID and updates Mattbook's project assignment while retaining the old project and connection for rollback.
+3. Preview `scripts/codex_alias_rekey.py` for only the selected threads. It clones each matching saved project under the replacement host ID and updates the requesting desktop's project assignment while retaining the old project and connection for rollback.
 4. Quit the Codex desktop state writer, apply, then reopen the same app.
 5. Verify each thread under the replacement host/project in the actual sidebar before removing any old project or connection.
 

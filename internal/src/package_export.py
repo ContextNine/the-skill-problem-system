@@ -37,6 +37,11 @@ CREDENTIAL_PATTERNS = (
         ),
     ),
 )
+# Instance identifiers are never part of a portable first-party skill. Keep this
+# check separate from credential detection so a new personal example fails export.
+PRIVATE_INSTANCE_RE = re.compile(
+    r"(?i)\b(?:matthew\s+derman|mattbook|wootbook|workermacair|fridaystudios|impression-group1|outsource-think)\b|taildb6722"
+)
 FORBIDDEN_PARTS = {
     "private",
     "__pycache__",
@@ -637,6 +642,8 @@ def scan(stage: Path) -> None:
         for label, pattern in CREDENTIAL_PATTERNS:
             if pattern.search(text):
                 raise ExportError(f"credential-like {label} found in {rendered}")
+        if relative.parts[:2] == ("edit", "skills") and "github" not in relative.parts and PRIVATE_INSTANCE_RE.search(text):
+            raise ExportError(f"private instance identifier found in first-party skill: {rendered}")
 
 
 def public_skill_names(root: Path) -> set[str]:

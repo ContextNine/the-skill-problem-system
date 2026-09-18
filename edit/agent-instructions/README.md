@@ -10,7 +10,7 @@ Edit files directly under `templates/` for specific text:
 - `connections.md`: registered access, peers, and GUI connection guidance.
 - `development-previews.md`: worker preview forwarding.
 
-The machine registry owns identity, paths, access routes, Vault participation, variant choice, and the non-secret `development_services` context and service names. Leave service fields `null` until a development target is configured; never put credentials there. Markdown owns all instruction wording. For syntax and precedence, see the Fleet templating reference in `../skills/_agents/agents-i-write-or-edit-a-skill/references/fleet-templating.md`.
+The machine registry owns identity, the default Code root, access routes, Vault participation, variant choice, and the non-secret `development_services` context and service names. Leave service fields `null` until a development target is configured; never put credentials there. Markdown owns all instruction wording. For syntax and precedence, see the Fleet templating reference in `../skills/_agents/agents-i-write-or-edit-a-skill/references/fleet-templating.md`.
 
 `fleet sync --skills --instructions --dry-run` previews generated destinations; `fleet sync --skills --instructions` applies them. The generated global file is `~/.agents/instructions/AGENTS.md`, with Codex and optional Claude links. The Vault root `AGENTS.md` is a separate, direct-edit project instruction file.
 

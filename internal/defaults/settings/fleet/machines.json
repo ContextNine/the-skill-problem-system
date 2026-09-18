@@ -17,7 +17,7 @@
       "transport": "local",
       "home": "__HOME__",
       "roots": {
-        "code": "__CODE_ROOT__",
+        "code": "~/Code",
         "vault": null
       },
       "vault": {

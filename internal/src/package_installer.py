@@ -244,7 +244,7 @@ def customize_machine_settings(
             machines["vault_git"]["refresh_owner_machine_id"] = machine_id
     primary["home"] = str(home)
     primary["platform"] = "macos" if platform.system() == "Darwin" else "linux"
-    primary["roots"]["code"] = code_root or "~/Code"
+    primary["roots"]["code"] = code_root or primary["roots"]["code"]
     if vault_root:
         if primary["platform"] != "macos":
             raise InstallError(

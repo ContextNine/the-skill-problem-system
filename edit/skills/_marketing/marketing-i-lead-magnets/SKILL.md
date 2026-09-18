@@ -21,7 +21,7 @@ Read the references needed for the task:
 3. Prefer the repository's DB-backed double opt-in when it already owns consent state.
 4. Redirect a confirmed lead to `confirmationDestinationUrl`; tenant-local configs may use `confirmationDestinationPath`.
 5. Let that destination expose the actual `downloadUrl` and any optional VSL or upsell.
-6. Use `$infra-i-file-upload` for requested public or lead-magnet assets.
+6. Use `$publisher-file-upload` for requested public or lead-magnet assets.
 7. Use `$marketing-manage-utm-tracking-links` only when the user explicitly invokes it for managed campaign links.
 8. Validate tenant/offer isolation, accessibility, mobile layout, analytics, and the complete email-to-download journey.
 

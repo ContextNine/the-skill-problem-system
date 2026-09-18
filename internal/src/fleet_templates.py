@@ -1,171 +1,187 @@
 #!/usr/bin/env python3
-"""Render colocated fleet templates without evaluating code."""
+"""Render explicit Fleet expressions in Markdown owned by one bundle."""
 
 from __future__ import annotations
 
-import json
-from dataclasses import dataclass
+import re
 from pathlib import Path, PurePosixPath
-from typing import Any, Mapping, Sequence
+from typing import Any, Mapping
 
 
-SEPARATOR = "\n\n***\n\n"
-ALLOWED_FORMATS = {"markdown", "json", "text"}
-ALLOWED_SELECTORS = {"platform", "role", "machine_id", "vault_enabled"}
+TOKEN = re.compile(r"(?<!\\)(\{\{.*?\}\}|\{%.*?%\})", re.DOTALL)
+FIELD = re.compile(r"[a-zA-Z_][a-zA-Z_0-9]*(?:\.[a-zA-Z_][a-zA-Z_0-9]*)*")
+VARIANT = re.compile(r"[a-z][a-z0-9]*")
+INCLUDE = re.compile(r'''include\s+["'](templates/[a-zA-Z0-9_./-]+\.md)["']''')
+FOR = re.compile(r"for\s+([a-zA-Z_][a-zA-Z_0-9]*)\s+in\s+(fleet\.[a-zA-Z_0-9.]+)")
+EQUALITY = re.compile(r'''(fleet\.[a-zA-Z_0-9.]+)\s*==\s*["']([^"']+)["']''')
 
 
 class FleetTemplateError(ValueError):
     pass
 
 
-@dataclass(frozen=True)
-class RenderedFile:
-    target: str
-    content: str
-    fragment_ids: tuple[str, ...]
-
-
-def _safe_path(bundle_root: Path, raw: object, label: str) -> Path:
-    if not isinstance(raw, str) or not raw:
-        raise FleetTemplateError(f"{label} must be a non-empty relative path")
-    relative = PurePosixPath(raw)
-    if relative.is_absolute() or ".." in relative.parts or relative.as_posix() in {"", "."}:
-        raise FleetTemplateError(f"{label} escapes its owning bundle: {raw!r}")
-    candidate = bundle_root.joinpath(*relative.parts)
-    resolved_root = bundle_root.resolve()
-    resolved = candidate.resolve(strict=False)
-    if resolved != resolved_root and resolved_root not in resolved.parents:
-        raise FleetTemplateError(f"{label} escapes its owning bundle: {raw!r}")
-    return candidate
-
-
-def _format(value: str, variables: Mapping[str, object], label: str) -> str:
-    try:
-        return value.format_map(dict(variables))
-    except KeyError as exc:
-        raise FleetTemplateError(f"{label} uses unknown variable {exc.args[0]!r}") from exc
-    except ValueError as exc:
-        raise FleetTemplateError(f"{label} has invalid template syntax: {exc}") from exc
-
-
-def _matches(raw: object, context: Mapping[str, object], label: str) -> bool:
-    if raw is None:
+def has_fleet_syntax(content: str) -> bool:
+    if ("\\{{ fleet." in content or "\\{% include \"templates/" in content
+            or "\\{% if fleet." in content or "\\{% for " in content):
         return True
-    if not isinstance(raw, dict) or not raw:
-        raise FleetTemplateError(f"{label} when must be a non-empty object")
-    unknown = set(raw) - ALLOWED_SELECTORS
-    if unknown:
-        raise FleetTemplateError(f"{label} has unsupported selectors: {sorted(unknown)}")
-    for key, expected in raw.items():
-        accepted = expected if isinstance(expected, list) else [expected]
-        if key == "vault_enabled":
-            if not accepted or not all(isinstance(item, bool) for item in accepted):
-                raise FleetTemplateError(f"{label} selector {key!r} must use a boolean or boolean list")
-        elif not accepted or not all(isinstance(item, str) and item for item in accepted):
-            raise FleetTemplateError(f"{label} selector {key!r} must use a string or string list")
-        if context.get(key) not in accepted:
-            return False
-    return True
+    return any(
+        token.startswith("{{ fleet.")
+        or INCLUDE.fullmatch(token[2:-2].strip()) is not None
+        or (token.startswith("{% if ") and token[2:-2].strip()[3:].strip().startswith("fleet."))
+        or (token.startswith("{% for ") and FOR.fullmatch(token[2:-2].strip()) is not None)
+        for token in TOKEN.findall(content)
+    )
 
 
-def _read(path: Path, label: str) -> str:
-    if not path.is_file() or path.is_symlink():
-        raise FleetTemplateError(f"{label} is missing or not a real file: {path}")
-    return path.read_text(encoding="utf-8")
+def bundle_has_templates(bundle: Path) -> bool:
+    return any(
+        has_fleet_syntax(path.read_text(encoding="utf-8"))
+        for path in bundle.rglob("*.md")
+        if "templates" not in path.relative_to(bundle).parts and not path.is_symlink()
+    )
 
 
-def _validate_content(target: str, file_format: str, content: str) -> None:
-    if file_format == "json":
-        try:
-            json.loads(content)
-        except json.JSONDecodeError as exc:
-            raise FleetTemplateError(f"rendered JSON is invalid for {target}: {exc}") from exc
-    if target.endswith("/SKILL.md") or target == "SKILL.md":
-        if not content.startswith("---\n"):
-            raise FleetTemplateError(f"rendered skill has no frontmatter: {target}")
-        end = content.find("\n---\n", 4)
-        if end == -1:
-            raise FleetTemplateError(f"rendered skill frontmatter is incomplete: {target}")
-
-
-def load_config(config_path: Path) -> dict[str, Any]:
-    try:
-        value = json.loads(config_path.read_text(encoding="utf-8"))
-    except FileNotFoundError as exc:
-        raise FleetTemplateError(f"fleet template config is missing: {config_path}") from exc
-    except (OSError, json.JSONDecodeError) as exc:
-        raise FleetTemplateError(f"fleet template config is invalid: {exc}") from exc
-    if not isinstance(value, dict) or value.get("schema_version") != 1:
-        raise FleetTemplateError("fleet template config needs schema_version 1")
-    outputs = value.get("outputs")
-    if not isinstance(outputs, list) or not outputs:
-        raise FleetTemplateError("fleet template config needs a non-empty outputs list")
+def _lookup(expression: str, scope: Mapping[str, Any], source: Path, *, optional: bool = False) -> Any:
+    if not FIELD.fullmatch(expression):
+        raise FleetTemplateError(f"invalid field {expression!r} in {source}")
+    value: Any = scope
+    for part in expression.split("."):
+        if not isinstance(value, Mapping) or part not in value:
+            if optional:
+                return None
+            raise FleetTemplateError(f"missing field {expression!r} in {source}")
+        value = value[part]
     return value
 
 
-def render_bundle(
-    bundle_root: Path,
-    config_path: Path,
-    variables: Mapping[str, object],
-    *,
-    additional_fragments: Sequence[tuple[str, Path]] = (),
-    managed_metadata: bool = False,
-) -> list[RenderedFile]:
-    """Render every explicit output for one owning bundle."""
-    bundle_root = bundle_root.resolve()
-    config = load_config(config_path)
-    outputs = config["outputs"]
-    rendered: list[RenderedFile] = []
-    targets: set[str] = set()
-    for index, raw_output in enumerate(outputs):
-        label = f"outputs[{index}]"
-        if not isinstance(raw_output, dict):
-            raise FleetTemplateError(f"{label} must be an object")
-        target_path = _safe_path(bundle_root, raw_output.get("target"), f"{label} target")
-        target = target_path.relative_to(bundle_root).as_posix()
-        if target in targets:
-            raise FleetTemplateError(f"duplicate fleet template output target: {target}")
-        targets.add(target)
-        file_format = raw_output.get("format", "text")
-        if file_format not in ALLOWED_FORMATS:
-            raise FleetTemplateError(f"{label} has unsupported format: {file_format!r}")
-        base_raw = raw_output.get("base")
-        template_raw = raw_output.get("template")
-        if (base_raw is None) == (template_raw is None):
-            raise FleetTemplateError(f"{label} needs exactly one of base or template")
-        if template_raw is not None:
-            template_path = _safe_path(bundle_root, template_raw, f"{label} template")
-            content = _format(_read(template_path, f"{label} template"), variables, str(template_path))
-            fragment_ids: list[str] = []
-        else:
-            base_path = _safe_path(bundle_root, base_raw, f"{label} base")
-            parts = [_read(base_path, f"{label} base").rstrip()]
-            fragment_ids = []
-            raw_fragments = raw_output.get("fragments", [])
-            if not isinstance(raw_fragments, list) or not all(isinstance(item, dict) for item in raw_fragments):
-                raise FleetTemplateError(f"{label} fragments must be an object list")
-            selected: list[tuple[str, Path]] = []
-            for fragment_index, fragment in enumerate(raw_fragments):
-                fragment_label = f"{label} fragments[{fragment_index}]"
-                if not _matches(fragment.get("when"), variables, fragment_label):
+def _include_path(bundle: Path, raw: str, variants: list[str], source: Path) -> Path:
+    relative = PurePosixPath(raw)
+    if relative.is_absolute() or len(relative.parts) != 2 or relative.parts[0] != "templates":
+        raise FleetTemplateError(f"include escapes {bundle}: {raw!r} in {source}")
+    for variant in reversed(variants):
+        if not VARIANT.fullmatch(variant):
+            raise FleetTemplateError(f"invalid template variant {variant!r} in {source}")
+        candidate = bundle / relative.with_name(f"{relative.stem}.{variant}.md")
+        if candidate.is_file() and not candidate.is_symlink():
+            return candidate
+    candidate = bundle / relative
+    if candidate.is_file() and not candidate.is_symlink():
+        return candidate
+    raise FleetTemplateError(f"missing include {raw!r} for {source}")
+
+
+def _parse(tokens: list[str], position: int, source: Path, stops: set[str],
+           locals_in_scope: frozenset[str] = frozenset()) -> tuple[list[tuple], int, str | None]:
+    nodes: list[tuple] = []
+    while position < len(tokens):
+        token = tokens[position]
+        position += 1
+        if token.startswith("{%"):
+            directive = token[2:-2].strip()
+            keyword = directive.split(maxsplit=1)[0] if directive else ""
+            if keyword in stops:
+                return nodes, position, keyword
+            if keyword in {"else", "endif", "endfor"}:
+                nodes.append(("text", token))
+                continue
+            if keyword == "include":
+                match = INCLUDE.fullmatch(directive)
+                if not match:
+                    raise FleetTemplateError(f"invalid include in {source}: {directive}")
+                nodes.append(("include", match.group(1)))
+                continue
+            if keyword == "if":
+                expression = directive[3:].strip()
+                if not expression.startswith("fleet.") and expression.split(".", 1)[0] not in locals_in_scope:
+                    nodes.append(("text", token))
                     continue
-                fragment_id = _format(str(fragment.get("id") or ""), variables, f"{fragment_label} id")
-                if not fragment_id:
-                    raise FleetTemplateError(f"{fragment_label} needs an id")
-                path = _safe_path(bundle_root, fragment.get("path"), f"{fragment_label} path")
-                selected.append((fragment_id, path))
-            selected.extend(additional_fragments)
-            if len({item[0] for item in selected}) != len(selected):
-                raise FleetTemplateError(f"{label} selected duplicate fragment ids")
-            fragment_ids.extend(item[0] for item in selected)
-            if managed_metadata:
-                metadata = "<!-- fleet.managed instruction-fragments: base"
-                if fragment_ids:
-                    metadata += "," + ",".join(fragment_ids)
-                parts.append(metadata + " -->")
-            for fragment_id, path in selected:
-                parts.append(_format(_read(path, f"fragment {fragment_id}"), variables, str(path)).strip())
-            content = SEPARATOR.join(parts) + "\n"
-        _validate_content(target, str(file_format), content)
-        rendered.append(RenderedFile(target, content, tuple(fragment_ids)))
-    return rendered
+                if not (EQUALITY.fullmatch(expression) or FIELD.fullmatch(expression)):
+                    raise FleetTemplateError(f"invalid condition in {source}: {expression}")
+                yes, position, stop = _parse(tokens, position, source, {"else", "endif"}, locals_in_scope)
+                if stop is None:
+                    raise FleetTemplateError(f"unclosed if in {source}")
+                no: list[tuple] = []
+                if stop == "else":
+                    no, position, stop = _parse(tokens, position, source, {"endif"}, locals_in_scope)
+                    if stop != "endif":
+                        raise FleetTemplateError(f"unclosed if in {source}")
+                nodes.append(("if", expression, yes, no))
+                continue
+            if keyword == "for":
+                match = FOR.fullmatch(directive)
+                if not match:
+                    raise FleetTemplateError(f"invalid loop in {source}: {directive}")
+                body, position, stop = _parse(tokens, position, source, {"endfor"},
+                                              locals_in_scope | {match.group(1)})
+                if stop != "endfor":
+                    raise FleetTemplateError(f"unclosed for in {source}")
+                nodes.append(("for", match.group(1), match.group(2), body))
+                continue
+            nodes.append(("text", token))
+        elif token.startswith("{{"):
+            expression = token[2:-2].strip()
+            if expression.startswith("fleet."):
+                nodes.append(("value", expression))
+            elif FIELD.fullmatch(expression):
+                nodes.append(("local-or-text", expression, token))
+            else:
+                nodes.append(("text", token))
+        else:
+            nodes.append(("text", token.replace("\\{{", "{{").replace("\\{%", "{%")))
+    return nodes, position, None
+
+
+def _render(nodes: list[tuple], scope: Mapping[str, Any], bundle: Path, source: Path,
+            variants: list[str], stack: tuple[Path, ...]) -> str:
+    output: list[str] = []
+    for node in nodes:
+        kind = node[0]
+        if kind == "text":
+            output.append(node[1])
+        elif kind == "value":
+            value = _lookup(node[1], scope, source)
+            output.append("" if value is None else str(value))
+        elif kind == "local-or-text":
+            name = node[1].split(".", 1)[0]
+            value = _lookup(node[1], scope, source) if name in scope and name != "fleet" else node[2]
+            output.append("" if value is None else str(value))
+        elif kind == "include":
+            included = _include_path(bundle, node[1], variants, source)
+            output.append(render_file(bundle, included, scope, variants, stack=stack))
+        elif kind == "if":
+            equality = EQUALITY.fullmatch(node[1])
+            selected = (_lookup(equality.group(1), scope, source, optional=True) == equality.group(2)) if equality else bool(_lookup(node[1], scope, source, optional=True))
+            output.append(_render(node[2] if selected else node[3], scope, bundle, source, variants, stack))
+        elif kind == "for":
+            values = _lookup(node[2], scope, source)
+            if not isinstance(values, list):
+                raise FleetTemplateError(f"loop value is not a list in {source}: {node[2]}")
+            for value in values:
+                output.append(_render(node[3], {**scope, node[1]: value}, bundle, source, variants, stack))
+    return "".join(output)
+
+
+def render_file(bundle: Path, source: Path, context: Mapping[str, Any], variants: list[str],
+                *, stack: tuple[Path, ...] = ()) -> str:
+    bundle = bundle.resolve()
+    resolved = source.resolve()
+    if resolved in stack:
+        raise FleetTemplateError(f"include cycle: {' -> '.join(map(str, (*stack, resolved)))}")
+    if bundle not in resolved.parents or not source.is_file() or source.is_symlink():
+        raise FleetTemplateError(f"template source escapes bundle: {source}")
+    nodes, _, stop = _parse(TOKEN.split(source.read_text(encoding="utf-8")), 0, source, set())
+    if stop is not None:
+        raise FleetTemplateError(f"unexpected {stop} in {source}")
+    content = _render(nodes, context, bundle, source, variants, (*stack, resolved))
+    if source.name == "SKILL.md" and (not content.startswith("---\n") or "\n---\n" not in content[4:]):
+        raise FleetTemplateError(f"rendered skill frontmatter is invalid: {source}")
+    return content
+
+
+def render_markdown_tree(bundle: Path, context: Mapping[str, Any], variants: list[str]) -> None:
+    """Render Fleet-marked Markdown in a staged copy, leaving authored files untouched."""
+    for path in sorted(bundle.rglob("*.md")):
+        if "templates" in path.relative_to(bundle).parts or path.is_symlink():
+            continue
+        if has_fleet_syntax(path.read_text(encoding="utf-8")):
+            path.write_text(render_file(bundle, path, context, variants), encoding="utf-8")

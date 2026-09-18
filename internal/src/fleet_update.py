@@ -19,7 +19,7 @@ from typing import Any
 
 PACKAGE_DIRECTORY = Path(__file__).resolve().parents[1]
 AGENTS_DIRECTORY = PACKAGE_DIRECTORY.parent
-FLEET_SCRIPTS = AGENTS_DIRECTORY / "edit/skills/_infrastructure/infra-i-sync-code-workspaces/scripts"
+FLEET_SCRIPTS = AGENTS_DIRECTORY / "edit/skills/_fleet/fleet-i-sync-code-workspaces/scripts"
 if not FLEET_SCRIPTS.is_dir():
     FLEET_SCRIPTS = PACKAGE_DIRECTORY / "src"
 COMMANDS_DIRECTORY = AGENTS_DIRECTORY.parent / "commands"

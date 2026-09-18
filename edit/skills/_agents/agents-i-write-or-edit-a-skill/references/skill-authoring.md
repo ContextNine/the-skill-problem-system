@@ -18,6 +18,8 @@
 
 Treat `SKILL.md` as the entry point for prerequisites, durable safety rules, routing decisions, and the shortest complete workflow.
 
+Keep public defaults and schemas under `internal/defaults/` and `internal/schemas/`. Never store credential values in the repository. Preserve provenance and license notices when importing a skill.
+
 - If you discover that the skill file will be long (> 300 lines), create additional docs under references/ grouped logically.
 - Keep references one level deep and give each one a clear responsibility.
 - Keep detail inline when splitting it would only add indirection.
@@ -32,6 +34,7 @@ Use each file for one job:
 
 - `SKILL.md`: discovery, routing, invariants, and the quick execution contract.
 - `references/`: additional docs
+- `templates/`: flat Markdown fragments selected by inline includes and machine suffixes; see `fleet-templating.md`.
 - `scripts/`: repeatable validation, transformation, or operations with useful failure handling.
 - `assets/`: reusable inputs or templates consumed by the skill.
 - `_system/agents/edit/settings/skills/config/<skill-name>/`: changing personal paths, domains, IDs, machine facts, and private instance configuration.
@@ -89,7 +92,7 @@ The `-i-` marker is only for Vault-owned sources. Repository and GH names retain
 | `_documents` | `documents` |
 | `_finance` | `finance` |
 | `_gws` | `gws` |
-| `_infrastructure` | `infra` |
+| `_fleet` | `fleet` |
 | `_marketing` | `marketing` |
 | `_spreadsheets` | `spreadsheets` |
 | `_vault` | `vault` |
@@ -165,6 +168,8 @@ Refer to another capability as `$skill-name`, never by absolute skill directory.
 
 Local-checkout direct links and overlays are recreated against each target machine's own `~/` path. Missing enrolled checkouts fail strict sync rather than linking across machines. Fleet-distributed Vault, GH, and prefixed skills are portable copies.
 
+A skill with Fleet expressions is rendered into a target-specific snapshot even if it would otherwise be a direct link or invocation overlay. The authored `SKILL.md` and supporting Markdown remain the editable source; the snapshot is generated output. Use `references/fleet-templating.md` for the one shared syntax and variant precedence contract.
+
 All external skills default to manual globally. A literal `$skill-name` reference in an invoked skill is explicit composition and may load that dependency even when the dependency is manual-only. Manual-only prevents unsolicited top-level selection, not named dependency use.
 
 ## Runtime dependencies
@@ -183,7 +188,7 @@ Every non-standard runtime dependency for a global skill must be declared in `_s
 - a lifecycle document;
 - a deterministic verification command.
 
-Command-line dependencies belong in `dependencies.json`, not `agents/openai.yaml`. The latter only declares supported MCP tool dependencies. `fleet sync --dependencies` installs missing required packages and verifies them on enabled agent machines. Read [Agent and fleet dependencies](../../../_infrastructure/infra-i-update-fleet-dependencies/references/dependencies.md) for the registry schema and lifecycle rules.
+Command-line dependencies belong in `dependencies.json`, not `agents/openai.yaml`. The latter only declares supported MCP tool dependencies. `fleet sync --dependencies` installs missing required packages and verifies them on enabled agent machines. Read [Agent and fleet dependencies](../../../_fleet/fleet-i-update-dependencies/references/dependencies.md) for the registry schema and lifecycle rules.
 
 ### Local-only skills
 

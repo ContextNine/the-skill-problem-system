@@ -16,6 +16,7 @@ from urllib.parse import quote
 
 from package_layout import AGENTS_ROOT, EXPORT_ROOT, VAULT_ROOT
 import working_repo_skills
+import fleet_templates
 
 
 MANIFEST_NAME = ".ctx9-agent-export-manifest.json"
@@ -512,42 +513,24 @@ def inventory_payload(inventory: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def validate_exported_templates(stage: Path) -> None:
-    for config_path in sorted((stage / "edit/skills").rglob("fleet-templates/render.json")):
-        skill_root = config_path.parent.parent
-        if not (skill_root / "SKILL.md").is_file():
-            raise ExportError(f"fleet template config has no owning skill: {config_path}")
-        try:
-            config = json.loads(config_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as exc:
-            raise ExportError(f"fleet template config is invalid: {config_path}: {exc}") from exc
-        outputs = config.get("outputs") if isinstance(config, dict) else None
-        if not isinstance(config, dict) or config.get("schema_version") != 1 or not isinstance(outputs, list) or not outputs:
-            raise ExportError(f"fleet template config needs schema_version 1 and outputs: {config_path}")
-        for output in outputs:
-            if not isinstance(output, dict):
-                raise ExportError(f"fleet template output must be an object: {config_path}")
-            for field in ("base", "template"):
-                raw = output.get(field)
-                if raw is None:
-                    continue
-                source = skill_root / safe_relative(raw, f"fleet template {field}")
-                if not source.is_file() or source.is_symlink():
-                    raise ExportError(
-                        f"public exclusion removed required fleet template {field}: {source}"
-                    )
-            fragments = output.get("fragments", [])
-            if not isinstance(fragments, list):
-                raise ExportError(f"fleet template fragments must be a list: {config_path}")
-            for fragment in fragments:
-                if not isinstance(fragment, dict):
-                    raise ExportError(f"fleet template fragment must be an object: {config_path}")
-                source = skill_root / safe_relative(
-                    fragment.get("path"), "fleet template fragment"
-                )
-                if not source.is_file() or source.is_symlink():
-                    raise ExportError(
-                        f"public exclusion removed required fleet template fragment: {source}"
-                    )
+    registry = json.loads((stage / "edit/settings/fleet/machines.json").read_text(encoding="utf-8"))
+    primary = next(machine for machine in registry["machines"] if machine["id"] == registry["primary_machine_id"])
+    machine = {**primary, "access": {"provider": None, "host": None}}
+    context = {"fleet": {"machine": machine, "primary": machine, "peers": [],
+                         "vault_source": None, "runtime": {"novnc_url": None}}}
+    owners = [stage / "edit/agent-instructions"]
+    owners.extend(path.parent for path in (stage / "edit/skills").rglob("SKILL.md"))
+    for owner in owners:
+        for path in owner.rglob("*.md"):
+            if "templates" in path.relative_to(owner).parts or path.is_symlink():
+                continue
+            content = path.read_text(encoding="utf-8")
+            if not fleet_templates.has_fleet_syntax(content):
+                continue
+            try:
+                fleet_templates.render_file(owner, path, context, primary["template_variants"])
+            except fleet_templates.FleetTemplateError as exc:
+                raise ExportError(f"public template is incomplete: {exc}") from exc
 
 
 def write_internal_inventory(

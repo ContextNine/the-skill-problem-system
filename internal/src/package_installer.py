@@ -162,24 +162,22 @@ def stage_public_skills(
         names.add(name)
         target = stage / "skills" / name
         shutil.copytree(skill, target, symlinks=False, ignore=install_ignore)
-        config = target / "fleet-templates/render.json"
-        if not config.is_file():
+        if not fleet_templates.bundle_has_templates(target):
             continue
         if template_values is None:
             raise InstallError(f"skill {name} needs machine facts for fleet templates")
         try:
-            outputs = fleet_templates.render_bundle(target, config, template_values)
+            fleet_templates.render_markdown_tree(
+                target, template_values,
+                template_values["fleet"]["machine"]["template_variants"],
+            )
         except fleet_templates.FleetTemplateError as exc:
             raise InstallError(f"skill {name} template failed: {exc}") from exc
-        for output in outputs:
-            output_path = target / output.target
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_path.write_text(output.content, encoding="utf-8")
 
 
 def stage_workspace_sync_helpers(source: Path, stage: Path) -> None:
     """Bundle private-source helpers that public exports already place in src/."""
-    helper_source = source / "edit/skills/_infrastructure/infra-i-sync-code-workspaces/scripts"
+    helper_source = source / "edit/skills/_fleet/fleet-i-sync-code-workspaces/scripts"
     for name in WORKSPACE_SYNC_HELPERS:
         target = stage / "src" / name
         if target.is_file():

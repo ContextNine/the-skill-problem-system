@@ -21,7 +21,7 @@ from typing import Any
 
 PACKAGE_DIRECTORY = Path(__file__).resolve().parents[1]
 AGENTS_DIRECTORY = PACKAGE_DIRECTORY.parent
-SOURCE_FLEET_SCRIPTS = AGENTS_DIRECTORY / "edit/skills/_infrastructure/infra-i-sync-code-workspaces/scripts"
+SOURCE_FLEET_SCRIPTS = AGENTS_DIRECTORY / "edit/skills/_fleet/fleet-i-sync-code-workspaces/scripts"
 FLEET_SCRIPTS = (
     SOURCE_FLEET_SCRIPTS
     if (SOURCE_FLEET_SCRIPTS / "sync_code_workspaces.py").is_file()
@@ -61,7 +61,7 @@ def validate_dependency_lifecycle_routes(root: Path, manifest: dict[str, Any]) -
     dependencies = manifest.get("dependencies")
     if not isinstance(dependencies, list):
         raise AgentsSyncError("agent dependency registry needs a dependencies list")
-    base = resolve_agents_root(root) / "edit/skills/_infrastructure/infra-i-update-fleet-dependencies/references"
+    base = resolve_agents_root(root) / "edit/skills/_fleet/fleet-i-update-dependencies/references"
     for dependency in dependencies:
         if not isinstance(dependency, dict) or not isinstance(dependency.get("id"), str):
             raise AgentsSyncError("every agent dependency needs an id")
@@ -256,18 +256,18 @@ def build_agent_reference_files(
 ) -> dict[str, dict[str, str]]:
     agents = resolve_agents_root(root)
     dependency_path = agents / "internal/defaults/dependencies.json"
-    dependency_skill = agents / "edit/skills/_infrastructure/infra-i-update-fleet-dependencies"
-    onboarding_skill = agents / "edit/skills/_infrastructure/infra-i-onboard-machine"
+    dependency_skill = agents / "edit/skills/_fleet/fleet-i-update-dependencies"
+    onboarding_skill = agents / "edit/skills/_fleet/fleet-i-onboard-machine"
     sources = {
         dependency_path: "internal/defaults/dependencies.json",
         agents / "edit/settings/dependencies/selections.json": "settings/dependencies/selections.json",
         agents / "edit/settings/fleet/machine-secrets.json": "settings/fleet/machine-secrets.json",
         agents / "edit/settings/skills/skill-sources.json": "settings/skills/skill-sources.json",
-        dependency_skill / "references/dependencies.md": "skills/infra-i-update-fleet-dependencies/references/dependencies.md",
-        onboarding_skill / "references/machine-local-secrets.md": "skills/infra-i-onboard-machine/references/machine-local-secrets.md",
-        onboarding_skill / "references/kubernetes-operator-kubeconfig.md": "skills/infra-i-onboard-machine/references/kubernetes-operator-kubeconfig.md",
+        dependency_skill / "references/dependencies.md": "skills/fleet-i-update-dependencies/references/dependencies.md",
+        onboarding_skill / "references/machine-local-secrets.md": "skills/fleet-i-onboard-machine/references/machine-local-secrets.md",
+        onboarding_skill / "references/kubernetes-operator-kubeconfig.md": "skills/fleet-i-onboard-machine/references/kubernetes-operator-kubeconfig.md",
         **{
-            path: f"skills/infra-i-update-fleet-dependencies/references/dependencies/{path.name}"
+            path: f"skills/fleet-i-update-dependencies/references/dependencies/{path.name}"
             for path in sorted((dependency_skill / "references/dependencies").glob("*.md"))
         },
     }
@@ -501,13 +501,13 @@ def build_skill_snapshot_bundle(
         links: dict[str, str] = {}
         overlays: dict[str, dict[str, object]] = {}
         for skill in skills:
-            has_templates = (skill.path / "fleet-templates/render.json").is_file()
+            has_templates = fleet_templates.bundle_has_templates(skill.path)
             if skill.source == "repo" and skill.materialization == "direct" and not has_templates:
                 if not skill.declared_path:
                     raise AgentsSyncError(f"linked repository skill lacks a declared path: {skill.name}")
                 links[skill.name] = skill.declared_path
                 continue
-            if skill.source == "repo" and skill.materialization == "overlay":
+            if skill.source == "repo" and skill.materialization == "overlay" and not has_templates:
                 if not skill.declared_path:
                     raise AgentsSyncError(f"overlaid repository skill lacks a declared path: {skill.name}")
                 overlays[skill.name] = {
@@ -538,28 +538,22 @@ def snapshot_skill_source(
     *,
     template_values: dict[str, object] | None = None,
 ) -> Path:
-    """Dereference overlays and render any colocated fleet templates."""
-    template_config = source / "fleet-templates/render.json"
-    if skill.materialization != "overlay" and not template_config.is_file():
+    """Render inline Fleet expressions in a machine-specific skill copy."""
+    has_templates = fleet_templates.bundle_has_templates(source)
+    if skill.materialization != "overlay" and not has_templates:
         return source
     preview_target = preview_root / skill.name
     shutil.copytree(source, preview_target, symlinks=False)
-    template_config = preview_target / "fleet-templates/render.json"
-    if template_config.is_file():
+    if has_templates:
         if template_values is None:
             raise AgentsSyncError(f"skill {skill.name} needs target machine facts for fleet templates")
         try:
-            rendered = fleet_templates.render_bundle(
-                preview_target,
-                template_config,
-                template_values,
+            fleet_templates.render_markdown_tree(
+                preview_target, template_values,
+                template_values["fleet"]["machine"]["template_variants"],
             )
         except fleet_templates.FleetTemplateError as exc:
             raise AgentsSyncError(f"skill {skill.name} template failed: {exc}") from exc
-        for output in rendered:
-            target = preview_target / output.target
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(output.content, encoding="utf-8")
     return preview_target
 
 

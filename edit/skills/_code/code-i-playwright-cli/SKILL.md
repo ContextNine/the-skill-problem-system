@@ -10,7 +10,7 @@ allowed-tools: Bash(playwright-cli:*)
 
 - Required dependency ID: `playwright-cli`.
 - Optional Linux service ID: `playwright-cli-watchdog`; it is never required for normal CLI use.
-- If the CLI is missing or incompatible, read `$infra-i-update-fleet-dependencies` and its `references/dependencies/playwright-cli.md`, report the missing approved dependency, and stop for confirmation. Do not improvise an installer or enable the watchdog from this skill.
+- If the CLI is missing or incompatible, read `$fleet-i-update-dependencies` and its `references/dependencies/playwright-cli.md`, report the missing approved dependency, and stop for confirmation. Do not improvise an installer or enable the watchdog from this skill.
 
 ## Session safety
 

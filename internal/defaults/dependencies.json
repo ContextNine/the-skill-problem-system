@@ -243,7 +243,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "infra-i-file-upload",
+        "publisher-file-upload",
         "impression-resize-or-create-media-for-linkedin"
       ],
       "lifecycle_doc": "dependencies/package-managers.md",
@@ -659,8 +659,8 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "infra-i-onboard-machine",
-        "infra-i-update-fleet-dependencies",
+        "fleet-i-onboard-machine",
+        "fleet-i-update-dependencies",
         "fleet-sync"
       ],
       "lifecycle_doc": "dependencies/ctx9.md",
@@ -717,8 +717,8 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "infra-i-onboard-machine",
-        "infra-i-update-fleet-dependencies",
+        "fleet-i-onboard-machine",
+        "fleet-i-update-dependencies",
         "fleet-sync"
       ],
       "lifecycle_doc": "dependencies/ctx9.md",
@@ -761,8 +761,8 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "infra-i-onboard-machine",
-        "infra-i-update-fleet-dependencies",
+        "fleet-i-onboard-machine",
+        "fleet-i-update-dependencies",
         "fleet-sync"
       ],
       "lifecycle_doc": "dependencies/ctx9.md",
@@ -803,8 +803,8 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "infra-i-onboard-machine",
-        "infra-i-sync-code-workspaces",
+        "fleet-i-onboard-machine",
+        "fleet-i-sync-code-workspaces",
         "fleet-sync"
       ],
       "lifecycle_doc": "dependencies/ctx9.md",
@@ -848,8 +848,8 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "infra-i-onboard-machine",
-        "infra-i-sync-code-workspaces",
+        "fleet-i-onboard-machine",
+        "fleet-i-sync-code-workspaces",
         "fleet-sync"
       ],
       "lifecycle_doc": "dependencies/ctx9.md",
@@ -895,9 +895,9 @@
       "required_by": [
         "incident-controller-manage-incidents",
         "incident-controller-remediate-production-incidents",
-        "infra-i-file-upload",
-        "infra-i-md-html-publisher",
-        "infra-i-onboard-machine",
+        "publisher-file-upload",
+        "publisher-md-html-publisher",
+        "fleet-i-onboard-machine",
         "fleet-sync"
       ],
       "lifecycle_doc": "dependencies/publisher.md",
@@ -1240,8 +1240,8 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "infra-i-update-fleet-coding-tools",
-        "infra-i-onboard-machine"
+        "fleet-i-update-coding-tools",
+        "fleet-i-onboard-machine"
       ],
       "lifecycle_doc": "dependencies/codex-cli.md",
       "requires": [],
@@ -1265,8 +1265,8 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "infra-i-update-fleet-coding-tools",
-        "infra-i-onboard-machine"
+        "fleet-i-update-coding-tools",
+        "fleet-i-onboard-machine"
       ],
       "lifecycle_doc": "dependencies/t3-code.md",
       "requires": [],
@@ -1293,8 +1293,8 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "infra-i-update-fleet-coding-tools",
-        "infra-i-onboard-machine"
+        "fleet-i-update-coding-tools",
+        "fleet-i-onboard-machine"
       ],
       "lifecycle_doc": "dependencies/claude-code.md",
       "requires": [],
@@ -1316,8 +1316,8 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "infra-i-update-fleet-coding-tools",
-        "infra-i-onboard-machine"
+        "fleet-i-update-coding-tools",
+        "fleet-i-onboard-machine"
       ],
       "lifecycle_doc": "dependencies/opencode.md",
       "requires": [],
@@ -1338,7 +1338,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "infra-i-onboard-machine"
+        "fleet-i-onboard-machine"
       ],
       "lifecycle_doc": "dependencies/bitwarden.md",
       "requires": [],
@@ -1363,7 +1363,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "infra-i-onboard-machine"
+        "fleet-i-onboard-machine"
       ],
       "lifecycle_doc": "dependencies/google-chrome.md",
       "requires": [],
@@ -1388,7 +1388,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "infra-i-onboard-machine"
+        "fleet-i-onboard-machine"
       ],
       "lifecycle_doc": "dependencies/chatgpt-desktop.md",
       "requires": [],
@@ -1414,7 +1414,7 @@
       ],
       "eligibility": "provider-selected",
       "required_by": [
-        "infra-i-onboard-machine"
+        "fleet-i-onboard-machine"
       ],
       "lifecycle_doc": "dependencies/wireguard.md",
       "requires": [],
@@ -1441,7 +1441,7 @@
       ],
       "eligibility": "provider-selected",
       "required_by": [
-        "infra-i-onboard-machine"
+        "fleet-i-onboard-machine"
       ],
       "lifecycle_doc": "dependencies/tailscale.md",
       "requires": [],
@@ -1539,7 +1539,7 @@
       "eligibility": "capability-selected",
       "required_by": [
         "code-i-playwright-cli",
-        "infra-i-onboard-machine"
+        "fleet-i-onboard-machine"
       ],
       "lifecycle_doc": "dependencies/playwright-cli.md",
       "requires": [
@@ -1578,7 +1578,7 @@
       ],
       "eligibility": "capability-selected",
       "required_by": [
-        "infra-i-onboard-machine"
+        "fleet-i-onboard-machine"
       ],
       "lifecycle_doc": "dependencies/playwright-cli.md",
       "requires": [
@@ -1600,7 +1600,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "infra-i-onboard-machine",
+        "fleet-i-onboard-machine",
         "fleet-sync"
       ],
       "lifecycle_doc": "dependencies/macos-prerequisites.md",
@@ -1621,7 +1621,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "infra-i-onboard-machine"
+        "fleet-i-onboard-machine"
       ],
       "lifecycle_doc": "dependencies/macos-prerequisites.md",
       "requires": [],
@@ -1641,7 +1641,7 @@
       ],
       "eligibility": "remote-vault-clients",
       "required_by": [
-        "infra-i-onboard-machine",
+        "fleet-i-onboard-machine",
         "vault-access"
       ],
       "lifecycle_doc": "dependencies/package-managers.md",
@@ -1676,7 +1676,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "infra-i-onboard-machine"
+        "fleet-i-onboard-machine"
       ],
       "lifecycle_doc": "dependencies/machine-access-prerequisites.md",
       "requires": [],
@@ -1697,8 +1697,8 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "infra-i-onboard-machine",
-        "infra-i-sync-code-workspaces"
+        "fleet-i-onboard-machine",
+        "fleet-i-sync-code-workspaces"
       ],
       "lifecycle_doc": "dependencies/package-managers.md",
       "requires": [],
@@ -1718,7 +1718,7 @@
       ],
       "eligibility": "linux-workers",
       "required_by": [
-        "infra-i-onboard-machine"
+        "fleet-i-onboard-machine"
       ],
       "lifecycle_doc": "dependencies/linux-worker-image.md",
       "requires": [],
@@ -1823,7 +1823,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "infra-i-onboard-machine",
+        "fleet-i-onboard-machine",
         "fleet-sync"
       ],
       "lifecycle_doc": "dependencies/secret-bindings.md",
@@ -1870,7 +1870,7 @@
       ],
       "eligibility": "capability-selected",
       "required_by": [
-        "infra-configure-langfuse-coding-agents"
+        "fleet-configure-langfuse-coding-agents"
       ],
       "lifecycle_doc": "dependencies/langfuse-coding-agents.md",
       "requires": [
@@ -1896,7 +1896,7 @@
       ],
       "eligibility": "capability-selected",
       "required_by": [
-        "infra-i-onboard-machine"
+        "fleet-i-onboard-machine"
       ],
       "lifecycle_doc": "dependencies/kimi-code.md",
       "requires": [],
@@ -1918,7 +1918,7 @@
       ],
       "eligibility": "capability-selected",
       "required_by": [
-        "infra-i-onboard-machine"
+        "fleet-i-onboard-machine"
       ],
       "lifecycle_doc": "dependencies/optional-developer-tools.md",
       "requires": [],
@@ -1939,7 +1939,7 @@
       ],
       "eligibility": "capability-selected",
       "required_by": [
-        "infra-i-onboard-machine"
+        "fleet-i-onboard-machine"
       ],
       "lifecycle_doc": "dependencies/optional-developer-tools.md",
       "requires": [],
@@ -1960,8 +1960,8 @@
       ],
       "eligibility": "capability-selected",
       "required_by": [
-        "infra-i-kubernetes",
-        "infra-i-onboard-machine"
+        "k3s-infrastructure-kubernetes",
+        "fleet-i-onboard-machine"
       ],
       "lifecycle_doc": "dependencies/optional-developer-tools.md",
       "requires": [],
@@ -1982,8 +1982,8 @@
       ],
       "eligibility": "capability-selected",
       "required_by": [
-        "infra-i-kubernetes",
-        "infra-i-onboard-machine"
+        "k3s-infrastructure-kubernetes",
+        "fleet-i-onboard-machine"
       ],
       "lifecycle_doc": "dependencies/optional-developer-tools.md",
       "requires": [],
@@ -2004,7 +2004,7 @@
       ],
       "eligibility": "capability-selected",
       "required_by": [
-        "infra-i-onboard-machine"
+        "fleet-i-onboard-machine"
       ],
       "lifecycle_doc": "dependencies/optional-developer-tools.md",
       "requires": [],
@@ -2025,7 +2025,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "infra-i-manage-rclone-google-drive",
+        "fleet-i-manage-rclone-google-drive",
         "codefoldersync-backup",
         "vault-sync"
       ],

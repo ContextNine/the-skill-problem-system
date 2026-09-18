@@ -1,5 +1,0 @@
-interface:
-  short_description: "Upload and share files"
-  default_prompt: "Use $infra-i-file-upload to upload this file and return a ready-to-use link."
-policy:
-  allow_implicit_invocation: true

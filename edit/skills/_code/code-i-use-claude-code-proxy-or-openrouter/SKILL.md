@@ -14,4 +14,4 @@ Read [Claude Provider Routes](references/README-claude-provider-routes.md) befor
 - Do not install a missing Claude Code, `curl`, `jq`, Python, Secret Service, or CLIProxyAPI dependency. Report the missing dependency and stop at that acceptance gate.
 - Install locally with `scripts/install-claude-provider-launchers.sh`; pass one canonical SSH alias to install on another enabled machine.
 - Verify command resolution, credential status, route banner, Claude `/status`, and one bounded live tool-use request before recording acceptance.
-- `$infra-i-onboard-machine` consumes this capability during machine setup. It does not own these files or procedures.
+- `$fleet-i-onboard-machine` consumes this capability during machine setup. It does not own these files or procedures.

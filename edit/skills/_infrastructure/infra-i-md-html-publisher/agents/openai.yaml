@@ -1,5 +1,0 @@
-interface:
-  short_description: "Create, publish, and read Markdown or HTML"
-  default_prompt: "Use $infra-i-md-html-publisher to create, publish, read, or update a Markdown or HTML document."
-policy:
-  allow_implicit_invocation: true

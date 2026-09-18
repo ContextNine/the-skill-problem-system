@@ -9,7 +9,7 @@ Install and configure CodeGraph from https://github.com/colbymchenry/codegraph f
 
 ## Safety
 
-- Resolve the exact target repository first. Use `$infra-i-code-folder-and-computer-topology` only when its path or owning machine is unclear.
+- Resolve the exact target repository first. Use `$fleet-i-code-folder-and-computer-topology` only when its path or owning machine is unclear.
 - Do not target the Obsidian Vault unless the user explicitly asks to index its supported code and accepts modifying managed agent configuration. CodeGraph does not index Markdown, so it cannot search the Vault's notes or documentation.
 - Read the target repository's `AGENTS.md` and README breadcrumbs before mutation. Preserve unrelated work and stop if CodeGraph would overlap dirty `AGENTS.md` or `.codex/config.toml` changes.
 - State before setup that a local Codex install updates `AGENTS.md` and `.codex/config.toml`, while `codegraph init` creates the local `.codegraph/` index.

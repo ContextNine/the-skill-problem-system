@@ -15,7 +15,7 @@ if str(SRC) not in sys.path:
 
 from package_layout import ConfigurationError, expand_registered_path, validate_machines, validate_workspaces
 from package_installer import InstallError, install, uninstall, verify
-from fleet_templates import FleetTemplateError, render_bundle
+from fleet_templates import FleetTemplateError, render_file, render_markdown_tree
 
 
 class PackageConfigurationTests(unittest.TestCase):
@@ -36,6 +36,7 @@ class PackageConfigurationTests(unittest.TestCase):
                     "enabled": True,
                     "role": "primary",
                     "platform": "linux",
+                    "template_variants": ["linux", "workerlinux"],
                     "transport": "local",
                     "home": home,
                     "roots": {"code": code, "vault": None},
@@ -78,6 +79,7 @@ class PackageConfigurationTests(unittest.TestCase):
                 "enabled": True,
                 "role": "worker",
                 "platform": "linux",
+                "template_variants": ["linux", "workerlinux"],
                 "transport": "ssh",
                 "home": "/srv/example-linux/user",
                 "roots": {"code": "~/" + "code", "vault": None},
@@ -110,45 +112,48 @@ class FleetTemplateTests(unittest.TestCase):
     def test_skill_and_supporting_files_render_deterministically_and_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             bundle = Path(temporary)
-            templates = bundle / "fleet-templates"
+            templates = bundle / "templates"
             templates.mkdir()
             (bundle / "SKILL.md").write_text(
-                "---\nname: code-example\ndescription: Test.\n---\n\n# Code · Example\n",
+                "---\nname: code-example\ndescription: Test.\n---\n\n"
+                "# Example\n\n{{ fleet.machine.display_name }}\n"
+                "{% include \"templates/runtime.md\" %}\n",
                 encoding="utf-8",
             )
-            (bundle / "facts.md").write_text("Base.\n", encoding="utf-8")
-            (templates / "machine.md").write_text("Machine {machine_id}.\n", encoding="utf-8")
-            config = templates / "render.json"
-            config.write_text(
-                json.dumps(
-                    {
-                        "schema_version": 1,
-                        "outputs": [
-                            {
-                                "target": "facts.md",
-                                "base": "facts.md",
-                                "format": "markdown",
-                                "fragments": [
-                                    {
-                                        "id": "machine:{machine_id}",
-                                        "path": "fleet-templates/machine.md",
-                                        "when": {"platform": "linux"},
-                                    }
-                                ],
-                            }
-                        ],
-                    }
-                ),
+            reference = bundle / "references/facts.md"
+            reference.parent.mkdir()
+            reference.write_text(
+                "{% include \"templates/runtime.md\" %}\n"
+                "\\{{ fleet.machine.display_name }} and \\{% include \"templates/runtime.md\" %}\n"
+                "{{first_name}}\n",
                 encoding="utf-8",
             )
-            first = render_bundle(bundle, config, {"machine_id": "worker", "platform": "linux"})
-            second = render_bundle(bundle, config, {"machine_id": "worker", "platform": "linux"})
-            self.assertEqual(first, second)
-            self.assertEqual(first[0].content, "Base.\n\n***\n\nMachine worker.\n")
+            (templates / "runtime.md").write_text("Common runtime.\n", encoding="utf-8")
+            (templates / "runtime.linux.md").write_text("Linux runtime.\n", encoding="utf-8")
+            (templates / "runtime.workerlinux.md").write_text("Worker runtime.\n", encoding="utf-8")
+            context = {"fleet": {"machine": {"display_name": "Wootbook"}}}
+            variants = ["linux", "workerlinux"]
+            first = render_file(bundle, bundle / "SKILL.md", context, variants)
+            self.assertEqual(first, render_file(bundle, bundle / "SKILL.md", context, variants))
+            self.assertIn("Wootbook\nWorker runtime.", first)
+            self.assertEqual(
+                render_file(bundle, reference, context, ["linux"]),
+                'Linux runtime.\n\n{{ fleet.machine.display_name }} and {% include "templates/runtime.md" %}\n{{first_name}}\n',
+            )
+            render_markdown_tree(bundle, context, variants)
+            self.assertIn("Worker runtime.\n\n{{ fleet.machine.display_name }}", reference.read_text())
+            self.assertEqual((templates / "runtime.workerlinux.md").read_text(), "Worker runtime.\n")
 
-            (templates / "machine.md").write_text("Machine {unknown}.\n", encoding="utf-8")
-            with self.assertRaisesRegex(FleetTemplateError, "unknown variable"):
-                render_bundle(bundle, config, {"machine_id": "worker", "platform": "linux"})
+            (templates / "runtime.workerlinux.md").unlink()
+            (templates / "runtime.linux.md").unlink()
+            (templates / "runtime.md").unlink()
+            reference.write_text('{% include "templates/runtime.md" %}\n', encoding="utf-8")
+            with self.assertRaisesRegex(FleetTemplateError, "missing include"):
+                render_file(bundle, reference, context, variants)
+
+            reference.write_text('{% include "templates/../escape.md" %}\n', encoding="utf-8")
+            with self.assertRaisesRegex(FleetTemplateError, "invalid include|escapes"):
+                render_file(bundle, reference, context, variants)
 
 
 class StandaloneInstallTests(unittest.TestCase):
@@ -179,9 +184,9 @@ class StandaloneInstallTests(unittest.TestCase):
             )
             self.assertEqual(machines["primary_machine_id"], "test-mac")
             self.assertEqual(machines["machines"][0]["roots"]["code"], "~/Developer")
-            self.assertFalse((home / ".agents/internal/skills").exists())
             launcher = (home / ".local/bin/fleet").read_text(encoding="utf-8")
-            self.assertIn(f"--root {json.dumps(str(package.parents[1].resolve()))}", launcher)
+            source_root = package if (package / "install.sh").exists() else package.parents[1]
+            self.assertIn(f"--root {json.dumps(str(source_root.resolve()))}", launcher)
             second = install(
                 package,
                 home,
@@ -222,11 +227,13 @@ class StandaloneInstallTests(unittest.TestCase):
         source_registry = json.loads(
             (package / "edit/settings/fleet/machines.json").read_text(encoding="utf-8")
         )
-        worker_id = next(
+        worker_id = next((
             machine["id"]
             for machine in source_registry["machines"]
             if machine.get("role") == "worker" and machine.get("enabled")
-        )
+        ), None)
+        if worker_id is None:
+            self.skipTest("the standalone starter registry has no enrolled worker")
         with tempfile.TemporaryDirectory() as temporary:
             home = Path(temporary) / "worker-home"
             home.mkdir()

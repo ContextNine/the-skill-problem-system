@@ -11,7 +11,7 @@ from typing import Any, Mapping, Sequence
 
 SEPARATOR = "\n\n***\n\n"
 ALLOWED_FORMATS = {"markdown", "json", "text"}
-ALLOWED_SELECTORS = {"platform", "role", "machine_id"}
+ALLOWED_SELECTORS = {"platform", "role", "machine_id", "vault_enabled"}
 
 
 class FleetTemplateError(ValueError):
@@ -58,9 +58,12 @@ def _matches(raw: object, context: Mapping[str, object], label: str) -> bool:
         raise FleetTemplateError(f"{label} has unsupported selectors: {sorted(unknown)}")
     for key, expected in raw.items():
         accepted = expected if isinstance(expected, list) else [expected]
-        if not accepted or not all(isinstance(item, str) and item for item in accepted):
+        if key == "vault_enabled":
+            if not accepted or not all(isinstance(item, bool) for item in accepted):
+                raise FleetTemplateError(f"{label} selector {key!r} must use a boolean or boolean list")
+        elif not accepted or not all(isinstance(item, str) and item for item in accepted):
             raise FleetTemplateError(f"{label} selector {key!r} must use a string or string list")
-        if str(context.get(key) or "") not in accepted:
+        if context.get(key) not in accepted:
             return False
     return True
 

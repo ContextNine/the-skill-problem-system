@@ -19,7 +19,7 @@ Read [Platform Runtime](references/platform-runtime.md) before running the workf
 6. Read [Fleet Codex Plugin Reconciliation](references/plugin-reconciliation.md) before changing plugin inventory, marketplace handling, ownership state, or readiness reporting.
 7. The scripts preflight every selected target before any apply. Use their explicit preview modes when the user asks for a dry run.
 
-The editable global instruction base and its colocated templates live in `edit/root-agents/`. `fleet sync` is the sole default-apply entrypoint. It resolves settings from `edit/settings/` and renders exact absolute Code and Vault roots for the selected machine.
+The editable global instruction base and its colocated templates live in `edit/agent-instructions/`. `fleet sync` is the sole default-apply entrypoint. It resolves settings from `edit/settings/` and renders exact absolute Code and Vault roots for the selected machine.
 
 Use `reconcile` for normal repeat synchronization and during onboarding. `bootstrap` remains available for first-run clone behavior; `refresh` updates existing clean workspaces; `doctor` verifies without mutation. Use `migrate-github-remotes` only after every selected machine passes dedicated GitHub SSH verification; it changes same-identity transport on the source and targets with rollback and history.
 

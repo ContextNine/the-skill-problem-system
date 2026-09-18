@@ -499,10 +499,7 @@ def vault_guidance(
 
     vault = machine.get("vault")
     if not isinstance(vault, dict) or not vault.get("enabled"):
-        return (
-            "This machine is a Code-repository worker only. It must not infer or create a Vault clone, "
-            "sparse checkout, mount, or publication path."
-        )
+        return ""
     mode = vault.get("checkout_mode")
     if mode == "remote-sshfs":
         remote = vault.get("remote_access")
@@ -567,16 +564,35 @@ def machine_template_values(
     code_root = expand_registered_path(roots.get("code"), machine.get("home"))
     vault_root = expand_registered_path(roots.get("vault"), machine.get("home"), optional=not bool(vault.get("enabled")))
     machine_id = str(machine.get("id") or "")
+    vault_text = vault_guidance(registry, machine, vault_root)
+    peers = peer_lines(registry, machine_id)
+    access_text = access_guidance(machine, source_home, primary)
+    connections = []
+    if address != "not configured":
+        connections.append(f"Access: {provider} at `{address}`.")
+    if has_enabled_peer(registry, machine_id):
+        connections.append(f"Connected machines:\n\n{peers}")
+    if access_text:
+        connections.append(access_text)
     values: dict[str, object] = {
         "machine_id": machine_id,
         "platform": machine.get("platform"),
         "role": machine.get("role"),
+        "vault_enabled": bool(vault.get("enabled")),
+        "machine": str(machine.get("display_name") or machine_id),
         "display_name": machine.get("display_name"),
         "platform_name": "macOS" if machine.get("platform") == "macos" else "Linux",
         "code_root": code_root,
         "vault_root": vault_root or "not enrolled",
         "vault_participation": vault.get("checkout_mode") if vault.get("enabled") else "disabled",
         "vault_guidance": vault_guidance(registry, machine, vault_root),
+        "vault": f"Vault root: `{vault_root}`. {vault_text}" if vault_text else "",
+        "connection_guidance": "\n\n".join(connections),
+        "container_guidance": (
+            "Never use Docker on this Mac. Use configured local development infrastructure for container workloads."
+            if machine.get("platform") == "macos"
+            else "When development K3s is configured, use it for container workloads. Use Docker only when explicitly requested."
+        ),
         "machine_access_provider": provider,
         "mesh_address": address,
         "service_url": service_url,
@@ -584,8 +600,8 @@ def machine_template_values(
         "primary_display_name": primary.get("display_name"),
         "primary_machine_access_provider": primary_provider,
         "primary_mesh_address": primary_address,
-        "peers": peer_lines(registry, machine_id),
-        "access_guidance": access_guidance(machine, source_home, primary),
+        "peers": peers,
+        "access_guidance": access_text,
         "primary_ssh_alias": primary.get("ssh_alias") or primary.get("id"),
         "primary_loopback": "127.0.0.1",
         "primary_port": "<primary-port>",
@@ -606,15 +622,15 @@ def render_global_agents(
     from fleet_templates import FleetTemplateError, load_config, render_bundle
     from skill_source_config import SkillSourceConfigError, validate_config
 
-    bundle = agents_root / "edit/root-agents"
-    template_config_path = bundle / "fleet-templates/render.json"
-    previews_fragment = bundle / "fleet-templates/development-previews.md"
-    if not (bundle / "AGENTS.md").is_file() or not previews_fragment.is_file():
+    bundle = agents_root / "edit/agent-instructions"
+    template_config_path = agents_root / "internal/instructions/render.json"
+    previews_fragment = agents_root / "internal/instructions/development-previews.md"
+    if not (bundle / "AGENT-INSTRUCTIONS.md").is_file() or not previews_fragment.is_file():
         raise AgentConfigurationError(f"global agent configuration is incomplete under {bundle}")
     values = machine_template_values(registry, machine, source_home=source_home)
     values["development_previews"] = (
         previews_fragment.read_text(encoding="utf-8").format_map(values).strip()
-        if has_enabled_peer(registry, str(machine.get("id") or ""))
+        if machine.get("role") == "worker" and has_enabled_peer(registry, str(machine.get("id") or ""))
         else ""
     )
     skill_sources = config / "skills/skill-sources.json"

@@ -13,7 +13,7 @@ Use it only when the schema-v7 machine registry selects `vault.checkout_mode: re
 
 - The registry derives the source alias and source path from the selected macOS host. Do not duplicate or hard-code them in scripts.
 - Mount only the exact Vault directory. Never mount the host home, iCloud parent, Git directory, credential directories, or another broad path.
-- The mount contains the entire Vault, including `_library`, `_system`, context folders, hidden files, and media.
+- The mount contains the entire Vault, including `_library`, `_system`, teamspace folders, hidden files, and media.
 - The shared `.git` pointer remains unchanged and deliberately unresolved on the host and client. Only the registered `vault_git.owner_machine_id` runs Vault Git.
 - The SSHFS mount is read-write when the registry enables it. Linux edits land directly in the configured Mac host's worktree.
 - The Linux client must pass `vault access status` before reading or editing. Pending outbound iCloud upload does not block access.
@@ -129,7 +129,7 @@ Before enablement and again after reboot, prove:
 
 1. Client-to-host SSH and SFTP use the registered stable alias.
 2. `findmnt` reports the exact expected source, `fuse.sshfs`, and `rw` without `allow_other`.
-3. `AGENTS.md`, `_library`, `_system`, context folders, hidden paths, filenames with spaces and Unicode, symlinks, and representative large media are readable.
+3. `AGENTS.md`, `_library`, `_system`, teamspace folders, hidden paths, filenames with spaces and Unicode, symlinks, and representative large media are readable.
 4. `.git` exists as the shared pointer but `git -C "$(vault root)" rev-parse --git-dir` fails.
 5. A harmless write, read, and delete probe succeeds through the mounted worktree without waiting for iCloud upload.
 6. `ctx9 doctor codex-repo-sync --json` remains healthy in Code repositories and performs no Vault Git work in the mount.

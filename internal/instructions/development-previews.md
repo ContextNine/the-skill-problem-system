@@ -1,0 +1,3 @@
+When working on a registered worker, proactively expose a useful localhost preview when the changes would benefit from inspection and the request did not instruct you to commit immediately.
+
+Bind the server to `{worker_loopback}`. Forward its port to the primary's loopback with `ssh -NT -o ExitOnForwardFailure=yes -R {primary_loopback}:{primary_port}:{worker_loopback}:{worker_port} {primary_ssh_alias}`. Use the same port on both ends when available; otherwise report the exact mapping. Return the clickable `http://{primary_loopback}:{primary_port}` URL and keep the server and tunnel alive while useful. Never bind the preview listener to a LAN or mesh address.

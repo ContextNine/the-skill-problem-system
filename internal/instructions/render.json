@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "install": {"codex": true, "claude_alias": true},
+  "outputs": [
+    {
+      "target": "AGENTS.md",
+      "base": "AGENT-INSTRUCTIONS.md",
+      "format": "markdown",
+      "fragments": [
+        {"id": "machine:primary-mac", "path": "templates/machine-primary-mac.md", "when": {"platform": "macos", "role": "primary"}},
+        {"id": "machine:worker-mac", "path": "templates/machine-worker-mac.md", "when": {"platform": "macos", "role": "worker"}},
+        {"id": "machine:worker-linux", "path": "templates/machine-worker-linux.md", "when": {"platform": "linux", "role": "worker"}},
+        {"id": "identity:{machine_id}", "path": "templates/machine.md"},
+        {"id": "machine:worker-mac-vault", "path": "templates/machine-worker-mac-vault.md", "when": {"platform": "macos", "role": "worker", "vault_enabled": true}},
+        {"id": "local-development", "path": "templates/local-development.md"}
+      ]
+    }
+  ],
+  "append_fragments": []
+}

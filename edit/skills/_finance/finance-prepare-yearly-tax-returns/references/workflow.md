@@ -40,7 +40,7 @@ Never promote a lower-level source into a higher-confidence status. A note sayin
 
 - Owner deposits are financing, not turnover.
 - Reconcile shareholder loans as opening balance plus owner funding, less personal costs or withdrawals paid by the company. State whether linked savings transfers remain company cash or reduce the shareholder loan.
-- Personal invoices do not become company revenue because they are stored in the company/context folder.
+- Personal invoices do not become company revenue because they are stored in the company/teamspace folder.
 - Refunds reduce the related cost.
 - Personal tax paid from the company account is a shareholder/director item, not a company deduction.
 - A cash loss is not automatically an assessed loss. Determine trade commencement, deductibility, capital allowances, pre-trade treatment, and the assessed result.

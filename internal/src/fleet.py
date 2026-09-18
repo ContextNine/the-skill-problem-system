@@ -9,7 +9,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-from package_installer import InstallError, install, uninstall, verify
+from package_installer import InstallError, install, installed_source, uninstall, verify
 from package_export import ExportError, export as export_package, read_manifest, release_preflight
 from package_layout import AGENTS_ROOT, ConfigurationError, active_instance_root, load_instance, resolve_dotted
 
@@ -29,6 +29,9 @@ def parser() -> argparse.ArgumentParser:
     config = commands.add_parser("config", help="inspect or validate installed instance configuration")
     config_commands = config.add_subparsers(dest="config_command", required=True)
     config_commands.add_parser("path")
+    source = commands.add_parser("source", help="inspect the editable skill-system source")
+    source_commands = source.add_subparsers(dest="source_command", required=True)
+    source_commands.add_parser("path")
     get = config_commands.add_parser("get")
     get.add_argument("key")
     get.add_argument("--config-root", type=Path)
@@ -50,6 +53,7 @@ def parser() -> argparse.ArgumentParser:
     install_parser.add_argument("--initialize-source", action="store_true")
     install_parser.add_argument("--command-root", type=Path)
     install_parser.add_argument("--json", action="store_true", help=argparse.SUPPRESS)
+    install_parser.add_argument("--adopt-source", action="store_true")
     verify_parser = commands.add_parser("verify")
     verify_parser.add_argument("--home", type=Path, default=Path.home())
     verify_parser.add_argument("--json", action="store_true", help=argparse.SUPPRESS)
@@ -74,6 +78,12 @@ def main(argv: list[str] | None = None) -> int:
         return subprocess.run([sys.executable, str(FLEET_COMMANDS[raw[0]]), *raw]).returncode
     args = parser().parse_args(raw)
     try:
+        if args.command == "source":
+            owner = installed_source(Path.home())
+            if owner is None:
+                raise InstallError("no managed skill-system source is installed")
+            print(owner)
+            return 0
         if args.command == "config":
             config_root = active_instance_root(getattr(args, "config_root", None))
             if args.config_command == "path":
@@ -99,6 +109,7 @@ def main(argv: list[str] | None = None) -> int:
                 vault_root=args.vault_root,
                 initialize_source=args.initialize_source,
                 command_root=args.command_root,
+                adopt_source=args.adopt_source,
             )
         elif args.command == "verify":
             report = verify(args.home)

@@ -17,7 +17,7 @@ This is the only source of truth for distributing personal Codex and Claude Code
 | Worker-Mac applications, GUI consent, and unattended-operation checks | `$infra-i-onboard-machine` worker-Mac route |
 | tmux, workmux, Warp, cmux, and terminal profiles | `$infra-i-manage-fleet-terminal-workspaces` |
 | Approved recipes and private dependency choices | package `defaults/dependencies.json` plus config `dependencies/selections.json` |
-| Versioned global instructions and fleet projection | `edit/root-agents/`, its colocated templates, and agent sync |
+| Versioned global instructions and fleet projection | `edit/agent-instructions/`, its colocated templates, and agent sync |
 | Repo-owned skill selection and portable fleet snapshots | `fleet sync --skills` |
 
 Other repositories own their local `.agents/skills` sources. `skill-sources.json` independently chooses which are globally enrolled and owns their fleet-distribution policy; `workspaces.json` only registers and reconciles repositories.
@@ -29,13 +29,13 @@ The Vault source and primary home settings are authoritative:
 | Source | Target | Behavior |
 |---|---|---|
 | source `edit/settings/` | `~/.agents/settings/` | Atomically projects the authoritative value-free fleet, workspace, dependency-selection, skill-source, and integration configuration |
-| source `edit/root-agents/` | `~/.agents/instructions/AGENTS.md` | Deterministic managed instructions with exact machine identity plus absolute Code and Vault roots |
+| source `edit/agent-instructions/` | `~/.agents/instructions/AGENTS.md` | Managed instructions with machine identity, absolute Code root, and optional Vault guidance |
 | source `edit/settings/integrations/langfuse.json` | `~/.agents/settings/integrations/langfuse.json` | Non-secret Langfuse instance metadata and disabled-integration intent; no keys or authorization header |
 | `~/.codex/config.toml` | `~/.codex/config.toml` | Primary settings and raw `[mcp_servers.*]`, with the primary home path rebased; target-local `[plugins.*]` and `[marketplaces.*]` are preserved |
 | Rendered `~/.agents/instructions/AGENTS.md` | `~/.codex/AGENTS.md` and `~/.claude/CLAUDE.md` | Relative symlinks, so personal instructions have one output |
 | `~/.claude/settings.json` | `~/.claude/settings.json` | All user settings, with the primary home path rebased to the target home |
 
-Machine sections identify the selected machine, platform, role, enabled peers, connection route, exact resolved Code root, exact resolved Vault root or disabled state, and configured GUI access. When another enabled fleet machine exists, the renderer adds development-preview guidance that binds on worker loopback and reverse-forwards to the registered primary's loopback through its configured SSH alias. Single-machine registries omit that guidance. No machine identity or home path is embedded in this reusable skill.
+Machine sections identify the selected machine, enabled peers, connection route, exact Code root, optional Vault guidance, and configured GUI access. On workers, the renderer adds development-preview guidance that binds on worker loopback and reverse-forwards to the registered primary's loopback through its configured SSH alias. No machine identity or home path is embedded in this reusable skill.
 
 For a macOS worker, the rendered Codex config enforces `approval_policy = "never"`, `sandbox_mode = "danger-full-access"`, and `[mcp_servers.computer-use] enabled = true`. All other primary settings remain intact. These are target-role overlays, not a second configuration source.
 

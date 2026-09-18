@@ -6,6 +6,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import shutil
 import stat
 import subprocess
 import sys
@@ -115,14 +116,14 @@ source = "https://example.com/source-only.git"
             encoding="utf-8",
         )
         config = root / "_system/agents/edit/settings"
-        bundle = root / "_system/agents/edit/root-agents"
-        templates = bundle / "fleet-templates"
+        bundle = root / "_system/agents/edit/agent-instructions"
+        instructions = root / "_system/agents/internal/instructions"
+        templates = bundle / "templates"
         (config / "skills").mkdir(parents=True)
         (config / "integrations").mkdir(parents=True)
-        (root / "_system/agents/internal").mkdir(parents=True)
-        (templates / "platform").mkdir(parents=True)
-        (templates / "role").mkdir(parents=True)
-        (bundle / "AGENTS.md").write_text("Keep it simple.\n", encoding="utf-8")
+        shutil.copytree(VAULT_ROOT / "_system/agents/edit/agent-instructions/templates", templates)
+        shutil.copytree(VAULT_ROOT / "_system/agents/internal/instructions", instructions)
+        (bundle / "AGENT-INSTRUCTIONS.md").write_text("Keep it simple.\n", encoding="utf-8")
         (config / "integrations/langfuse.json").write_text(
             json.dumps(
                 {
@@ -144,38 +145,8 @@ source = "https://example.com/source-only.git"
             }) + "\n",
             encoding="utf-8",
         )
-        (templates / "render.json").write_text(
-            json.dumps(
-                {
-                    "schema_version": 1,
-                    "install": {},
-                    "outputs": [
-                        {
-                            "target": "AGENTS.md",
-                            "base": "AGENTS.md",
-                            "format": "markdown",
-                            "fragments": [
-                                {"id": "platform:macos", "path": "fleet-templates/platform/macos.md", "when": {"platform": "macos"}},
-                                {"id": "platform:linux", "path": "fleet-templates/platform/linux.md", "when": {"platform": "linux"}},
-                                {"id": "role:primary", "path": "fleet-templates/role/primary.md", "when": {"role": "primary"}},
-                                {"id": "role:worker", "path": "fleet-templates/role/worker.md", "when": {"role": "worker"}},
-                                {"id": "machine:{machine_id}", "path": "fleet-templates/machine.md"},
-                            ],
-                        }
-                    ],
-                    "append_fragments": [],
-                }
-            )
-            + "\n",
-            encoding="utf-8",
-        )
-        (templates / "development-previews.md").write_text("Preview {primary_ssh_alias}.\n", encoding="utf-8")
-        (templates / "platform/macos.md").write_text("macOS.\n", encoding="utf-8")
-        (templates / "platform/linux.md").write_text("Linux.\n", encoding="utf-8")
-        (templates / "role/primary.md").write_text("Primary.\n", encoding="utf-8")
-        (templates / "role/worker.md").write_text("Worker.\n", encoding="utf-8")
         (templates / "machine.md").write_text(
-            "Machine {machine_id} at {service_url}. Code {code_root}. Vault {vault_root}.\n{peers}\n{access_guidance}\n",
+            "Machine {machine_id} at {service_url}. Code {code_root}. {vault}\n{peers}\n{access_guidance}\n",
             encoding="utf-8",
         )
         return source, self.create_registry()

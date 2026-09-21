@@ -20,7 +20,6 @@ if "__file__" in globals():
     if str(COMMANDS_DIR) not in sys.path:
         sys.path.insert(0, str(COMMANDS_DIR))
 
-MANAGED_MARKER = "fleet.managed"
 AGENTS_RELATIVE = Path("_system/agents")
 CONFIG_RELATIVE = AGENTS_RELATIVE / "edit/settings"
 REGISTRY_RELATIVE = CONFIG_RELATIVE / "fleet/machines.json"
@@ -40,23 +39,6 @@ def digest_bytes(value: bytes) -> str:
 
 def result(path: Path | str, kind: str, status: str, detail: str, **extra: object) -> dict[str, object]:
     return {"path": str(path), "kind": kind, "status": status, "detail": detail, **extra}
-
-
-def can_replace_managed_agent_file(path: Path) -> bool:
-    if not path.exists() or path.is_symlink() or not path.is_file():
-        return False
-    return MANAGED_MARKER in path.read_text(encoding="utf-8", errors="replace")
-
-
-def symlink_points_to_managed_agent_file(path: Path) -> bool:
-    """Recognize an owned alias while migrating it to the canonical target."""
-    if not path.is_symlink():
-        return False
-    try:
-        resolved = path.resolve(strict=True)
-    except (OSError, RuntimeError):
-        return False
-    return can_replace_managed_agent_file(resolved)
 
 
 def ensure_directory(path: Path, dry_run: bool) -> dict[str, object]:
@@ -94,16 +76,16 @@ def ensure_symlink(
             return result(path, "symlink", "different", "symlink target would be replaced", target=target)
         path.unlink()
     elif path.exists():
-        if path.is_file() and can_replace_managed_agent_file(path):
+        if path.is_file():
             if dry_run:
-                return result(path, "symlink", "different", "managed generated file would be replaced", target=target)
+                return result(path, "symlink", "different", "file would be replaced", target=target)
             path.unlink()
         elif path.is_dir() and not any(path.iterdir()):
             if dry_run:
                 return result(path, "symlink", "different", "empty directory would be replaced", target=target)
             path.rmdir()
         else:
-            raise AgentConfigurationError(f"Refusing to replace existing unmanaged path: {path}")
+            raise AgentConfigurationError(f"Refusing to replace existing non-file path: {path}")
     if dry_run:
         return result(path, "symlink", "missing", "symlink would be created", target=target)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -299,13 +281,8 @@ def reconcile_home(
                 )
             mode = int(raw.get("mode") or 0o600)
             state, detail = inspect_file(target, content, mode)
-            if (
-                relative == ".agents/instructions/AGENTS.md"
-                and state != "match"
-                and lexists(target)
-                and not can_replace_managed_agent_file(target)
-            ):
-                raise AgentConfigurationError(f"refusing to replace unmanaged global instructions: {target}")
+            if lexists(target) and target.is_dir() and not target.is_symlink():
+                raise AgentConfigurationError(f"managed file target is a directory: {target}")
             if apply and state != "match":
                 backup = install_file(target, content, mode, backup_suffix)
                 state, detail = "installed", "installed atomically"
@@ -317,14 +294,8 @@ def reconcile_home(
             if not link_target or PurePosixPath(link_target).is_absolute():
                 raise AgentConfigurationError(f"managed symlink needs a relative target: {relative}")
             state, detail = inspect_symlink(target, link_target)
-            if state != "match" and lexists(target):
-                replaceable = (
-                    target.is_file()
-                    and not target.is_symlink()
-                    and can_replace_managed_agent_file(target)
-                ) or symlink_points_to_managed_agent_file(target)
-                if not replaceable:
-                    raise AgentConfigurationError(f"refusing to replace unmanaged global instruction alias: {target}")
+            if lexists(target) and target.is_dir() and not target.is_symlink():
+                raise AgentConfigurationError(f"managed symlink target is a directory: {target}")
             if apply and state != "match":
                 backup = install_symlink(target, link_target, backup_suffix)
                 state, detail = "installed", "installed symlink atomically"
@@ -496,7 +467,7 @@ def render_global_agents(
         rendered = render_file(bundle, source, context, variants)
     except FleetTemplateError as exc:
         raise AgentConfigurationError(str(exc)) from exc
-    return re.sub(r"\n{3,}", "\n\n", rendered).rstrip() + "\n\n<!-- fleet.managed inline -->\n"
+    return re.sub(r"\n{3,}", "\n\n", rendered).rstrip() + "\n"
 
 
 def render_agents(

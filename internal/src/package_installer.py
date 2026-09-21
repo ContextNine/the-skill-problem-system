@@ -21,8 +21,7 @@ import working_repo_skills
 
 
 INSTALL_MARKER = ".fleet-install.json"
-MANAGED_TEXT_MARKER = "fleet.managed"
-PACKAGE_VERSION = "0.2.14"
+PACKAGE_VERSION = "0.2.15"
 ICLOUD_DUPLICATE_RE = re.compile(r"^.+ \d+(?:\.[^.]+)?$")
 
 
@@ -49,7 +48,7 @@ class InstallError(RuntimeError):
 
 def installed_command_root(home: Path) -> Path | None:
     launcher = home / ".local/bin/fleet"
-    if not launcher.is_file() or not managed_file(launcher):
+    if not launcher.is_file():
         return None
     match = re.search(r'--root ("(?:[^"\\]|\\.)*"|[^\s]+)', launcher.read_text(encoding="utf-8"))
     if match is None:
@@ -194,20 +193,6 @@ def stage_workspace_sync_helpers(source: Path, stage: Path) -> None:
             shutil.copy2(candidate, target)
 
 
-def managed_file(path: Path) -> bool:
-    return path.is_file() and MANAGED_TEXT_MARKER in path.read_text(encoding="utf-8", errors="replace")
-
-
-def managed_alias(path: Path) -> bool:
-    """Recognize an owned alias while migrating it to the canonical target."""
-    if not path.is_symlink():
-        return False
-    try:
-        return managed_file(path.resolve(strict=True))
-    except (OSError, RuntimeError):
-        return False
-
-
 def render_global(
     source: Path,
     config_root: Path,
@@ -287,8 +272,8 @@ def ensure_managed_text(path: Path, content: str, *, apply: bool) -> str:
     if path.exists() or path.is_symlink():
         if path.is_file() and not path.is_symlink() and path.read_text(encoding="utf-8", errors="replace") == content:
             return "match"
-        if not managed_file(path):
-            raise InstallError(f"refusing to replace unmanaged file: {path}")
+        if path.is_dir() and not path.is_symlink():
+            raise InstallError(f"managed file target is a directory: {path}")
     if apply:
         path.parent.mkdir(parents=True, exist_ok=True)
         temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
@@ -301,12 +286,9 @@ def ensure_managed_symlink(path: Path, target: str, *, apply: bool) -> str:
     if path.is_symlink() and os.readlink(path) == target:
         return "match"
     if path.exists() or path.is_symlink():
-        if path.is_file() and not path.is_symlink() and managed_file(path):
-            if apply:
-                path.unlink()
-        elif not managed_alias(path):
-            raise InstallError(f"refusing to replace unmanaged alias: {path}")
-        elif apply:
+        if path.is_dir() and not path.is_symlink():
+            raise InstallError(f"managed symlink target is a directory: {path}")
+        if apply:
             path.unlink()
     if apply:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -465,7 +447,7 @@ def install(
 
     launcher = home / ".local/bin/fleet"
     launcher_content = (
-        f"#!/bin/sh\n# {MANAGED_TEXT_MARKER}\n"
+        "#!/bin/sh\n"
         "command_name=${1:-}\n"
         "case \"$command_name\" in\n"
         "  sync|update)\n"
@@ -606,11 +588,11 @@ def uninstall(home: Path, *, apply: bool) -> dict[str, Any]:
         elif path == state / "machine-id" and path.is_file():
             if apply:
                 path.unlink()
-        elif managed_file(path):
+        elif path.is_file():
             if apply:
                 path.unlink()
         else:
-            raise InstallError(f"owned path was modified or is unmanaged; refusing removal: {path}")
+            raise InstallError(f"owned path has an unexpected type; refusing removal: {path}")
         actions.append({"path": str(path), "status": "removed" if apply else "would-remove"})
     if apply:
         manifest_path.unlink()

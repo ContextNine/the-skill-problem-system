@@ -248,6 +248,7 @@ class StandaloneInstallTests(unittest.TestCase):
             launcher = (home / ".local/bin/fleet").read_text(encoding="utf-8")
             command_root = package.parents[1] if is_private_source(package) else package
             self.assertIn(f"--root {json.dumps(str(command_root.resolve()))}", launcher)
+            self.assertNotIn("fleet.managed", launcher)
             second = install(
                 package,
                 home,
@@ -266,22 +267,24 @@ class StandaloneInstallTests(unittest.TestCase):
             self.assertTrue(removed["ok"])
             self.assertFalse((home / ".agents/internal").exists())
 
-    def test_global_instruction_install_refuses_an_unmanaged_file(self) -> None:
+    def test_global_instruction_install_replaces_existing_file_without_a_marker(self) -> None:
         package = Path(__file__).resolve().parents[2]
         with tempfile.TemporaryDirectory() as temporary:
             home = Path(temporary) / "user-home"
             target = home / ".codex/AGENTS.md"
             target.parent.mkdir(parents=True)
             target.write_text("user-owned\n", encoding="utf-8")
-            with self.assertRaisesRegex(InstallError, "unmanaged"):
-                install(
-                    package,
-                    home,
-                    apply=True,
-                    global_instructions=True,
-                    claude_alias=False,
-                    discovery_aliases=False,
-                )
+            install(
+                package,
+                home,
+                apply=True,
+                global_instructions=True,
+                claude_alias=False,
+                discovery_aliases=False,
+            )
+            self.assertTrue(target.is_symlink())
+            instructions = (home / ".agents/instructions/AGENTS.md").read_text(encoding="utf-8")
+            self.assertNotIn("fleet.managed", instructions)
 
     def test_existing_fleet_worker_keeps_the_primary_owned_registry(self) -> None:
         package = Path(__file__).resolve().parents[2]

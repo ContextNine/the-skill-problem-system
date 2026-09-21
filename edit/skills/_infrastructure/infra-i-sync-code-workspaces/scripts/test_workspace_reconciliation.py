@@ -64,6 +64,60 @@ class WorkspaceReconciliationTests(unittest.TestCase):
         run("git", "-C", str(destination), "remote", "set-url", "origin", self.remote_url)
         return destination
 
+    def test_discover_uses_the_default_machine_registry(self) -> None:
+        args = mock.Mock(
+            spec=["command", "source_root", "catalog", "profile", "entry", "path", "json", "skip_personal_configuration"],
+            command="discover",
+            source_root=self.code_root,
+            catalog=None,
+            profile=None,
+            entry=[],
+            path=[Path("repository")],
+            json=True,
+            skip_personal_configuration=False,
+        )
+        repository = self.source("repository")
+        machines = {
+            "primary_machine_id": "primary",
+            "machines": [
+                {
+                    "id": "primary",
+                    "home": str(self.root),
+                    "roots": {"code": str(self.code_root)},
+                }
+            ],
+        }
+        with (
+            mock.patch.object(controller, "parse_args", return_value=args),
+            mock.patch.object(controller, "vault_root", return_value=self.root),
+            mock.patch.object(controller, "current_machine_id", return_value="primary"),
+            mock.patch.object(controller, "load_machines", return_value=machines) as load_machines,
+            mock.patch.object(controller, "load_catalog", return_value={}),
+            mock.patch.object(controller, "select_specs", return_value=([{}], "test")),
+            mock.patch.object(controller, "discover_specs", return_value=([repository], [])),
+            mock.patch.object(controller, "source_warnings", return_value=[]),
+            mock.patch.object(sys, "stdout", io.StringIO()),
+        ):
+            self.assertEqual(controller.main(), 0)
+
+        load_machines.assert_called_once_with(
+            self.root / "_system/agents/edit/settings/fleet/machines.json"
+        )
+
+    def test_explicit_discovery_paths_are_normalized_relative_to_the_code_root(self) -> None:
+        args = mock.Mock(
+            path=[self.code_root / "ctx9/the-skill-problem-system"],
+            entry=[],
+            profile=None,
+        )
+        specs, selection = controller.select_specs(
+            {"defaults": {}, "entries": {}},
+            args,
+            self.code_root,
+        )
+        self.assertEqual(selection, "explicit paths")
+        self.assertEqual(specs[0]["path"], "ctx9/the-skill-problem-system")
+
     def source(self, relative: str) -> dict[str, object]:
         return {
             "relative_path": relative,

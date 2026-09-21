@@ -16,7 +16,7 @@ from pathlib import Path
 
 
 SCRIPT_DIRECTORY = Path(__file__).resolve().parent
-VAULT_ROOT = SCRIPT_DIRECTORY.parents[6]
+AGENTS_ROOT = SCRIPT_DIRECTORY.parents[4]
 
 
 def load_module(name: str, filename: str):
@@ -389,7 +389,7 @@ source = "/target/local/marketplace"
         shared = sync.global_agent_configuration
         sync_spec = importlib.util.spec_from_file_location(
             "sync_skills_shared_agent_test",
-            VAULT_ROOT / "_system/agents/internal/src/sync_skills.py",
+            AGENTS_ROOT / "internal/src/sync_skills.py",
         )
         assert sync_spec and sync_spec.loader
         regular_sync = importlib.util.module_from_spec(sync_spec)

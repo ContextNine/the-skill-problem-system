@@ -14,7 +14,7 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from package_layout import ConfigurationError, expand_registered_path, validate_machines, validate_workspaces
-from package_installer import InstallError, install, uninstall, verify
+from package_installer import WORKSPACE_SYNC_HELPERS, InstallError, install, is_private_source, uninstall, verify
 from fleet_templates import FleetTemplateError, render_bundle
 
 
@@ -179,9 +179,12 @@ class StandaloneInstallTests(unittest.TestCase):
             )
             self.assertEqual(machines["primary_machine_id"], "test-mac")
             self.assertEqual(machines["machines"][0]["roots"]["code"], "~/Developer")
-            self.assertFalse((home / ".agents/internal/skills").exists())
+            self.assertEqual((home / ".agents/internal/skills").exists(), not is_private_source(package))
+            for helper in WORKSPACE_SYNC_HELPERS:
+                self.assertTrue((home / ".agents/internal/src" / helper).is_file())
             launcher = (home / ".local/bin/fleet").read_text(encoding="utf-8")
-            self.assertIn(f"--root {json.dumps(str(package.parents[1].resolve()))}", launcher)
+            command_root = package.parents[1] if is_private_source(package) else package
+            self.assertIn(f"--root {json.dumps(str(command_root.resolve()))}", launcher)
             second = install(
                 package,
                 home,
@@ -223,10 +226,15 @@ class StandaloneInstallTests(unittest.TestCase):
             (package / "edit/settings/fleet/machines.json").read_text(encoding="utf-8")
         )
         worker_id = next(
-            machine["id"]
-            for machine in source_registry["machines"]
-            if machine.get("role") == "worker" and machine.get("enabled")
+            (
+                machine["id"]
+                for machine in source_registry["machines"]
+                if machine.get("role") == "worker" and machine.get("enabled")
+            ),
+            None,
         )
+        if worker_id is None:
+            self.skipTest("public starter settings do not include a worker")
         with tempfile.TemporaryDirectory() as temporary:
             home = Path(temporary) / "worker-home"
             home.mkdir()

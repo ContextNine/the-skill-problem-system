@@ -364,10 +364,11 @@ def select_specs(catalog: dict[str, object], args: argparse.Namespace, source_ro
         for index, supplied in enumerate(args.path, start=1):
             candidate = supplied if supplied.is_absolute() else source_root / supplied
             candidate = validate_under_code(candidate, source_root)
+            relative = candidate.relative_to(source_root).as_posix()
             specs.append(
                 normalize_spec(
                     f"path-{index}",
-                    {"path": str(candidate), "discovery": "auto", "required": True},
+                    {"path": relative, "discovery": "auto", "required": True},
                     defaults,
                 )
             )
@@ -1012,7 +1013,7 @@ def main() -> int:
     try:
         root = vault_root()
         source_id = current_machine_id(root)
-        machine_path = args.machine_registry or root / "_system/agents/edit/settings/fleet/machines.json"
+        machine_path = getattr(args, "machine_registry", None) or root / "_system/agents/edit/settings/fleet/machines.json"
         machine_registry = load_machines(machine_path.expanduser().resolve())
         source_matches = [machine for machine in machine_registry["machines"] if isinstance(machine, dict) and machine.get("id") == source_id]
         if len(source_matches) != 1:

@@ -39,6 +39,7 @@ CATEGORY_TOKENS = {
     "_finance": ("finance", "Finance"),
     "_gws": ("gws", "GWS"),
     "_fleet": ("fleet", "Fleet"),
+    "_integrations": ("integrations", "Integrations"),
     "_marketing": ("marketing", "Marketing"),
     "_spreadsheets": ("spreadsheets", "Spreadsheets"),
     "_vault": ("vault", "Vault"),

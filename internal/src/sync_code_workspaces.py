@@ -75,10 +75,12 @@ def error_text(process: subprocess.CompletedProcess[str]) -> str:
     return value.splitlines()[-1][:500] if value else "command failed"
 
 
-def github_repository(owner: str, name: str) -> dict[str, object]:
+def github_repository(owner: str, name: str, *, missing_ok: bool = False) -> dict[str, object] | None:
     """Resolve a GitHub repository through gh without handling credentials here."""
     result = run(["gh", "api", f"repos/{owner}/{name}"])
     if result.returncode != 0:
+        if missing_ok and "HTTP 404" in (result.stderr or result.stdout):
+            return None
         raise RuntimeError(f"cannot resolve GitHub repository {owner}/{name}: {error_text(result)}")
     try:
         payload = json.loads(result.stdout)
@@ -107,9 +109,15 @@ def prepare_github_owner_transfer(
                 f"selected repository {repository['relative_path']} is not owned by github.com/{old_owner}"
             )
         name = match.group(2)
-        previous = github_repository(old_owner, name)
+        previous = github_repository(old_owner, name, missing_ok=True)
         current = github_repository(new_owner, name)
-        if previous["id"] != current["id"]:
+        expected_id = previous["id"] if previous is not None else repository.get("expected_github_repository_id")
+        if not isinstance(expected_id, int):
+            raise RuntimeError(
+                f"pre-transfer GitHub repository ID is required for {old_owner}/{name} after its old API route is gone"
+            )
+        assert current is not None
+        if expected_id != current["id"]:
             raise RuntimeError(
                 f"GitHub repository ID changed for {old_owner}/{name} -> {new_owner}/{name}"
             )
@@ -122,7 +130,7 @@ def prepare_github_owner_transfer(
                 "remote_url": desired_url,
                 "remote_display": desired_url,
                 "transfer_target_identity": f"github.com/{new_owner}/{name}",
-                "github_repository_id": previous["id"],
+                "github_repository_id": expected_id,
             }
         )
     return prepared
@@ -593,6 +601,7 @@ def inspect_source_repository(
             "project_relative_path": project_relative,
             "catalog_relative_path": catalog_relative_path or relative,
             "source_relocated": bool(catalog_relative_path and catalog_relative_path != relative),
+            "expected_github_repository_id": spec.get("github_repository_id"),
         },
         None,
     )

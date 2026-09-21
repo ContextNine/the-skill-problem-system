@@ -11,7 +11,7 @@ Start with [Machine-local Secrets](machine-local-secrets.md) for package-level o
 
 `_system/agents/internal/generated/state/machine-secrets.lock.json` contains only sanitized facts emitted after verification: machine ID, credential name and provider ID where public, expiry, scopes, custody kind, helper digest, and boolean acceptance. An absent entry means unverified, not absent. Never hand-edit a successful record or infer it from file presence.
 
-Every credential entry must include a non-secret `documentation` reference that resolves either inside the agent package, to a manual skill reference, or through a logical workspace ID plus repository-relative path. Repository-owned authorities likewise use logical workspace IDs instead of checkout paths. Resolve those IDs through `fleet config` and schema-v2 `fleet/workspaces.json`; never persist expanded paths as authority.
+Every credential entry must include a non-secret `documentation` reference that resolves either inside the agent package, to a manual skill reference, or through a logical workspace ID plus repository-relative path. Repository-owned authorities likewise use logical workspace IDs instead of checkout paths. Resolve those IDs through `fleet config` and schema-v3 `fleet/workspaces.json`; never persist expanded paths as authority.
 
 Keep the lifecycle classes in this one registry rather than splitting them into separate manifests. The class answers the bootstrap question directly:
 

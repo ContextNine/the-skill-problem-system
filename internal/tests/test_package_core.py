@@ -51,7 +51,7 @@ class PackageConfigurationTests(unittest.TestCase):
     def test_workspace_targets_derive_from_code_root(self) -> None:
         machines = validate_machines(self.machines())
         workspaces = validate_workspaces(
-            {"schema_version": 2, "entries": {"app": {"path": "clients/app"}}},
+            {"schema_version": 3, "entries": {"app": {"path": "clients/app"}}},
             machines,
         )
         self.assertEqual(workspaces["app"]["resolved_paths"]["primary"], "/opt/example-home/workspace/clients/app")
@@ -60,15 +60,73 @@ class PackageConfigurationTests(unittest.TestCase):
         machines = validate_machines(self.machines())
         for value in ("../app", "/opt/app", "~/app"):
             with self.subTest(value=value), self.assertRaises(ConfigurationError):
-                validate_workspaces({"schema_version": 2, "entries": {"app": {"path": value}}}, machines)
+                validate_workspaces({"schema_version": 3, "entries": {"app": {"path": value}}}, machines)
 
     def test_duplicate_targets_are_rejected(self) -> None:
         machines = validate_machines(self.machines())
         with self.assertRaises(ConfigurationError):
             validate_workspaces(
-                {"schema_version": 2, "entries": {"one": {"path": "app"}, "two": {"path": "app"}}},
+                {"schema_version": 3, "entries": {"one": {"path": "app"}, "two": {"path": "app"}}},
                 machines,
             )
+
+    def test_workspace_development_targets_are_repository_specific_and_non_secret(self) -> None:
+        machines = validate_machines(self.machines())
+        registry = {
+            "schema_version": 3,
+            "entries": {
+                "impression": {
+                    "path": "impression",
+                    "development": {
+                        "environment": "local",
+                        "k3s_context": "example-cluster",
+                        "namespace": "impression-local",
+                        "postgres_service": "postgres-pooler.postgres.svc.cluster.local",
+                        "postgres_direct_service": "postgres-rw.postgres.svc.cluster.local",
+                        "redis_service": "redis.redis.svc.cluster.local",
+                    },
+                },
+                "rnr": {
+                    "path": "rnr",
+                    "development": {
+                        "environment": "local",
+                        "k3s_context": "example-cluster",
+                        "namespace": "rnr-local",
+                        "postgres_service": "postgres-pooler.postgres.svc.cluster.local",
+                        "postgres_direct_service": "postgres-rw.postgres.svc.cluster.local",
+                        "redis_service": None,
+                    },
+                },
+                "without-development": {"path": "without-development"},
+            },
+        }
+        workspaces = validate_workspaces(registry, machines)
+        self.assertEqual(workspaces["impression"]["development"]["namespace"], "impression-local")
+        self.assertIsNone(workspaces["rnr"]["development"]["redis_service"])
+        self.assertNotIn("development", workspaces["without-development"])
+
+    def test_workspace_development_targets_reject_credentials_and_managed_namespaces(self) -> None:
+        machines = validate_machines(self.machines())
+        valid = {
+            "environment": "local",
+            "k3s_context": "example-cluster",
+            "namespace": "app-local",
+            "postgres_service": "postgres-pooler.postgres.svc.cluster.local",
+            "postgres_direct_service": "postgres-rw.postgres.svc.cluster.local",
+            "redis_service": None,
+        }
+        invalid_targets = [
+            {**valid, "environment": "prod"},
+            {**valid, "namespace": "app-prod"},
+            {**valid, "postgres_service": "postgres://user:password@example.test/db"},
+            {**valid, "redis_service": "redis://secret@example.test"},
+        ]
+        for target in invalid_targets:
+            with self.subTest(target=target), self.assertRaises(ConfigurationError):
+                validate_workspaces(
+                    {"schema_version": 3, "entries": {"app": {"path": "app", "development": target}}},
+                    machines,
+                )
 
     def test_macos_and_linux_roots_resolve_from_the_registered_home(self) -> None:
         data = self.machines("/srv/example-macos/user", "~/" + "Code")

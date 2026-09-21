@@ -31,11 +31,5 @@
         "primarymac"
       ]
     }
-  ],
-  "development_services": {
-    "k3s_context": null,
-    "namespace": null,
-    "postgres_service": null,
-    "redis_service": null
-  }
+  ]
 }

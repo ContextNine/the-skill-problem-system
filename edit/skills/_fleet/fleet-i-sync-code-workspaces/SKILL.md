@@ -11,7 +11,7 @@ Read GitHub Fleet Authentication before changing GitHub remotes or diagnosing Gi
 
 Read [Platform Runtime](references/platform-runtime.md) before running the workflow. Fleet renders that reference for the selected machine during installation.
 
-1. Run `fleet config validate`, then load `fleet/machines.json` and schema-v2 `fleet/workspaces.json` below the resolved config path. Workspace paths are relative to each selected machine's registered Code root. Keep missing or invalid configuration inactive.
+1. Run `fleet config validate`, then load `fleet/machines.json` and schema-v3 `fleet/workspaces.json` below the resolved config path. Workspace paths are relative to each selected machine's registered Code root. Optional `development` targets are repository-specific and non-secret. Keep missing or invalid configuration inactive.
 2. Read [Workspace Sync Commands](references/workspace-sync-commands.md) for modes, command syntax, safety gates, and post-sync checks.
 3. Read [Catalog Schema](references/catalog-schema.md) before changing catalog entries, profiles, machine filters, or clone policy.
 4. Read [State and Reconciliation](references/state-and-reconciliation.md) before adopting source moves, relocating target checkouts, or inspecting run history.

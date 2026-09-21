@@ -6,17 +6,6 @@
   "properties": {
     "schema_version": {"const": 7},
     "primary_machine_id": {"type": "string", "minLength": 1},
-    "development_services": {
-      "type": "object",
-      "required": ["k3s_context", "namespace", "postgres_service", "redis_service"],
-      "properties": {
-        "k3s_context": {"type": ["string", "null"]},
-        "namespace": {"type": ["string", "null"]},
-        "postgres_service": {"type": ["string", "null"]},
-        "redis_service": {"type": ["string", "null"]}
-      },
-      "additionalProperties": false
-    },
     "vault_git": {
       "type": "object",
       "required": ["owner_machine_id", "refresh_owner_machine_id", "remote", "branch"],

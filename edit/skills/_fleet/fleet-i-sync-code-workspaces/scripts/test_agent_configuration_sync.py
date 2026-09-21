@@ -324,7 +324,7 @@ source = "/target/local/marketplace"
             desired.write_text(
                 json.dumps(
                     {
-                        "schema_version": 2,
+                        "schema_version": 3,
                         "default_profile": "core",
                         "entries": {"secret-bindings": {"path": "ctx9/secret-bindings"}},
                     }
@@ -335,7 +335,7 @@ source = "/target/local/marketplace"
             installed = source / ".agents/settings/fleet/workspaces.json"
             installed.parent.mkdir(parents=True)
             installed.write_text(
-                '{"schema_version":2,"default_profile":"core","entries":{}}\n',
+                '{"schema_version":3,"default_profile":"core","entries":{}}\n',
                 encoding="utf-8",
             )
             bundle = sync.load_source_bundle(source, root=root, registry=registry)

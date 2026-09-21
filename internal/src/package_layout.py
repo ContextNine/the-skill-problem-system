@@ -111,13 +111,6 @@ def expand_registered_path(value: object, home: object, *, optional: bool = Fals
 def validate_machines(data: dict[str, Any]) -> dict[str, dict[str, Any]]:
     if data.get("schema_version") != 7:
         raise ConfigurationError("machine registry needs schema_version 7")
-    services = data.get("development_services")
-    if services is not None and (
-        not isinstance(services, dict)
-        or set(services) != {"k3s_context", "namespace", "postgres_service", "redis_service"}
-        or any(value is not None and (not isinstance(value, str) or not value.strip()) for value in services.values())
-    ):
-        raise ConfigurationError("development_services needs nullable non-secret service names")
     machines = data.get("machines")
     if not isinstance(machines, list) or not machines:
         raise ConfigurationError("machine registry needs a non-empty machines list")
@@ -264,14 +257,47 @@ def safe_workspace_path(value: object, workspace_id: str) -> PurePosixPath:
 
 
 def validate_workspaces(data: dict[str, Any], machines: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
-    if data.get("schema_version") != 2 or not isinstance(data.get("entries"), dict):
-        raise ConfigurationError("workspace registry needs schema_version 2 and entries")
+    if data.get("schema_version") != 3 or not isinstance(data.get("entries"), dict):
+        raise ConfigurationError("workspace registry needs schema_version 3 and entries")
     entries = data["entries"]
     resolved: dict[str, dict[str, Any]] = {}
     for workspace_id, raw in entries.items():
         if not isinstance(workspace_id, str) or not isinstance(raw, dict):
             raise ConfigurationError("workspace entries must be named objects")
         relative = safe_workspace_path(raw.get("path"), workspace_id)
+        development = raw.get("development")
+        if development is not None:
+            required = {
+                "environment",
+                "k3s_context",
+                "namespace",
+                "postgres_service",
+                "postgres_direct_service",
+                "redis_service",
+            }
+            if not isinstance(development, dict) or set(development) != required:
+                raise ConfigurationError(f"workspace {workspace_id!r} development target has invalid fields")
+            if development.get("environment") != "local":
+                raise ConfigurationError(f"workspace {workspace_id!r} development environment must be local")
+            namespace = development.get("namespace")
+            if not isinstance(namespace, str) or not namespace.endswith("-local"):
+                raise ConfigurationError(f"workspace {workspace_id!r} development namespace must end in -local")
+            for field in ("k3s_context", "postgres_service", "postgres_direct_service"):
+                value = development.get(field)
+                if not isinstance(value, str) or not value.strip() or "://" in value or "@" in value or "/" in value:
+                    raise ConfigurationError(f"workspace {workspace_id!r} development {field} must be a non-secret name")
+            for field in ("postgres_service", "postgres_direct_service"):
+                if not str(development[field]).endswith(".svc.cluster.local"):
+                    raise ConfigurationError(f"workspace {workspace_id!r} development {field} must be a cluster service")
+            redis_service = development.get("redis_service")
+            if redis_service is not None and (
+                not isinstance(redis_service, str)
+                or not redis_service.endswith(".svc.cluster.local")
+                or "://" in redis_service
+                or "@" in redis_service
+                or "/" in redis_service
+            ):
+                raise ConfigurationError(f"workspace {workspace_id!r} development redis_service must be null or a cluster service")
         targets: dict[str, str] = {}
         for machine_id, machine in machines.items():
             if not machine.get("enabled"):

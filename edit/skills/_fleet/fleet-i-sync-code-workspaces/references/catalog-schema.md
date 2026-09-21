@@ -5,11 +5,11 @@ status: enabled
 
 ## Code Workspace Catalog Schema
 
-The private or installed `fleet/workspaces.json` uses schema version 2 and Code-root-relative entries:
+The private or installed `fleet/workspaces.json` uses schema version 3 and Code-root-relative entries:
 
 ```json
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "default_profile": "core",
   "defaults": {
     "clone_mode": "partial",
@@ -21,7 +21,15 @@ The private or installed `fleet/workspaces.json` uses schema version 2 and Code-
     "example": {
       "path": "example",
       "discovery": "repository",
-      "remote": "git@github.com:owner/example.git"
+      "remote": "git@github.com:owner/example.git",
+      "development": {
+        "environment": "local",
+        "k3s_context": "example-cluster",
+        "namespace": "example-local",
+        "postgres_service": "postgres-pooler.postgres.svc.cluster.local",
+        "postgres_direct_service": "postgres-rw.postgres.svc.cluster.local",
+        "redis_service": null
+      }
     },
     "group": {
       "path": "group",
@@ -33,7 +41,7 @@ The private or installed `fleet/workspaces.json` uses schema version 2 and Code-
 
 ### Fields
 
-- `schema_version`: must be `2`.
+- `schema_version`: must be `3`.
 - `default_profile`: profile used when the command receives no `--profile` or `--entry`.
 - `defaults`: values inherited by every entry.
 - `entries.<id>.path`: relative path below each selected machine's Code root; absolute paths, `~` and `..` are invalid.
@@ -44,6 +52,7 @@ The private or installed `fleet/workspaces.json` uses schema version 2 and Code-
 - `clone_mode`: `partial` or `full`; partial adds `git clone --filter=blob:none` and keeps full history.
 - `codex_project_root`: `.` by default. A relative subdirectory may identify the folder to save as the Codex project.
 - `required`: when true, missing source paths or empty recursive discovery are reported prominently.
+- `development`: optional non-secret repository-specific `local` target. It records the K3s context, app namespace, pooler and direct PostgreSQL service names, and an optional Redis service name. It never contains credentials or connection URLs.
 
 Paths outside the configured source Code root, overlapping parent/child repositories, credential-bearing remotes, duplicate target-relative paths, and one canonical remote assigned to multiple desired paths are invalid. Recursive discovery skips known dependency, build, cache, `.workspace-sync`, symlinked, and already-discovered repository subtrees; pass an excluded directory itself with `--path` when it intentionally owns repositories. A recursive entry is intentionally source-observed; use exact entries with `remote` when bootstrap must work without that source collection being present.
 

@@ -441,8 +441,8 @@ def validate_under_code(path: Path, source_root: Path) -> Path:
 
 def load_catalog(path: Path) -> dict[str, object]:
     registry = load_json(path, "repository registry")
-    if registry.get("schema_version") != 2:
-        raise RuntimeError("repository registry needs schema_version 2")
+    if registry.get("schema_version") != 3:
+        raise RuntimeError("repository registry needs schema_version 3")
     if not isinstance(registry.get("defaults", {}), dict) or not isinstance(registry.get("entries"), dict):
         raise RuntimeError("workspace defaults and entries must be objects")
     return registry

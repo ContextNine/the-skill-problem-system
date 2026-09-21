@@ -4,7 +4,7 @@
   "type": "object",
   "required": ["schema_version", "default_profile", "defaults", "entries"],
   "properties": {
-    "schema_version": {"const": 2},
+    "schema_version": {"const": 3},
     "default_profile": {"type": "string", "minLength": 1},
     "defaults": {"type": "object"},
     "entries": {
@@ -14,7 +14,25 @@
         "required": ["path"],
         "properties": {
           "path": {"type": "string", "minLength": 1, "not": {"pattern": "^(?:/|~|.*(?:^|/)\\.\\.(?:/|$))"}},
-          "remote": {"type": "string"}
+          "remote": {"type": "string"},
+          "development": {
+            "type": "object",
+            "required": ["environment", "k3s_context", "namespace", "postgres_service", "postgres_direct_service", "redis_service"],
+            "properties": {
+              "environment": {"const": "local"},
+              "k3s_context": {"type": "string", "minLength": 1},
+              "namespace": {"type": "string", "pattern": "^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?-local$"},
+              "postgres_service": {"type": "string", "pattern": "^[a-z0-9](?:[-a-z0-9.]*[a-z0-9])?\\.svc\\.cluster\\.local$"},
+              "postgres_direct_service": {"type": "string", "pattern": "^[a-z0-9](?:[-a-z0-9.]*[a-z0-9])?\\.svc\\.cluster\\.local$"},
+              "redis_service": {
+                "anyOf": [
+                  {"type": "null"},
+                  {"type": "string", "pattern": "^[a-z0-9](?:[-a-z0-9.]*[a-z0-9])?\\.svc\\.cluster\\.local$"}
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
         },
         "additionalProperties": true
       }

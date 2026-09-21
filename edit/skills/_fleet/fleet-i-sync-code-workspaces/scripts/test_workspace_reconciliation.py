@@ -299,7 +299,7 @@ class WorkspaceReconciliationTests(unittest.TestCase):
         catalog_path.write_text(
             json.dumps(
                 {
-                    "schema_version": 2,
+                    "schema_version": 3,
                     "entries": {
                         "repository": {
                             "path": "old/repository",

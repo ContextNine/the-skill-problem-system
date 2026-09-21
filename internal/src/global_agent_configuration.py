@@ -476,7 +476,6 @@ def machine_template_values(
         "primary": normalized(primary),
         "peers": peers,
         "vault_source": normalized(vault_source) if vault_source else None,
-        "development_services": registry.get("development_services"),
         "runtime": {"novnc_url": recorded_novnc_url(source_home, machine)},
     }}
 

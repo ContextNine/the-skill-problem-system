@@ -372,6 +372,17 @@ def current_machine_id(root: Path) -> str:
     return value
 
 
+def resolve_source_identity(args: argparse.Namespace) -> tuple[str, Path | None]:
+    """Use explicit installed configuration without requiring the private Vault root."""
+    source_id_value = getattr(args, "source_id", None)
+    source_id = source_id_value.strip() if isinstance(source_id_value, str) and source_id_value.strip() else None
+    machine_registry = getattr(args, "machine_registry", None)
+    if source_id and machine_registry and args.catalog:
+        return source_id, None
+    root = vault_root()
+    return source_id or current_machine_id(root), root
+
+
 def remote_details(url: str) -> tuple[str | None, str, str | None]:
     value = url.strip().rstrip("/")
     if not value:
@@ -1082,6 +1093,10 @@ def add_selection_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--entry", action="append", default=[], help="catalog entry ID; repeatable")
     parser.add_argument("--path", action="append", default=[], type=Path, help="repository or recursively scanned path; repeatable")
     parser.add_argument("--source-root", type=Path, help="executing machine's Code root; defaults to the machine registry")
+    parser.add_argument(
+        "--source-id",
+        help="registered source machine ID; with explicit registry and catalog, avoids private Vault discovery",
+    )
     parser.add_argument("--catalog", type=Path, help="repositories.json override")
     parser.add_argument("--json", action="store_true", help="emit JSON")
     parser.add_argument(
@@ -1151,9 +1166,12 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     try:
-        root = vault_root()
-        source_id = current_machine_id(root)
-        machine_path = getattr(args, "machine_registry", None) or root / "_system/agents/edit/settings/fleet/machines.json"
+        source_id, root = resolve_source_identity(args)
+        machine_path = getattr(args, "machine_registry", None)
+        if machine_path is None:
+            if root is None:
+                raise RuntimeError("the default machine registry requires a resolved Vault root")
+            machine_path = root / "_system/agents/edit/settings/fleet/machines.json"
         machine_registry = load_machines(machine_path.expanduser().resolve())
         source_matches = [machine for machine in machine_registry["machines"] if isinstance(machine, dict) and machine.get("id") == source_id]
         if len(source_matches) != 1:
@@ -1161,7 +1179,11 @@ def main() -> int:
         source_root = (args.source_root or machine_code_root(source_matches[0])).expanduser().resolve()
         if not source_root.is_dir():
             raise RuntimeError(f"source Code root is not a directory: {source_root}")
-        catalog_path = args.catalog or root / "_system/agents/edit/settings/fleet/workspaces.json"
+        catalog_path = args.catalog
+        if catalog_path is None:
+            if root is None:
+                raise RuntimeError("the default workspace catalog requires a resolved Vault root")
+            catalog_path = root / "_system/agents/edit/settings/fleet/workspaces.json"
         catalog = load_catalog(catalog_path.expanduser().resolve())
         specs, selection = select_specs(catalog, args, source_root)
         repositories, skipped = discover_specs(specs, source_root)
@@ -1244,6 +1266,8 @@ def main() -> int:
             and args.command not in {"migrate-github-remotes", "transfer-github-owner"}
             and not args.skip_personal_configuration
         )
+        if sync_personal_configuration and root is None:
+            root = vault_root()
         agent_bundle = (
             agent_configuration.load_source_bundle(Path.home(), root=root, registry=machine_registry)
             if sync_personal_configuration

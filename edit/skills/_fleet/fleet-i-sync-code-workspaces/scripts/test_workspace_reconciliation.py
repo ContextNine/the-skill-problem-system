@@ -118,6 +118,17 @@ class WorkspaceReconciliationTests(unittest.TestCase):
         self.assertEqual(selection, "explicit paths")
         self.assertEqual(specs[0]["path"], "ctx9/the-skill-problem-system")
 
+    def test_explicit_source_identity_avoids_vault_discovery(self) -> None:
+        args = mock.Mock(
+            source_id="primary",
+            machine_registry=self.root / "machines.json",
+            catalog=self.root / "workspaces.json",
+        )
+        with mock.patch.object(controller, "vault_root", side_effect=AssertionError("Vault should not be read")):
+            source_id, root = controller.resolve_source_identity(args)
+        self.assertEqual(source_id, "primary")
+        self.assertIsNone(root)
+
     def source(self, relative: str) -> dict[str, object]:
         return {
             "relative_path": relative,

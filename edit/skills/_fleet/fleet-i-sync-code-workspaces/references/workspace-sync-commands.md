@@ -15,6 +15,10 @@ python3 scripts/sync_code_workspaces.py reconcile --target linux-worker --apply
 python3 scripts/sync_code_workspaces.py reconcile --target NEW_MACHINE --provision-disabled --apply
 python3 scripts/sync_code_workspaces.py bootstrap --target linux-worker --apply
 python3 scripts/sync_code_workspaces.py refresh --target linux-worker
+python3 scripts/sync_code_workspaces.py refresh --source-id primary --source-root ~/Code \
+  --machine-registry ~/.agents/settings/fleet/machines.json \
+  --catalog ~/.agents/settings/fleet/workspaces.json \
+  --skip-personal-configuration --target linux-worker
 python3 scripts/sync_code_workspaces.py doctor --target linux-worker
 python3 scripts/sync_code_workspaces.py migrate-github-remotes --target linux-worker
 python3 scripts/sync_code_workspaces.py migrate-github-remotes --target linux-worker --apply
@@ -30,6 +34,8 @@ tail -n 20 "$(fleet config get fleet.machines.MACHINE_ID.roots.code)/.workspace-
 - `refresh`: sync agent configuration, fetch matching repositories, fast-forward only clean non-ahead branches, then reconcile plugins.
 - `doctor`: verify agent configuration, Git and Codex readiness, repository state, plugin/marketplace state, `.codex`/`AGENTS.md`, and project paths without mutation.
 - `migrate-github-remotes`: require canonical SSH URLs in the catalog, preflight the source and every selected target, then change only same-identity remote transport. Apply verifies each write, restores the old URL on failure, and records source/target history.
+
+An SSH controller that cannot read the primary's private Vault may supply `--source-id`, `--source-root`, `--machine-registry`, and `--catalog` together with `--skip-personal-configuration`. The explicit machine ID must exist exactly once in the registered machine file. This path uses installed public configuration and never opens the Vault.
 - `transfer-github-owner`: run only after an authorized GitHub owner transfer. It resolves the old and new slugs through `gh`, requires the same immutable repository ID, preflights every selected machine, updates canonical SSH remotes, and writes the new owner into exact catalog entries after all selected targets succeed. When the executing machine cannot query the destination organization, pass `--identity-evidence /absolute/path.json` captured by an authenticated machine; the value-free schema records `old_full_name`, `new_full_name`, and `repository_id` for each repository.
 
 Without `--target`, target every other enabled machine. Without `--profile`, use the catalog's default profile. Repeat `--entry`, `--path`, or `--target` as needed. During reviewed onboarding, `--provision-disabled` requires exactly one explicit disabled target and refuses enabled targets.

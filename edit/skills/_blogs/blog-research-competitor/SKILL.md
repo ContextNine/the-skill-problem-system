@@ -5,7 +5,7 @@ description: Research one or more Impression competitors and create or refresh s
 
 # Blogs · Research Competitor
 
-Use `$infra-i-code-folder-and-computer-topology` to resolve the registered Impression repository, then work from its root.
+Use `$fleet-i-code-folder-and-computer-topology` to resolve the registered Impression repository, then work from its root.
 
 Use this skill to create or update competitor research dossiers only. Do not write final public blog posts. Do not create the deep `vs Impression` or `best alternatives` briefs; ask the user to explicitly invoke `$blog-research-create-briefs` for that manual workflow.
 

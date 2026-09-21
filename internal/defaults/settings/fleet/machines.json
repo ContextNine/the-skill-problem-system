@@ -16,9 +16,26 @@
       "platform": "macos",
       "transport": "local",
       "home": "__HOME__",
-      "roots": {"code": "__CODE_ROOT__", "vault": null},
-      "vault": {"enabled": false, "checkout_mode": "none", "required": false},
-      "global_agents_eligible": true
+      "roots": {
+        "code": "~/Code",
+        "vault": null
+      },
+      "vault": {
+        "enabled": false,
+        "checkout_mode": "none",
+        "required": false
+      },
+      "global_agents_eligible": true,
+      "template_variants": [
+        "macos",
+        "primarymac"
+      ]
     }
-  ]
+  ],
+  "development_services": {
+    "k3s_context": null,
+    "namespace": null,
+    "postgres_service": null,
+    "redis_service": null
+  }
 }

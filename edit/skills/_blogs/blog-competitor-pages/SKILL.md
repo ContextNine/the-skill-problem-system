@@ -5,7 +5,7 @@ description: Create or update typed competitor comparison page data from existin
 
 # Blogs · Competitor Pages
 
-Use `$infra-i-code-folder-and-computer-topology` to resolve the registered Impression repository, then work from its root.
+Use `$fleet-i-code-folder-and-computer-topology` to resolve the registered Impression repository, then work from its root.
 
 Use this skill to turn existing competitor briefs into typed public page data for root-level comparison pages.
 

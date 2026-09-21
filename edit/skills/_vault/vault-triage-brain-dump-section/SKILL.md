@@ -10,7 +10,7 @@ Handle one live Brain Dump section with review before mutation. Do not run whole
 ## Prepare
 
 1. Read Brain Dump Routing completely.
-2. Run `vault inventory`, then read relevant context-folder and library routing notes.
+2. Run `vault inventory`, then read relevant teamspace-folder and library routing notes.
 3. Read `_system/inbox/BRAIN_DUMP.md` and identify requested section between full-line `***` or `---` separators. File boundary can replace outer separator.
 4. If description matches multiple sections, show short opening previews and ask user to identify one. Do not guess.
 5. Search filenames first with `rg --files`; inspect likely existing notes, tasks, projects, content items, and nearest READMEs.
@@ -25,7 +25,7 @@ Return 3–5 ranked destinations. Include for each:
 - transformation plan for raw text;
 - fit, tradeoff, and confidence from `0` to `1`.
 
-Name preferred option. Recommendations may include existing task, project note, context note, library topic note, `_templates` file, new TaskNotes task, content item, split route, or visible skip.
+Name preferred option. Recommendations may include existing task, project note, teamspace note, library topic note, `_templates` file, new TaskNotes task, content item, split route, or visible skip.
 
 Do not edit target or Brain Dump during recommendation phase. Wait for user selection unless invocation already supplies exact destination and approval to apply.
 

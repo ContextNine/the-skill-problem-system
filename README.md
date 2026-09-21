@@ -24,3 +24,5 @@ Then tell your agent:
 - I keep editable settings, skills, and instruction templates under `edit/`, with implementation under `internal/`.
 - I project validated skills into each agent's discovery folder with `fleet sync`.
 - I publish approved skills while keeping generated projections and user-selected exclusions private.
+
+The wizard installs the editable source in the folder you choose. `fleet source path` shows that folder later. The installed runtime and generated instructions live under `~/.agents/`; `fleet config path` shows its installed settings. A Context Vault is optional. If you install one later, its installer can connect it to this existing source without moving your skills.

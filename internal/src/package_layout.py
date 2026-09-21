@@ -22,7 +22,7 @@ DORMANT_SKILLS_ROOT = SKILLS_ROOT / "dormant"
 SOURCE_INSTANCE_ROOT = EDIT_ROOT / "settings"
 DEFAULTS_ROOT = INTERNAL_ROOT / "defaults"
 GENERATED_ROOT = INTERNAL_ROOT / "generated"
-TEMPLATES_ROOT = EDIT_ROOT / "root-agents/fleet-templates"
+TEMPLATES_ROOT = EDIT_ROOT / "agent-instructions/templates"
 SCHEMAS_ROOT = INTERNAL_ROOT / "schemas"
 DOCS_ROOT = INTERNAL_ROOT / "docs"
 EXPORT_ROOT = INTERNAL_ROOT / "release"
@@ -36,8 +36,7 @@ WORKSPACES_PATH = SOURCE_INSTANCE_ROOT / "fleet/workspaces.json"
 MACHINE_SECRETS_PATH = SOURCE_INSTANCE_ROOT / "fleet/machine-secrets.json"
 STARTUP_PATH = SOURCE_INSTANCE_ROOT / "fleet/startup.json"
 SKILL_SOURCES_PATH = SOURCE_INSTANCE_ROOT / "skills/skill-sources.json"
-INSTRUCTION_FRAGMENTS_PATH = TEMPLATES_ROOT / "render.json"
-BASE_INSTRUCTIONS_PATH = EDIT_ROOT / "root-agents/AGENTS.md"
+BASE_INSTRUCTIONS_PATH = EDIT_ROOT / "agent-instructions/AGENT-INSTRUCTIONS.md"
 LANGFUSE_PATH = SOURCE_INSTANCE_ROOT / "integrations/langfuse.json"
 DEPENDENCY_SELECTIONS_PATH = SOURCE_INSTANCE_ROOT / "dependencies/selections.json"
 DEPENDENCY_DEFAULTS_PATH = DEFAULTS_ROOT / "dependencies.json"
@@ -112,6 +111,13 @@ def expand_registered_path(value: object, home: object, *, optional: bool = Fals
 def validate_machines(data: dict[str, Any]) -> dict[str, dict[str, Any]]:
     if data.get("schema_version") != 7:
         raise ConfigurationError("machine registry needs schema_version 7")
+    services = data.get("development_services")
+    if services is not None and (
+        not isinstance(services, dict)
+        or set(services) != {"k3s_context", "namespace", "postgres_service", "redis_service"}
+        or any(value is not None and (not isinstance(value, str) or not value.strip()) for value in services.values())
+    ):
+        raise ConfigurationError("development_services needs nullable non-secret service names")
     machines = data.get("machines")
     if not isinstance(machines, list) or not machines:
         raise ConfigurationError("machine registry needs a non-empty machines list")
@@ -126,6 +132,11 @@ def validate_machines(data: dict[str, Any]) -> dict[str, dict[str, Any]]:
             raise ConfigurationError("every machine needs an id")
         if machine_id in resolved:
             raise ConfigurationError(f"duplicate machine id: {machine_id}")
+        variants = machine.get("template_variants")
+        if (not isinstance(variants, list) or not variants
+                or any(not isinstance(item, str) or not item.isalnum() or not item.islower() for item in variants)
+                or len(set(variants)) != len(variants)):
+            raise ConfigurationError(f"machine {machine_id!r} needs ordered template_variants")
         if machine.get("enabled"):
             if machine_id in enabled_ids:
                 raise ConfigurationError(f"duplicate enabled machine id: {machine_id}")

@@ -47,6 +47,31 @@ class InstallError(RuntimeError):
     pass
 
 
+def installed_source(home: Path) -> Path | None:
+    manifest = installed_state_root(home) / "installed.json"
+    if not manifest.is_file():
+        return None
+    try:
+        value = json.loads(manifest.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise InstallError(f"installed ownership manifest is invalid: {exc}") from exc
+    source = value.get("source_root")
+    if source is None:
+        launcher = home / ".local/bin/fleet"
+        if launcher.is_file() and managed_file(launcher):
+            match = re.search(r'--root ("(?:[^"\\]|\\.)*"|[^\s]+)', launcher.read_text(encoding="utf-8"))
+            if match:
+                raw = match.group(1)
+                root = Path(json.loads(raw) if raw.startswith('"') else raw).resolve()
+                candidate = root / "_system/agents" if (root / "_system/agents/edit/settings").is_dir() else root
+                if (candidate / "edit/settings/fleet/machines.json").is_file() and (candidate / "internal/src/fleet.py").is_file():
+                    return candidate
+        raise InstallError(f"installed skill source is unknown; select and adopt it explicitly: {manifest}")
+    if not isinstance(source, str) or not Path(source).is_absolute():
+        raise InstallError(f"installed skill source is invalid: {manifest}")
+    return Path(source).resolve()
+
+
 def utc_stamp() -> str:
     return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
@@ -137,24 +162,22 @@ def stage_public_skills(
         names.add(name)
         target = stage / "skills" / name
         shutil.copytree(skill, target, symlinks=False, ignore=install_ignore)
-        config = target / "fleet-templates/render.json"
-        if not config.is_file():
+        if not fleet_templates.bundle_has_templates(target):
             continue
         if template_values is None:
             raise InstallError(f"skill {name} needs machine facts for fleet templates")
         try:
-            outputs = fleet_templates.render_bundle(target, config, template_values)
+            fleet_templates.render_markdown_tree(
+                target, template_values,
+                template_values["fleet"]["machine"]["template_variants"],
+            )
         except fleet_templates.FleetTemplateError as exc:
             raise InstallError(f"skill {name} template failed: {exc}") from exc
-        for output in outputs:
-            output_path = target / output.target
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_path.write_text(output.content, encoding="utf-8")
 
 
 def stage_workspace_sync_helpers(source: Path, stage: Path) -> None:
     """Bundle private-source helpers that public exports already place in src/."""
-    helper_source = source / "edit/skills/_infrastructure/infra-i-sync-code-workspaces/scripts"
+    helper_source = source / "edit/skills/_fleet/fleet-i-sync-code-workspaces/scripts"
     for name in WORKSPACE_SYNC_HELPERS:
         target = stage / "src" / name
         if target.is_file():
@@ -221,7 +244,7 @@ def customize_machine_settings(
             machines["vault_git"]["refresh_owner_machine_id"] = machine_id
     primary["home"] = str(home)
     primary["platform"] = "macos" if platform.system() == "Darwin" else "linux"
-    primary["roots"]["code"] = code_root or "~/Code"
+    primary["roots"]["code"] = code_root or primary["roots"]["code"]
     if vault_root:
         if primary["platform"] != "macos":
             raise InstallError(
@@ -297,9 +320,8 @@ def install(
     vault_root: str | None = None,
     initialize_source: bool = False,
     command_root: Path | None = None,
+    adopt_source: bool = False,
 ) -> dict[str, Any]:
-    if claude_alias and not global_instructions:
-        raise InstallError("Claude instruction alias requires managed global instructions")
     source = source.expanduser().resolve()
     home = home.expanduser().resolve()
     sync_root = (
@@ -312,6 +334,25 @@ def install(
     config_target = installed_config_root(home)
     state_target = installed_state_root(home)
     marker = package_target / INSTALL_MARKER
+    try:
+        owner = installed_source(home)
+    except InstallError:
+        if not adopt_source:
+            raise
+        owner = None
+    if owner is not None and owner != source:
+        raise InstallError(f"skill system is already owned by {owner}; refusing competing source {source}")
+    if owner is None and package_target.exists() and not adopt_source:
+        raise InstallError("installed skill source is unknown; use --adopt-source with the verified original source")
+    if owner is not None and initialize_source:
+        raise InstallError("refusing to initialize an existing editable skill-system source")
+    if owner is not None:
+        previous = json.loads((state_target / "installed.json").read_text(encoding="utf-8"))
+        owned_before = set(previous.get("owned_paths", []))
+        global_instructions = global_instructions or str(home / ".agents/instructions/AGENTS.md") in owned_before
+        claude_alias = claude_alias or str(home / ".claude/CLAUDE.md") in owned_before
+    if claude_alias and not global_instructions:
+        raise InstallError("Claude instruction alias requires managed global instructions")
     if package_target.exists() and not marker.is_file():
         raise InstallError(f"refusing to replace unmanaged package directory: {package_target}")
     if global_instructions:
@@ -464,7 +505,7 @@ def install(
             actions.append({"path": str(alias), "status": ensure_managed_symlink(alias, str(skill), apply=apply)})
             owned.append(str(alias))
     manifest = state_target / "installed.json"
-    value = {"schema_version": 1, "package_version": PACKAGE_VERSION, "owned_paths": sorted(set(owned))}
+    value = {"schema_version": 1, "package_version": PACKAGE_VERSION, "source_root": str(source), "owned_paths": sorted(set(owned))}
     manifest_status = "would-write"
     if apply:
         manifest.parent.mkdir(parents=True, exist_ok=True)

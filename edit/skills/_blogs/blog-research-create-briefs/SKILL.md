@@ -5,7 +5,7 @@ description: Create deep internal competitor blog research briefs for Impression
 
 # Blogs · Research Create Briefs
 
-Use `$infra-i-code-folder-and-computer-topology` to resolve the registered Impression repository, then work from its root.
+Use `$fleet-i-code-folder-and-computer-topology` to resolve the registered Impression repository, then work from its root.
 
 Use this skill to create deep internal research briefs from existing competitor dossiers. These are writer handoff briefs, not final public blog posts.
 

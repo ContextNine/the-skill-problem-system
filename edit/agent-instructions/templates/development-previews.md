@@ -1,0 +1,3 @@
+When working on a registered worker, proactively expose a useful localhost preview when the changes would benefit from inspection and the request did not instruct you to commit immediately.
+
+Bind the server to `127.0.0.1`. Forward its port to the primary's loopback with `ssh -NT -o ExitOnForwardFailure=yes -R 127.0.0.1:<primary-port>:127.0.0.1:<worker-port> {% if fleet.primary.ssh_alias %}{{ fleet.primary.ssh_alias }}{% else %}{{ fleet.primary.id }}{% endif %}`. Use the same port on both ends when available; otherwise report the exact mapping. Return the clickable `http://127.0.0.1:<primary-port>` URL and keep the server and tunnel alive while useful. Never bind the preview listener to a LAN or mesh address.

@@ -6,6 +6,17 @@
   "properties": {
     "schema_version": {"const": 7},
     "primary_machine_id": {"type": "string", "minLength": 1},
+    "development_services": {
+      "type": "object",
+      "required": ["k3s_context", "namespace", "postgres_service", "redis_service"],
+      "properties": {
+        "k3s_context": {"type": ["string", "null"]},
+        "namespace": {"type": ["string", "null"]},
+        "postgres_service": {"type": ["string", "null"]},
+        "redis_service": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
     "vault_git": {
       "type": "object",
       "required": ["owner_machine_id", "refresh_owner_machine_id", "remote", "branch"],
@@ -22,13 +33,19 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "display_name", "enabled", "role", "platform", "transport", "home", "roots", "vault"],
+        "required": ["id", "display_name", "enabled", "role", "platform", "transport", "home", "roots", "vault", "template_variants"],
         "properties": {
           "id": {"type": "string", "minLength": 1},
           "display_name": {"type": "string", "minLength": 1},
           "enabled": {"type": "boolean"},
           "role": {"enum": ["primary", "worker"]},
           "platform": {"enum": ["macos", "linux"]},
+          "template_variants": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"type": "string", "pattern": "^[a-z][a-z0-9]*$"}
+          },
           "transport": {"enum": ["local", "ssh"]},
           "home": {"type": "string", "pattern": "^/"},
           "roots": {

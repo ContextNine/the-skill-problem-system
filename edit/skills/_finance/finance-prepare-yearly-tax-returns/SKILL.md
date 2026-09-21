@@ -20,8 +20,8 @@ Use this skill for preparation and recordkeeping. Never submit, amend, or pay a 
 Run once for each current entity. The command refuses to overwrite an existing file:
 
 ```bash
-python3 scripts/scaffold_tax_year.py --vault-root "$(vault root)" --context personal --year YYYY --taxpayer "M J Derman" --kind individual
-python3 scripts/scaffold_tax_year.py --vault-root "$(vault root)" --context <finance-context> --year YYYY --taxpayer "Registered taxpayer" --kind company --year-end-month 3 --year-end-day 31
+python3 scripts/scaffold_tax_year.py --vault-root "$(vault root)" --teamspace personal --year YYYY --taxpayer "M J Derman" --kind individual
+python3 scripts/scaffold_tax_year.py --vault-root "$(vault root)" --teamspace <finance-context> --year YYYY --taxpayer "Registered taxpayer" --kind company --year-end-month 3 --year-end-day 31
 ```
 
 Use `--dry-run` first. Add a new context only after its `_finance/AGENTS.md` defines its legal taxpayer, period, returns, and source folders.

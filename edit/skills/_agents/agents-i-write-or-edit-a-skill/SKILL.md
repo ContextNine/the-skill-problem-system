@@ -5,4 +5,4 @@ description: Creates or edits agent skills using the Vault's authoring standards
 
 # Agents · Write or edit a skill
 
-Read `references/skill-authoring.md` before changing a skill. If the skill or another owned file needs machine variants, also read `references/fleet-templating.md`.
+Read `references/skill-authoring.md` before changing a skill. If the skill or another owned file needs machine variants or inline Fleet values, also read `references/fleet-templating.md`.

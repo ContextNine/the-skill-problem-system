@@ -24,7 +24,6 @@ MANAGED_MARKER = "fleet.managed"
 AGENTS_RELATIVE = Path("_system/agents")
 CONFIG_RELATIVE = AGENTS_RELATIVE / "edit/settings"
 REGISTRY_RELATIVE = CONFIG_RELATIVE / "fleet/machines.json"
-NOVNC_EXAMPLE_PORT = 61152
 
 
 class AgentConfigurationError(RuntimeError):
@@ -407,35 +406,16 @@ def machine_by_id(registry: dict[str, Any], machine_id: str) -> dict[str, Any]:
     return matches[0]
 
 
-def selected_machine_access(machine: dict[str, Any]) -> tuple[str, str]:
+def selected_machine_access(machine: dict[str, Any]) -> dict[str, str | None]:
     access = machine.get("machine_access")
     if not isinstance(access, dict):
-        return "not configured", "not configured"
-    provider = str(access.get("provider") or "not configured")
+        return {"provider": None, "host": None}
+    provider = access.get("provider")
     providers = access.get("providers")
     selected = providers.get(provider) if isinstance(providers, dict) else None
-    host = str(selected.get("host") or "") if isinstance(selected, dict) else ""
-    return provider, host or "not configured"
-
-
-def peer_lines(registry: dict[str, Any], machine_id: str) -> str:
-    lines: list[str] = []
-    for peer in registry["machines"]:
-        if not isinstance(peer, dict) or not peer.get("enabled") or peer.get("id") == machine_id:
-            continue
-        provider, host = selected_machine_access(peer)
-        route = f", {provider} `{host}`" if host != "not configured" else ""
-        lines.append(
-            f"- {peer.get('display_name')} (`{peer.get('id')}`): {peer.get('role')} {peer.get('platform')}{route}."
-        )
-    return "\n".join(lines) if lines else "- No other enabled fleet machines are registered."
-
-
-def has_enabled_peer(registry: dict[str, Any], machine_id: str) -> bool:
-    return any(
-        isinstance(peer, dict) and peer.get("enabled") and peer.get("id") != machine_id
-        for peer in registry["machines"]
-    )
+    host = selected.get("host") if isinstance(selected, dict) else None
+    return {"provider": provider if isinstance(provider, str) else None,
+            "host": host if isinstance(host, str) else None}
 
 
 def recorded_novnc_url(source_home: Path, machine: dict[str, Any]) -> str | None:
@@ -465,211 +445,59 @@ def recorded_novnc_url(source_home: Path, machine: dict[str, Any]) -> str | None
     return url if isinstance(url, str) and url.startswith("http://127.0.0.1:") else None
 
 
-def access_guidance(
-    machine: dict[str, Any], source_home: Path, primary: dict[str, Any]
-) -> str:
-    vnc = machine.get("vnc")
-    if not isinstance(vnc, dict):
-        return ""
-    if vnc.get("kind") == "native-url" and isinstance(vnc.get("url"), str):
-        return (
-            f"For GUI inspection from {primary.get('display_name')}, return the Screen Sharing link "
-            f"[{vnc['url']}]({vnc['url']})."
-        )
-    if vnc.get("kind") != "ssh-novnc":
-        return ""
-    active = recorded_novnc_url(source_home, machine)
-    open_path = str(vnc.get("open_path") or "/vnc.html")
-    example = f"http://127.0.0.1:{NOVNC_EXAMPLE_PORT}{open_path}"
-    guidance = (
-        f"For GUI inspection, ensure {primary.get('display_name')} has established and confirmed the SSH noVNC tunnel with "
-        f"`vault machine vnc {machine.get('id')}`, then return its actual clickable loopback URL."
-    )
-    if active:
-        return f"{guidance} The last recorded tunnel URL is [{active}]({active}); confirm it before use."
-    return f"{guidance} A possible forwarded URL is [{example}]({example}); its port is only an example."
-
-
-def vault_guidance(
-    registry: dict[str, Any],
-    machine: dict[str, Any],
-    vault_root: str | None,
-) -> str:
-    from package_layout import expand_registered_path
-
-    vault = machine.get("vault")
-    if not isinstance(vault, dict) or not vault.get("enabled"):
-        return (
-            "This machine is a Code-repository worker only. It must not infer or create a Vault clone, "
-            "sparse checkout, mount, or publication path."
-        )
-    mode = vault.get("checkout_mode")
-    if mode == "remote-sshfs":
-        remote = vault.get("remote_access")
-        source_id = remote.get("source_machine_id") if isinstance(remote, dict) else None
-        source = machine_by_id(registry, str(source_id or ""))
-        source_roots = source.get("roots")
-        source_root = expand_registered_path(
-            source_roots.get("vault") if isinstance(source_roots, dict) else None,
-            source.get("home"),
-        )
-        return (
-            f"This is a registered full read-write remote Vault client. `{vault_root}` mounts the complete "
-            f"iCloud worktree from {source.get('display_name')} (`{source.get('id')}`) through the stable "
-            f"SSH alias `{source.get('ssh_alias')}` at `{source_root}`. Before reading or editing the Vault, "
-            "run `vault access status`. Continue only when it succeeds and reports `\"ok\": true`; otherwise "
-            "do not edit. An absent, "
-            "read-only, wrong-source, or unhealthy mount is a hard stop, never a reason to recreate a clone "
-            "or sparse checkout. Vault Git, refresh, release, agents sync, bootstrap publication, and "
-            "Git-backed media maintenance are prohibited here. Git remains fully available in ordinary Code "
-            "repositories. Only the registered Vault Git owner may report `git-pushed`."
-        )
-    if mode == "icloud-gitless":
-        host_enabled = vault.get("remote_access", {}).get("host_enabled") is True
-        host_text = (
-            " It is the registered iCloud worktree host for remote clients."
-            if host_enabled
-            else ""
-        )
-        return (
-            "This is a full, Keep Downloaded iCloud worktree with deliberately unresolved Git metadata. "
-            "Edit the local Vault normally. Never run Vault Git, refresh, release, agents sync, "
-            f"or Git-backed media maintenance here.{host_text}"
-        )
-    if mode == "primary-external-git":
-        return (
-            "This machine is the sole Vault Git and fleet owner. Edit the local Vault normally. Commit and push "
-            "the complete worktree currently visible here without waiting for iCloud upload."
-        )
-    raise AgentConfigurationError(f"machine {machine.get('id')} has unsupported Vault mode {mode!r}")
-
-
 def machine_template_values(
-    registry: dict[str, Any],
-    machine: dict[str, Any],
-    *,
-    source_home: Path,
+    registry: dict[str, Any], machine: dict[str, Any], *, source_home: Path,
 ) -> dict[str, object]:
+    """Expose machine facts as data; authored Markdown owns every instruction."""
     from package_layout import expand_registered_path
+
+    def normalized(record: dict[str, Any]) -> dict[str, Any]:
+        roots = record.get("roots")
+        vault = record.get("vault")
+        if not isinstance(roots, dict) or not isinstance(vault, dict):
+            raise AgentConfigurationError(f"machine {record.get('id')} has no normalized roots or Vault policy")
+        result = dict(record)
+        result["roots"] = {
+            "code": expand_registered_path(roots.get("code"), record.get("home")),
+            "vault": expand_registered_path(roots.get("vault"), record.get("home"), optional=not bool(vault.get("enabled"))),
+        }
+        result["access"] = selected_machine_access(record)
+        return result
 
     primary = machine_by_id(registry, str(registry.get("primary_machine_id") or ""))
-    provider, address = selected_machine_access(machine)
-    primary_provider, primary_address = selected_machine_access(primary)
-    service_url = (
-        f"http://{address}:<port>"
-        if address != "not configured"
-        else "a registry-provided reachable address"
-    )
-    roots = machine.get("roots")
+    peers = [normalized(peer) for peer in registry["machines"]
+             if isinstance(peer, dict) and peer.get("enabled") and peer.get("id") != machine.get("id")]
     vault = machine.get("vault")
-    if not isinstance(roots, dict) or not isinstance(vault, dict):
-        raise AgentConfigurationError(f"machine {machine.get('id')} has no normalized roots or Vault policy")
-    code_root = expand_registered_path(roots.get("code"), machine.get("home"))
-    vault_root = expand_registered_path(roots.get("vault"), machine.get("home"), optional=not bool(vault.get("enabled")))
-    machine_id = str(machine.get("id") or "")
-    values: dict[str, object] = {
-        "machine_id": machine_id,
-        "platform": machine.get("platform"),
-        "role": machine.get("role"),
-        "display_name": machine.get("display_name"),
-        "platform_name": "macOS" if machine.get("platform") == "macos" else "Linux",
-        "code_root": code_root,
-        "vault_root": vault_root or "not enrolled",
-        "vault_participation": vault.get("checkout_mode") if vault.get("enabled") else "disabled",
-        "vault_guidance": vault_guidance(registry, machine, vault_root),
-        "machine_access_provider": provider,
-        "mesh_address": address,
-        "service_url": service_url,
-        "primary_id": primary.get("id"),
-        "primary_display_name": primary.get("display_name"),
-        "primary_machine_access_provider": primary_provider,
-        "primary_mesh_address": primary_address,
-        "peers": peer_lines(registry, machine_id),
-        "access_guidance": access_guidance(machine, source_home, primary),
-        "primary_ssh_alias": primary.get("ssh_alias") or primary.get("id"),
-        "primary_loopback": "127.0.0.1",
-        "primary_port": "<primary-port>",
-        "worker_loopback": "127.0.0.1",
-        "worker_port": "<worker-port>",
-    }
-    return values
+    remote = vault.get("remote_access") if isinstance(vault, dict) else None
+    source_id = remote.get("source_machine_id") if isinstance(remote, dict) else None
+    vault_source = machine_by_id(registry, source_id) if isinstance(source_id, str) else None
+    return {"fleet": {
+        "machine": normalized(machine),
+        "primary": normalized(primary),
+        "peers": peers,
+        "vault_source": normalized(vault_source) if vault_source else None,
+        "development_services": registry.get("development_services"),
+        "runtime": {"novnc_url": recorded_novnc_url(source_home, machine)},
+    }}
 
 
 def render_global_agents(
-    agents_root: Path,
-    config: Path,
-    registry: dict[str, Any],
-    machine: dict[str, Any],
-    *,
-    source_home: Path,
+    agents_root: Path, config: Path, registry: dict[str, Any],
+    machine: dict[str, Any], *, source_home: Path,
 ) -> str:
-    from fleet_templates import FleetTemplateError, load_config, render_bundle
-    from skill_source_config import SkillSourceConfigError, validate_config
+    from fleet_templates import FleetTemplateError, render_file
 
-    bundle = agents_root / "edit/root-agents"
-    template_config_path = bundle / "fleet-templates/render.json"
-    previews_fragment = bundle / "fleet-templates/development-previews.md"
-    if not (bundle / "AGENTS.md").is_file() or not previews_fragment.is_file():
-        raise AgentConfigurationError(f"global agent configuration is incomplete under {bundle}")
-    values = machine_template_values(registry, machine, source_home=source_home)
-    values["development_previews"] = (
-        previews_fragment.read_text(encoding="utf-8").format_map(values).strip()
-        if has_enabled_peer(registry, str(machine.get("id") or ""))
-        else ""
-    )
-    skill_sources = config / "skills/skill-sources.json"
+    bundle = agents_root / "edit/agent-instructions"
+    source = bundle / "AGENT-INSTRUCTIONS.md"
+    context = machine_template_values(registry, machine, source_home=source_home)
+    variants = machine.get("template_variants")
+    if not isinstance(variants, list):
+        raise AgentConfigurationError(f"machine {machine.get('id')} has no template_variants")
     try:
-        skill_config = json.loads(skill_sources.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise AgentConfigurationError(f"invalid skill source configuration: {exc}") from exc
-    try:
-        validate_config(skill_config)
-    except SkillSourceConfigError as exc:
-        raise AgentConfigurationError(f"invalid skill source configuration: {exc}") from exc
-    try:
-        fragments_config = load_config(template_config_path)
+        rendered = render_file(bundle, source, context, variants)
     except FleetTemplateError as exc:
         raise AgentConfigurationError(str(exc)) from exc
-    raw_fragments = fragments_config.get("append_fragments", [])
-    if not isinstance(raw_fragments, list):
-        raise AgentConfigurationError("append_fragments must be a list")
-    if not all(isinstance(item, dict) for item in raw_fragments):
-        raise AgentConfigurationError("every instruction fragment must be an object")
-    skill_root = agents_root / "edit/skills"
-    allowed_roots = [
-        path.resolve()
-        for path in skill_root.iterdir()
-        if path.is_dir() and not path.is_symlink() and path.name.startswith("_")
-    ] if skill_root.is_dir() else []
-    selected: list[tuple[str, Path]] = []
-    seen: set[str] = set()
-    for raw in sorted(raw_fragments, key=lambda item: (int(item.get("order", 0)), str(item.get("id", "")))):
-        if not isinstance(raw.get("id"), str) or not isinstance(raw.get("path"), str):
-            raise AgentConfigurationError("every instruction fragment needs id and path")
-        fragment_id = f"skill:{raw['id']}"
-        if fragment_id in seen:
-            raise AgentConfigurationError(f"duplicate instruction fragment id: {fragment_id}")
-        candidate = (agents_root / "edit" / raw["path"]).resolve()
-        if not any(allowed == candidate or allowed in candidate.parents for allowed in allowed_roots):
-            raise AgentConfigurationError(f"instruction fragment is not Vault-authored: {raw['path']}")
-        if not candidate.is_file():
-            raise AgentConfigurationError(f"instruction fragment is missing: {raw['path']}")
-        seen.add(fragment_id)
-        selected.append((fragment_id, candidate))
-    try:
-        outputs = render_bundle(
-            bundle,
-            template_config_path,
-            values,
-            additional_fragments=selected,
-            managed_metadata=True,
-        )
-    except FleetTemplateError as exc:
-        raise AgentConfigurationError(str(exc)) from exc
-    agents_outputs = [item for item in outputs if item.target == "AGENTS.md"]
-    if len(agents_outputs) != 1:
-        raise AgentConfigurationError("root agent templates must render AGENTS.md exactly once")
-    return agents_outputs[0].content
+    return re.sub(r"\n{3,}", "\n\n", rendered).rstrip() + "\n\n<!-- fleet.managed inline -->\n"
 
 
 def render_agents(

@@ -31,7 +31,7 @@ After that approval, use `scripts/manage_worker_mac_sleep_service.py` for previe
 4. Keep the registry entry disabled until the selected role document's reboot acceptance passes.
 5. Use `$infra-i-sync-code-workspaces` during onboarding for Code repositories and primary-owned Codex and Claude configuration. Do not recreate that sync here.
 6. Use `$infra-i-manage-fleet-terminal-workspaces` for terminal packages, profiles, Warp, cmux, tmux, workmux, and terminal acceptance.
-7. Use `$infra-i-manage-claude-provider-routes` for every Claude provider launcher, installer, API-key route, CLIProxyAPI route, and provider acceptance. Do not keep launcher copies or provider SOPs here.
+7. Use `$code-i-use-claude-code-proxy-or-openrouter` for every Claude provider launcher, installer, API-key route, CLIProxyAPI route, and provider acceptance. Do not keep launcher copies or provider SOPs here.
 8. Use [SOPS Key Enrollment and Rotation](references/sops-key-enrollment-and-rotation.md) only when an owning repository requires shared SOPS access.
 9. On Linux workers, install user-approved optional daemons or watchdogs only through [Linux Worker Optional Daemons And Watchdogs](references/linux-worker-onboarding-and-acceptance.md#optional-daemons-and-watchdogs). Keep the registered set explicit, preview first, and verify the exact target after apply.
 

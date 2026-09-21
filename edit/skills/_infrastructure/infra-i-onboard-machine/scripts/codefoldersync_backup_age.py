@@ -20,7 +20,7 @@ from typing import Any
 
 SCHEMA_VERSION = 1
 CREDENTIAL_ID = "codefoldersync-backup-age"
-RECOVERY_MACHINES = frozenset({"mattbook", "wootbook"})
+RECOVERY_CONFIG = Path("skills/config/infra-i-onboard-machine/backup-recovery.json")
 IDENTITY_RELATIVE_PATH = Path(".config/ctx9/codefoldersync/backup-recovery.agekey")
 PURPOSE = "codefoldersync-backup-recovery-acceptance"
 SAFE_ID = re.compile(r"^[a-z0-9][a-z0-9._-]{0,127}$")
@@ -29,6 +29,32 @@ SAFE_RECIPIENT = re.compile(r"^age1[0-9a-z]{20,}$")
 
 class LifecycleError(RuntimeError):
     """A safe lifecycle precondition or acceptance invariant failed."""
+
+
+def load_recovery_machines(path: Path) -> frozenset[str]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise LifecycleError("backup recovery configuration is unavailable") from exc
+    names = data.get("recovery_machines") if isinstance(data, dict) and data.get("schema_version") == 1 else None
+    if not isinstance(names, list) or len(names) < 2 or not all(
+        isinstance(name, str) and SAFE_ID.fullmatch(name) for name in names
+    ) or len(names) != len(set(names)):
+        raise LifecycleError("configure at least two distinct recovery machine IDs")
+    return frozenset(names)
+
+
+def recovery_machines() -> frozenset[str]:
+    source_config = Path(__file__).resolve().parents[4] / "settings" / RECOVERY_CONFIG
+    if source_config.is_file():
+        return load_recovery_machines(source_config)
+    try:
+        result = subprocess.run(["fleet", "config", "path"], capture_output=True, text=True, check=False)
+    except OSError as exc:
+        raise LifecycleError("installed Fleet configuration is unavailable") from exc
+    if result.returncode != 0 or not result.stdout.strip():
+        raise LifecycleError("installed Fleet configuration is unavailable")
+    return load_recovery_machines(Path(result.stdout.strip()) / RECOVERY_CONFIG)
 
 
 def sha256_bytes(value: bytes) -> str:
@@ -48,8 +74,8 @@ def utc_now() -> str:
 
 
 def validate_machine_id(machine_id: str) -> str:
-    if machine_id not in RECOVERY_MACHINES:
-        expected = ", ".join(sorted(RECOVERY_MACHINES))
+    if machine_id not in recovery_machines():
+        expected = ", ".join(sorted(recovery_machines()))
         raise LifecycleError(f"recovery machine must be one of: {expected}")
     return machine_id
 
@@ -253,8 +279,8 @@ def fixture_preview(fixture_id: str, recipients: list[str], output: Path) -> dic
     if output.exists() or output.is_symlink():
         raise LifecycleError("fixture ciphertext output already exists")
     accepted = sorted({validate_recipient(value) for value in recipients})
-    if len(accepted) != len(RECOVERY_MACHINES):
-        raise LifecycleError("fixture requires two distinct recovery recipients")
+    if len(accepted) != len(recovery_machines()):
+        raise LifecycleError("fixture requires one distinct recipient per recovery machine")
     plaintext = fixture_plaintext(fixture_id)
     return {
         "schema_version": SCHEMA_VERSION,
@@ -318,8 +344,8 @@ def load_fixture_manifest(path: Path) -> dict[str, Any]:
         raise LifecycleError("fixture manifest policy mismatch")
     validate_fixture_id(str(value.get("fixture_id", "")))
     fingerprints = value.get("recipient_sha256")
-    if not isinstance(fingerprints, list) or len(fingerprints) != len(RECOVERY_MACHINES):
-        raise LifecycleError("fixture manifest must bind both recovery recipients")
+    if not isinstance(fingerprints, list) or len(fingerprints) != len(recovery_machines()):
+        raise LifecycleError("fixture manifest must bind every recovery recipient")
     if any(not isinstance(item, str) or not re.fullmatch(r"[0-9a-f]{64}", item) for item in fingerprints):
         raise LifecycleError("fixture manifest contains an invalid recipient fingerprint")
     for key in ("ciphertext_sha256", "plaintext_sha256"):
@@ -387,8 +413,8 @@ ACCEPTANCE_KEYS = frozenset(
 
 
 def validate_acceptance_reports(reports: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
-    if len(reports) != len(RECOVERY_MACHINES):
-        raise LifecycleError("exactly two recovery acceptance reports are required")
+    if len(reports) != len(recovery_machines()):
+        raise LifecycleError("one acceptance report per configured recovery machine is required")
     by_machine: dict[str, dict[str, Any]] = {}
     for report in reports:
         if set(report) != ACCEPTANCE_KEYS:
@@ -409,12 +435,12 @@ def validate_acceptance_reports(reports: list[dict[str, Any]]) -> dict[str, dict
         if report.get("recipient_sha256") != recipient_fingerprint(recipient):
             raise LifecycleError("acceptance report recipient fingerprint mismatch")
         by_machine[machine_id] = report
-    if set(by_machine) != RECOVERY_MACHINES:
-        raise LifecycleError("acceptance reports do not cover both recovery machines")
+    if set(by_machine) != recovery_machines():
+        raise LifecycleError("acceptance reports do not cover every recovery machine")
     shared_fields = ("fixture_id", "fixture_ciphertext_sha256", "fixture_plaintext_sha256")
     if any(len({report[field] for report in reports}) != 1 for field in shared_fields):
         raise LifecycleError("recovery machines did not verify the same fixture")
-    if len({report["recipient"] for report in reports}) != len(RECOVERY_MACHINES):
+    if len({report["recipient"] for report in reports}) != len(recovery_machines()):
         raise LifecycleError("recovery identities must have distinct public recipients")
     return by_machine
 
@@ -528,7 +554,7 @@ def build_parser() -> argparse.ArgumentParser:
     verify.add_argument("--fixture-manifest", type=Path, required=True)
     verify.add_argument("--report", type=Path)
 
-    accept = subcommands.add_parser("accept", help="Preview or record a matched two-machine acceptance")
+    accept = subcommands.add_parser("accept", help="Preview or record matched recovery-machine acceptance")
     accept.add_argument("--report", action="append", type=Path, required=True)
     accept.add_argument("--state-output", type=Path, required=True)
     accept.add_argument("--apply", action="store_true")
@@ -565,7 +591,7 @@ def main(argv: list[str] | None = None) -> int:
         summary = {
             "schema_version": SCHEMA_VERSION,
             "credential_id": CREDENTIAL_ID,
-            "machines": sorted(RECOVERY_MACHINES),
+            "machines": sorted(recovery_machines()),
             "fixture_id": reports[0]["fixture_id"],
             "status": "accepted" if args.apply else "ready-to-accept",
         }

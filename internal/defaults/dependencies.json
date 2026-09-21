@@ -1838,13 +1838,13 @@
           "macos": {
             "manager": "ctx9-component",
             "package": "secret-bindings",
-            "private_catalog_url": "https://gitlab.com/api/v4/projects/85404252/packages/generic/secret-bindings-machine/1.5.1/components.json",
+            "private_catalog_url": "https://gitlab.com/api/v4/projects/85404252/packages/generic/secret-bindings-machine/1.5.2/components.json",
             "credential_binding": "ctx9-gitlab-group-read"
           },
           "linux": {
             "manager": "ctx9-component",
             "package": "secret-bindings",
-            "private_catalog_url": "https://gitlab.com/api/v4/projects/85404252/packages/generic/secret-bindings-machine/1.5.1/components.json",
+            "private_catalog_url": "https://gitlab.com/api/v4/projects/85404252/packages/generic/secret-bindings-machine/1.5.2/components.json",
             "credential_binding": "ctx9-gitlab-group-read"
           }
         },
@@ -1854,7 +1854,7 @@
             "--version",
             "--json"
           ],
-          "exact": "1.5.1"
+          "exact": "1.5.2"
         }
       }
     },
@@ -2066,7 +2066,7 @@
       ],
       "eligibility": "capability-selected",
       "required_by": [
-        "infra-i-manage-claude-provider-routes"
+        "code-i-use-claude-code-proxy-or-openrouter"
       ],
       "lifecycle_doc": "dependencies/optional-developer-tools.md",
       "requires": [],

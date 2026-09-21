@@ -74,10 +74,12 @@ def validate_desired(value: dict[str, Any]) -> dict[str, Any]:
     retention = value.get("retention")
     if not isinstance(remote_name, str) or not SAFE_REMOTE.fullmatch(remote_name):
         raise BackupError("desired remote_name is unsafe")
-    if not isinstance(machines, list) or not machines or not all(
+    if not isinstance(machines, list) or not all(
         isinstance(machine, str) and SAFE_ID.fullmatch(machine) for machine in machines
     ):
         raise BackupError("desired allowed_machines is invalid")
+    if value["enabled"] and not machines:
+        raise BackupError("enabled backup needs at least one allowed machine")
     if len(set(machines)) != len(machines):
         raise BackupError("desired allowed_machines contains duplicates")
     if not isinstance(drive, dict) or drive.get("scope") != "drive.file":
@@ -100,6 +102,8 @@ def validate_desired(value: dict[str, Any]) -> dict[str, Any]:
 def desired_missing(desired: dict[str, Any]) -> list[str]:
     drive = desired["google_drive"]
     missing = [] if desired["enabled"] else ["enabled"]
+    if not desired["allowed_machines"]:
+        missing.append("allowed_machines")
     missing.extend(
         f"google_drive.{field}"
         for field in ("oauth_client_id", "shared_drive_id", "root_folder_id")

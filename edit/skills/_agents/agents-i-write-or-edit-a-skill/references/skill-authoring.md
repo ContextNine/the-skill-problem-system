@@ -26,6 +26,8 @@ Treat `SKILL.md` as the entry point for prerequisites, durable safety rules, rou
   duplicated elsewhere. This is because information like this will inevitably change, and never ever do we want to have conflicting or duplicate information. When it makes sense, store user-editable configuration such as file paths under `edit/settings/` as explained below.
 - Always suggest changes to existing skills when you notice they conflict with these rules.
 
+Design first-party skills to be shareable by default. A primary Mac with optional additional Mac or Linux machines is a safe assumption for fleet skills. A particular username, machine ID or count, path, domain, account, repository, or provider ID is not. Resolve those facts from the installed registry or per-skill settings, or ask the user. Keep examples and test fixtures neutral. Deliberately private sources and explicit public-export exclusions are the exceptions.
+
 Use each file for one job:
 
 - `SKILL.md`: discovery, routing, invariants, and the quick execution contract.
@@ -198,4 +200,4 @@ fleet sync
 
 Sync validates sources, materializes overlays and snapshots, rebuilds the symlink-only catalog, and reconciles fleet discovery. Existing tasks cache their skill catalog, so start a new task after changing skills.
 
-Public Vault export includes canonical Vault and GH sources when licensing permits. It excludes local-checkout links and generated overlays/snapshots.
+The Skill Problem System export includes canonical Vault and licensed GH sources. It excludes local-checkout links and generated overlays/snapshots. The separate public Vault includes only its repo-local `vault-i` skill.

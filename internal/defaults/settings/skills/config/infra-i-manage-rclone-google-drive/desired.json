@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "enabled": false,
+  "remote_name": "code_backups",
+  "allowed_machines": [],
+  "google_drive": {
+    "oauth_client_id": null,
+    "scope": "drive.file",
+    "shared_drive_id": null,
+    "root_folder_id": null
+  },
+  "paths": {
+    "backup_prefix": "Code Backups",
+    "acceptance_prefix": ".backup-acceptance"
+  },
+  "retention": {
+    "mode": "explicit-retirement-only",
+    "automatic_deletion": false
+  }
+}

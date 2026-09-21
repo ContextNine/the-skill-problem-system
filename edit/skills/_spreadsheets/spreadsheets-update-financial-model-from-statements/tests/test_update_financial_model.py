@@ -173,7 +173,7 @@ class FinancialPipelineTests(unittest.TestCase):
             self.categories, self.aliases, self.rules, {},
         )
         debit = pipeline.classify(
-            self.tx(entity="Business", description_raw="Payment to Matthew Derman", description_normalized="payment to matthew derman", principal_amount="-1000", direction="debit", legacy_category=""),
+            self.tx(entity="Business", description_raw="Payment to Example Person", description_normalized="payment to example person", principal_amount="-1000", direction="debit", legacy_category=""),
             self.categories, self.aliases, self.rules, {},
         )
         self.assertEqual(credit["category_id"], "business.receipt.capital_contribution")

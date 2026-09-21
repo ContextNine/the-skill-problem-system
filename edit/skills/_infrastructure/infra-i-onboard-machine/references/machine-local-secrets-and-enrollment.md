@@ -45,7 +45,7 @@ Separate files would make lifecycle changes and cross-class audits harder and cr
 | ctx9 GitLab reads | `setup-fleet-read-credential.sh` in `ctx9/gitlab` | Exact group scopes, native custody, package read, and sanitized lock record pass |
 | Secret Bindings identities | Secret Bindings fleet installer | Unique channel, Age, and unlock identities plus broker acceptance pass |
 | Langfuse coding-agent API | `$infra-configure-langfuse-coding-agents` | Plugins remain disabled without credentials; after native enrollment, one test turn and trace lookup pass |
-| Claude provider API keys | `$infra-i-manage-claude-provider-routes` | Native credential status plus one bounded live route and tool-use check pass |
+| Claude provider API keys | `$code-i-use-claude-code-proxy-or-openrouter` | Native credential status plus one bounded live route and tool-use check pass |
 | Rclone Google Drive OAuth | `$infra-i-manage-rclone-google-drive` target-local configure flow | Exact `drive.file` policy, encrypted config, live dedicated-root read, and random sentinel round trip pass |
 | Rclone config unlock | Target-local generation into Keychain or Secret Service | `rclone config encryption check` passes only through the absolute password command |
 | Google OAuth desktop-client secret | Reviewed guarded enrollment into target-native custody | Desired client ID matches, no client secret persists in Rclone config, and target-local OAuth passes |
@@ -58,13 +58,13 @@ The SOPS identity is an explicit guarded portable fleet authority retained for r
 
 Selected backup machines are not accepted merely because Rclone is installed. Preview and approve the direct dependency through `$infra-i-update-fleet-dependencies`, then enroll the two native Rclone records through this onboarding workflow. Generate the config unlock independently on the target. Enroll the reviewed OAuth desktop-client secret as guarded application authority without writing it to a file, shell profile, process argument, or Rclone configuration.
 
-Each machine must then complete OAuth locally through `$infra-i-manage-rclone-google-drive`. Reboot acceptance re-runs encrypted configuration verification and a read-only dedicated-root check; it does not create another sentinel or upload a real archive. Revocation disables uploads, proves retained-backup recovery, revokes that target's OAuth grant, and removes its native records without deleting Drive snapshots. Age recovery identities are independently generated only on Mattbook and Wootbook; all three sources receive public recipients only.
+Each machine must then complete OAuth locally through `$infra-i-manage-rclone-google-drive`. Reboot acceptance re-runs encrypted configuration verification and a read-only dedicated-root check; it does not create another sentinel or upload a real archive. Revocation disables uploads, proves retained-backup recovery, revokes that target's OAuth grant, and removes its native records without deleting Drive snapshots. The configured recovery machines generate independent age identities; backup sources receive only their public recipients.
 
 ### ctx9 GitLab read credential
 
 Primary machine's broader GitLab management token is a separate primary-only bootstrap authority in Keychain service `ctx9-gitlab-management`, account `ctx9`. It may mint, inventory, rotate, and revoke deploy tokens, so it is never copied to workers or reused as a package credential. The GitLab repository's migration command verifies that authority, round-trips it through Keychain, and atomically removes its old ignored `.env` assignment before `load-env.sh` begins resolving native custody.
 
-Each enabled machine receives one independently revocable group deploy token named `ctx9-fleet-<machine-id>` with exactly `read_repository`, `read_registry`, and `read_package_registry`. That single credential covers every project under the active `ctx9` group, including `ctx9/web` packages. It does not grant GitLab API access or write access, and it does not cover the older `outsourcethink` or `impression-group1` groups.
+Where private GitLab packages are configured, each eligible machine receives its own revocable group-read credential with the scopes declared by the owning repository. Resolve the group, projects, and credential name from installed configuration. Do not assume a particular organization or grant write or API access merely to read packages.
 
 The primary runs the GitLab automation controller with the Secret Bindings helper source and a state-output path. Preview first even though apply is the controller default:
 

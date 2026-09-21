@@ -6,7 +6,7 @@ The transfer unit is a flat directory containing `witness.json` and one or more 
 {
   "schema_version": 1,
   "snapshot_id": "snapshot-safe-id",
-  "machine_id": "mattbook",
+  "machine_id": "primary-mac",
   "artifacts": [
     {
       "name": "code.tar.zst.age",
@@ -17,7 +17,7 @@ The transfer unit is a flat directory containing `witness.json` and one or more 
 }
 ```
 
-The controller rejects nested entries, symlinks, non-`.age` artifacts, unbound files, size mismatches, and digest mismatches before contacting Drive. The capture workflow must encrypt both the archive and any path-bearing semantic manifest to the Mattbook and Wootbook recipients accepted through CodeFolderSync Backup Age Recovery before placing them in this bundle. `witness.json` may contain only ciphertext names, sizes, digests, machine ID, and snapshot ID.
+The controller rejects nested entries, symlinks, non-`.age` artifacts, unbound files, size mismatches, and digest mismatches before contacting Drive. The capture workflow must encrypt both the archive and any path-bearing semantic manifest to the recipients configured and accepted through CodeFolderSync Backup Age Recovery before placing them in this bundle. `witness.json` may contain only ciphertext names, sizes, digests, machine ID, and snapshot ID.
 
 `backup` copies to `<backup-prefix>/snapshots/<snapshot-id>/<machine-id>` with `--immutable`, then runs `rclone check --download --one-way`. It compares only aggregate remote counts and bytes in its report. It never syncs, overwrites, or deletes a snapshot.
 

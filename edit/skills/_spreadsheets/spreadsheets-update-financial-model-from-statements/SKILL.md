@@ -39,7 +39,7 @@ Witan save defaults: five table rows per phase, staged filename rotation every s
 ## Workflow
 
 1. Read `_system/agents/edit/settings/skills/config/spreadsheets-update-financial-model-from-statements/README.md`; load paths and cutoff from `private/workflow.json`.
-2. Read `personal/_finance/AGENTS.md` and `outsource-think/_finance/AGENTS.md`. Active inputs and outputs must stay in those Vault workspaces; never recreate former Drive finance folders.
+2. Read the selected context's `_finance/AGENTS.md`. Active inputs and outputs must stay in the registered Vault finance workspace; do not infer a former external Drive folder.
 3. Hash source CSV/PDF files. Do not modify source folders.
 4. For known CSV schemas, validate and normalize directly.
 5. For new PDFs without validated output, run `documents-reliable-pdf-data-extraction` in isolated job folder under data root. Unknown layouts block workbook update until versioned adapter passes validation.

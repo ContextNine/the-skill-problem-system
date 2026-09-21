@@ -43,7 +43,7 @@ Preview first. The destination ID must already exist in the destination database
 
 ### Desktop SSH Alias Re-key
 
-Use `scripts/codex_alias_rekey.py` when old and new SSH aliases reach the same physical remote Codex home. It changes Mattbook desktop project metadata only; it does not copy transcripts.
+Use `scripts/codex_alias_rekey.py` when old and new SSH aliases reach the same physical remote Codex home. It changes the requesting desktop's project metadata only; it does not copy transcripts.
 
 ```bash
 python3 scripts/codex_alias_rekey.py \

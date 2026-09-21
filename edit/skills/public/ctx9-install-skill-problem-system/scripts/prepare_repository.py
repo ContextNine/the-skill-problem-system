@@ -10,8 +10,8 @@ from pathlib import Path
 
 
 EXPECTED_ORIGINS = {
-    "https://github.com/MDerman/the-skill-problem-system.git",
-    "git@github.com:MDerman/the-skill-problem-system.git",
+    "https://github.com/ContextNine/the-skill-problem-system.git",
+    "git@github.com:ContextNine/the-skill-problem-system.git",
 }
 
 

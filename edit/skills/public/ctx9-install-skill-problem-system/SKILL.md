@@ -13,7 +13,7 @@ Read [Install](references/install.md) before changing installation behavior, [Co
 ## Workflow
 
 1. Check `fleet source path`. If it identifies an existing source, verify that installation and reuse it. If no source is installed, ask whether its editable source should be standalone or inside an existing Context Vault.
-2. For a standalone source, ask for an empty destination folder. Reject a non-empty or Git-managed destination. Clone `https://github.com/MDerman/the-skill-problem-system.git` there.
+2. For a standalone source, ask for an empty destination folder. Reject a non-empty or Git-managed destination. Clone `https://github.com/ContextNine/the-skill-problem-system.git` there.
 3. Record the installed release tag and commit. For standalone placement, use the bundled guard to detach only the verified public clone and initialize a fresh repository on `master`:
 
 ```bash

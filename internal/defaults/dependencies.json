@@ -676,7 +676,7 @@
             "manager": "github-python-installer",
             "version": "0.3.17",
             "archive": {
-              "url": "https://github.com/MDerman/ctx9/releases/download/v0.3.17/ctx9-0.3.17.tar.gz",
+              "url": "https://github.com/ContextNine/ctx9/releases/download/v0.3.17/ctx9-0.3.17.tar.gz",
               "sha256": "6861b933e5d4e776ac626e277f4cd8d248853d9cb43736d557e09c7d8097e247"
             },
             "archive_root": "ctx9-0.3.17",
@@ -687,7 +687,7 @@
             "manager": "github-python-installer",
             "version": "0.3.17",
             "archive": {
-              "url": "https://github.com/MDerman/ctx9/releases/download/v0.3.17/ctx9-0.3.17.tar.gz",
+              "url": "https://github.com/ContextNine/ctx9/releases/download/v0.3.17/ctx9-0.3.17.tar.gz",
               "sha256": "6861b933e5d4e776ac626e277f4cd8d248853d9cb43736d557e09c7d8097e247"
             },
             "archive_root": "ctx9-0.3.17",

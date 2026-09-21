@@ -5,7 +5,7 @@ The Skill Problem System is a Git-backed home for organizing, configuring, insta
 ## Install with your agent
 
 ```bash
-gh skill install MDerman/the-skill-problem-system skills/ctx9-install-skill-problem-system --scope user
+gh skill install ContextNine/the-skill-problem-system skills/ctx9-install-skill-problem-system --scope user
 ```
 
 Then tell your agent:

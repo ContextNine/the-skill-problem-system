@@ -2,7 +2,7 @@
 
 Dependency IDs: `ctx9-launcher`, `fleet-cli`, `vault-cli`, `codex-repo-sync`, `codefoldersync`, and `publisher-cli`.
 
-`ctx9-launcher` is installed from the exact public `MDerman/ctx9` GitHub release declared in `../dependencies.json`. The fleet worker downloads the archive, verifies its pinned SHA-256, rejects unsafe archive entries, and invokes the release-owned Python installer. The accepted command is `~/.local/bin/ctx9`. Verification uses the declared version as a minimum so a newer launcher catalog can remain installed without creating a release cycle between the launcher and its Fleet component.
+`ctx9-launcher` is installed from the exact public `ContextNine/ctx9` GitHub release declared in `../dependencies.json`. The fleet worker downloads the archive, verifies its pinned SHA-256, rejects unsafe archive entries, and invokes the release-owned Python installer. The accepted command is `~/.local/bin/ctx9`. Verification uses the declared version as a minimum so a newer launcher catalog can remain installed without creating a release cycle between the launcher and its Fleet component.
 
 Components remain independently released. The launcher catalog owns their exact artifact URL, integrity digest, supported platforms, installer, provided commands or capabilities, and doctor contract. Fleet recipes use `ctx9 install <component>` and `ctx9 doctor <component>` instead of duplicating a component's release logic or depending on a workspace checkout. Private component recipes additionally declare one exact GitLab generic-package catalog URL and the `ctx9-gitlab-group-read` binding. The dependency worker invokes those recipes through `ctx9 auth`, while the public launcher continues to validate the private overlay, exact host artifact, and checksum.
 

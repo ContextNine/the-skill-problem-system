@@ -18,6 +18,8 @@ python3 scripts/sync_code_workspaces.py refresh --target linux-worker
 python3 scripts/sync_code_workspaces.py doctor --target linux-worker
 python3 scripts/sync_code_workspaces.py migrate-github-remotes --target linux-worker
 python3 scripts/sync_code_workspaces.py migrate-github-remotes --target linux-worker --apply
+python3 scripts/sync_code_workspaces.py transfer-github-owner --old-owner OLD --new-owner NEW --entry repository --target linux-worker
+python3 scripts/sync_code_workspaces.py transfer-github-owner --old-owner OLD --new-owner NEW --entry repository --target linux-worker --apply
 python3 scripts/sync_agent_configuration.py --target linux-worker --verify
 tail -n 20 "$(fleet config get fleet.machines.MACHINE_ID.roots.code)/.workspace-sync/history.jsonl"
 ```
@@ -28,6 +30,7 @@ tail -n 20 "$(fleet config get fleet.machines.MACHINE_ID.roots.code)/.workspace-
 - `refresh`: sync agent configuration, fetch matching repositories, fast-forward only clean non-ahead branches, then reconcile plugins.
 - `doctor`: verify agent configuration, Git and Codex readiness, repository state, plugin/marketplace state, `.codex`/`AGENTS.md`, and project paths without mutation.
 - `migrate-github-remotes`: require canonical SSH URLs in the catalog, preflight the source and every selected target, then change only same-identity remote transport. Apply verifies each write, restores the old URL on failure, and records source/target history.
+- `transfer-github-owner`: run only after an authorized GitHub owner transfer. It resolves the old and new slugs through `gh`, requires the same immutable repository ID, preflights every selected machine, updates canonical SSH remotes, and writes the new owner into exact catalog entries after all selected targets succeed.
 
 Without `--target`, target every other enabled machine. Without `--profile`, use the catalog's default profile. Repeat `--entry`, `--path`, or `--target` as needed. During reviewed onboarding, `--provision-disabled` requires exactly one explicit disabled target and refuses enabled targets.
 
@@ -42,6 +45,7 @@ Apply uses a fleet-wide preview and authentication phase before any target mutat
 - Credential-bearing or local remotes, path escapes, ambiguous matches, nested repositories, linked worktrees, and destination conflicts stop unchanged.
 - Existing dirty, ahead, divergent, detached, remote-mismatched, non-Git, or symlink-escaped targets remain unchanged.
 - HTTPS and SSH URLs for the same repository are transport drift, not identity drift. Normal reconciliation reports and maintains desired transport; repo-specific `core.sshCommand` blocks automatic migration for manual review.
+- Owner transfer is the only supported repository-identity rewrite. The old and new GitHub slugs must resolve to the same numeric repository ID; a different ID or a non-GitHub remote stops unchanged.
 - Partial clones use `--filter=blob:none`; Git LFS smudging stays disabled and submodules stay uninitialized.
 
 Applied `bootstrap`, `reconcile`, and `refresh` runs record correlated source and target history plus machine-local fleet plugin ownership under `<resolved Code root>/.workspace-sync/`. Preview and doctor remain read-only. After first setup, save each reported repository root as a local or SSH project in ChatGPT when cross-host task handoff is required.

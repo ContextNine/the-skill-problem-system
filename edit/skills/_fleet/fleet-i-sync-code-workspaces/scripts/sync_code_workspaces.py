@@ -75,6 +75,84 @@ def error_text(process: subprocess.CompletedProcess[str]) -> str:
     return value.splitlines()[-1][:500] if value else "command failed"
 
 
+def github_repository(owner: str, name: str) -> dict[str, object]:
+    """Resolve a GitHub repository through gh without handling credentials here."""
+    result = run(["gh", "api", f"repos/{owner}/{name}"])
+    if result.returncode != 0:
+        raise RuntimeError(f"cannot resolve GitHub repository {owner}/{name}: {error_text(result)}")
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"GitHub returned invalid repository metadata for {owner}/{name}") from exc
+    if not isinstance(payload, dict) or not isinstance(payload.get("id"), int):
+        raise RuntimeError(f"GitHub repository metadata is incomplete for {owner}/{name}")
+    return payload
+
+
+def prepare_github_owner_transfer(
+    repositories: list[dict[str, object]], old_owner: str, new_owner: str
+) -> list[dict[str, object]]:
+    """Attach a verified owner-transfer destination while retaining the current identity for inspection."""
+    owner_pattern = r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})"
+    if not re.fullmatch(owner_pattern, old_owner) or not re.fullmatch(owner_pattern, new_owner):
+        raise RuntimeError("GitHub owners must be ordinary account or organization names")
+    if old_owner.lower() == new_owner.lower():
+        raise RuntimeError("GitHub owner transfer requires different old and new owners")
+    prepared: list[dict[str, object]] = []
+    for repository in repositories:
+        identity = str(repository["remote_identity"])
+        match = re.fullmatch(r"github\.com/([^/]+)/([^/]+)", identity, flags=re.IGNORECASE)
+        if not match or match.group(1).lower() != old_owner.lower():
+            raise RuntimeError(
+                f"selected repository {repository['relative_path']} is not owned by github.com/{old_owner}"
+            )
+        name = match.group(2)
+        previous = github_repository(old_owner, name)
+        current = github_repository(new_owner, name)
+        if previous["id"] != current["id"]:
+            raise RuntimeError(
+                f"GitHub repository ID changed for {old_owner}/{name} -> {new_owner}/{name}"
+            )
+        if str(current.get("full_name", "")).lower() != f"{new_owner}/{name}".lower():
+            raise RuntimeError(f"GitHub canonical owner is not {new_owner} for repository {name}")
+        desired_url = f"git@github.com:{new_owner}/{name}.git"
+        prepared.append(
+            {
+                **repository,
+                "remote_url": desired_url,
+                "remote_display": desired_url,
+                "transfer_target_identity": f"github.com/{new_owner}/{name}",
+                "github_repository_id": previous["id"],
+            }
+        )
+    return prepared
+
+
+def adopt_github_owner_transfer(
+    catalog_path: Path,
+    entry_ids: set[str],
+    old_owner: str,
+    new_owner: str,
+) -> list[dict[str, str]]:
+    """Persist verified GitHub owner changes to exact catalog entries."""
+    catalog = load_catalog(catalog_path)
+    entries = catalog["entries"]
+    changes: list[dict[str, str]] = []
+    for entry_id in sorted(entry_ids):
+        entry = entries.get(entry_id)
+        if not isinstance(entry, dict) or not isinstance(entry.get("remote"), str):
+            raise RuntimeError(f"catalog entry {entry_id!r} has no explicit remote to transfer")
+        old_url = str(entry["remote"])
+        expected_prefix = f"git@github.com:{old_owner}/"
+        if not old_url.lower().startswith(expected_prefix.lower()) or not old_url.endswith(".git"):
+            raise RuntimeError(f"catalog entry {entry_id!r} is not owned by {old_owner}")
+        new_url = f"git@github.com:{new_owner}/{old_url[len(expected_prefix):]}"
+        entry["remote"] = new_url
+        changes.append({"entry": entry_id, "from": old_url, "to": new_url})
+    atomic_write_json(catalog_path, catalog, sort_keys=False)
+    return changes
+
+
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
@@ -1005,6 +1083,14 @@ def parse_args() -> argparse.Namespace:
     )
     add_selection_arguments(migrate)
     add_target_arguments(migrate, mutable=True)
+    transfer = subparsers.add_parser(
+        "transfer-github-owner",
+        help="rewrite remotes after a GitHub owner transfer verified by immutable repository ID",
+    )
+    add_selection_arguments(transfer)
+    add_target_arguments(transfer, mutable=True)
+    transfer.add_argument("--old-owner", required=True, help="current owner recorded in the workspace catalog")
+    transfer.add_argument("--new-owner", required=True, help="new canonical GitHub organization or account")
     return parser.parse_args()
 
 
@@ -1028,6 +1114,8 @@ def main() -> int:
         if not repositories:
             raise RuntimeError("no repositories with usable canonical remotes were discovered")
         warnings = source_warnings(repositories)
+        if args.command == "transfer-github-owner":
+            repositories = prepare_github_owner_transfer(repositories, args.old_owner, args.new_owner)
         if args.command == "migrate-github-remotes":
             invalid_transport = [
                 str(repo["relative_path"])
@@ -1092,7 +1180,7 @@ def main() -> int:
         primary_config_source = source_id == machine_registry["primary_machine_id"]
         sync_personal_configuration = (
             primary_config_source
-            and args.command != "migrate-github-remotes"
+            and args.command not in {"migrate-github-remotes", "transfer-github-owner"}
             and not args.skip_personal_configuration
         )
         agent_bundle = (
@@ -1172,12 +1260,14 @@ def main() -> int:
                 return 1
         run_id = new_run_id() if apply else None
         selections = [(machine, repositories_for_machine(repositories, str(machine["id"]))) for machine in targets]
-        if args.command == "migrate-github-remotes":
+        if args.command in {"migrate-github-remotes", "transfer-github-owner"}:
             source_preflight = workspace_worker.preflight_repositories(repositories)
             source_remote_results = [
-                workspace_worker.reconcile_remote(
-                    source_root / str(repository["relative_path"]), repository, False
-                )
+                (
+                    workspace_worker.reconcile_github_owner_transfer
+                    if args.command == "transfer-github-owner"
+                    else workspace_worker.reconcile_remote
+                )(source_root / str(repository["relative_path"]), repository, False)
                 for repository in repositories
             ]
             report["source_remote_preflight"] = source_preflight
@@ -1270,11 +1360,13 @@ def main() -> int:
                     print_target_report(report)
                 return 1 if preflight_fatal else 2
 
-        if apply and args.command == "migrate-github-remotes":
+        if apply and args.command in {"migrate-github-remotes", "transfer-github-owner"}:
             report["source_remote_results"] = [
-                workspace_worker.reconcile_remote(
-                    source_root / str(repository["relative_path"]), repository, True
-                )
+                (
+                    workspace_worker.reconcile_github_owner_transfer
+                    if args.command == "transfer-github-owner"
+                    else workspace_worker.reconcile_remote
+                )(source_root / str(repository["relative_path"]), repository, True)
                 for repository in repositories
             ]
             if any(
@@ -1420,6 +1512,13 @@ def main() -> int:
         report["mode"] = "apply" if apply else "preview"
         report["targets"] = target_reports
         all_targets_applied = all(target.get("ok") and target.get("applied") for target in target_reports)
+        if apply and args.command == "transfer-github-owner" and all_targets_applied:
+            report["catalog_owner_changes"] = adopt_github_owner_transfer(
+                catalog_path.expanduser().resolve(),
+                {str(repository["entry_id"]) for repository in repositories},
+                args.old_owner,
+                args.new_owner,
+            )
         if apply and run_id and all_targets_applied:
             try:
                 report["source_history"] = record_source_run(

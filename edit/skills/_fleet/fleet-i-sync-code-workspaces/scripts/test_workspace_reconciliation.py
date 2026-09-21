@@ -101,7 +101,7 @@ class WorkspaceReconciliationTests(unittest.TestCase):
             self.assertEqual(controller.main(), 0)
 
         load_machines.assert_called_once_with(
-            self.root / "_system/agents/edit/settings/fleet/machines.json"
+            (self.root / "_system/agents/edit/settings/fleet/machines.json").resolve()
         )
 
     def test_explicit_discovery_paths_are_normalized_relative_to_the_code_root(self) -> None:
@@ -431,6 +431,69 @@ class WorkspaceReconciliationTests(unittest.TestCase):
         self.assertEqual(result["status"], "error")
         self.assertTrue(result["rolled_back"])
         self.assertEqual(worker.configured_remote_url(destination, "origin"), self.remote_url)
+
+    def test_github_owner_transfer_requires_and_preserves_repository_id(self) -> None:
+        repository = {
+            **self.source("repository"),
+            "remote_identity": "github.com/OldOwner/repository",
+            "remote_url": "git@github.com:OldOwner/repository.git",
+        }
+        same_repository = {
+            "id": 123,
+            "full_name": "NewOwner/repository",
+        }
+        with mock.patch.object(
+            controller,
+            "github_repository",
+            side_effect=[{"id": 123, "full_name": "NewOwner/repository"}, same_repository],
+        ):
+            prepared = controller.prepare_github_owner_transfer(
+                [repository], "OldOwner", "NewOwner"
+            )
+        self.assertEqual(prepared[0]["github_repository_id"], 123)
+        self.assertEqual(prepared[0]["remote_url"], "git@github.com:NewOwner/repository.git")
+
+        with (
+            mock.patch.object(
+                controller,
+                "github_repository",
+                side_effect=[
+                    {"id": 123, "full_name": "NewOwner/repository"},
+                    {"id": 456, "full_name": "NewOwner/repository"},
+                ],
+            ),
+            self.assertRaisesRegex(RuntimeError, "repository ID changed"),
+        ):
+            controller.prepare_github_owner_transfer([repository], "OldOwner", "NewOwner")
+
+    def test_github_owner_transfer_preview_apply_and_idempotency(self) -> None:
+        destination = self.clone("repository")
+        old_url = "git@github.com:OldOwner/repository.git"
+        new_url = "git@github.com:NewOwner/repository.git"
+        run("git", "-C", str(destination), "remote", "set-url", "origin", old_url)
+        source = {
+            **self.source("repository"),
+            "remote_identity": "github.com/OldOwner/repository",
+            "remote_url": new_url,
+            "transfer_target_identity": "github.com/NewOwner/repository",
+            "github_repository_id": 123,
+        }
+        preview = worker.reconcile_github_owner_transfer(destination, source, apply=False)
+        self.assertEqual(preview["status"], "planned-owner-transfer")
+
+        real_run = worker.run
+
+        def reachable(command, **kwargs):
+            if command[:2] == ["git", "ls-remote"]:
+                return subprocess.CompletedProcess(command, 0, "abc\tHEAD\n", "")
+            return real_run(command, **kwargs)
+
+        with mock.patch.object(worker, "run", side_effect=reachable):
+            applied = worker.reconcile_github_owner_transfer(destination, source, apply=True)
+            second = worker.reconcile_github_owner_transfer(destination, source, apply=True)
+        self.assertEqual(applied["status"], "owner-updated")
+        self.assertEqual(second["status"], "owner-current")
+        self.assertEqual(worker.configured_remote_url(destination, "origin"), new_url)
 
     def test_failed_apply_preflight_creates_no_target_state(self) -> None:
         absent_code_root = self.root / "new-code-root"

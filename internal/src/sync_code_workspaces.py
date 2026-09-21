@@ -130,7 +130,7 @@ def prepare_github_owner_transfer(
 
 def adopt_github_owner_transfer(
     catalog_path: Path,
-    entry_ids: set[str],
+    transferred_remotes: dict[str, str],
     old_owner: str,
     new_owner: str,
 ) -> list[dict[str, str]]:
@@ -138,17 +138,22 @@ def adopt_github_owner_transfer(
     catalog = load_catalog(catalog_path)
     entries = catalog["entries"]
     changes: list[dict[str, str]] = []
-    for entry_id in sorted(entry_ids):
+    for entry_id, verified_new_url in sorted(transferred_remotes.items()):
         entry = entries.get(entry_id)
-        if not isinstance(entry, dict) or not isinstance(entry.get("remote"), str):
-            raise RuntimeError(f"catalog entry {entry_id!r} has no explicit remote to transfer")
-        old_url = str(entry["remote"])
+        if not isinstance(entry, dict):
+            raise RuntimeError(f"catalog entry {entry_id!r} is missing")
+        configured = entry.get("remote")
+        old_url = str(configured) if isinstance(configured, str) else ""
         expected_prefix = f"git@github.com:{old_owner}/"
-        if not old_url.lower().startswith(expected_prefix.lower()) or not old_url.endswith(".git"):
+        if old_url and (
+            not old_url.lower().startswith(expected_prefix.lower()) or not old_url.endswith(".git")
+        ):
             raise RuntimeError(f"catalog entry {entry_id!r} is not owned by {old_owner}")
-        new_url = f"git@github.com:{new_owner}/{old_url[len(expected_prefix):]}"
+        new_url = verified_new_url
+        if not new_url.lower().startswith(f"git@github.com:{new_owner}/".lower()) or not new_url.endswith(".git"):
+            raise RuntimeError(f"catalog entry {entry_id!r} has an invalid verified destination")
         entry["remote"] = new_url
-        changes.append({"entry": entry_id, "from": old_url, "to": new_url})
+        changes.append({"entry": entry_id, "from": old_url or "derived-from-checkout", "to": new_url})
     atomic_write_json(catalog_path, catalog, sort_keys=False)
     return changes
 
@@ -1262,13 +1267,14 @@ def main() -> int:
         selections = [(machine, repositories_for_machine(repositories, str(machine["id"]))) for machine in targets]
         if args.command in {"migrate-github-remotes", "transfer-github-owner"}:
             source_preflight = workspace_worker.preflight_repositories(repositories)
+            source_repositories = [repository for repository in repositories if repository.get("source_present")]
             source_remote_results = [
                 (
                     workspace_worker.reconcile_github_owner_transfer
                     if args.command == "transfer-github-owner"
                     else workspace_worker.reconcile_remote
                 )(source_root / str(repository["relative_path"]), repository, False)
-                for repository in repositories
+                for repository in source_repositories
             ]
             report["source_remote_preflight"] = source_preflight
             report["source_remote_results"] = source_remote_results
@@ -1361,13 +1367,14 @@ def main() -> int:
                 return 1 if preflight_fatal else 2
 
         if apply and args.command in {"migrate-github-remotes", "transfer-github-owner"}:
+            source_repositories = [repository for repository in repositories if repository.get("source_present")]
             report["source_remote_results"] = [
                 (
                     workspace_worker.reconcile_github_owner_transfer
                     if args.command == "transfer-github-owner"
                     else workspace_worker.reconcile_remote
                 )(source_root / str(repository["relative_path"]), repository, True)
-                for repository in repositories
+                for repository in source_repositories
             ]
             if any(
                 result.get("status") in BLOCKING_STATUSES
@@ -1515,7 +1522,10 @@ def main() -> int:
         if apply and args.command == "transfer-github-owner" and all_targets_applied:
             report["catalog_owner_changes"] = adopt_github_owner_transfer(
                 catalog_path.expanduser().resolve(),
-                {str(repository["entry_id"]) for repository in repositories},
+                {
+                    str(repository["entry_id"]): str(repository["remote_url"])
+                    for repository in repositories
+                },
                 args.old_owner,
                 args.new_owner,
             )

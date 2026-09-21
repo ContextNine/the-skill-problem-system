@@ -294,8 +294,11 @@ def record_source_run(
 
 
 def vault_root() -> Path:
-    resolved = run(["vault", "root"])
-    if resolved.returncode == 0 and output(resolved):
+    try:
+        resolved = run(["vault", "root"])
+    except FileNotFoundError:
+        resolved = None
+    if resolved is not None and resolved.returncode == 0 and output(resolved):
         return Path(output(resolved)).resolve()
     fallback = run(["git", "rev-parse", "--show-toplevel"])
     if fallback.returncode == 0 and output(fallback):

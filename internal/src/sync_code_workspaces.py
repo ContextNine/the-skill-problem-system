@@ -92,7 +92,10 @@ def github_repository(owner: str, name: str, *, missing_ok: bool = False) -> dic
 
 
 def prepare_github_owner_transfer(
-    repositories: list[dict[str, object]], old_owner: str, new_owner: str
+    repositories: list[dict[str, object]],
+    old_owner: str,
+    new_owner: str,
+    evidence: dict[str, dict[str, object]] | None = None,
 ) -> list[dict[str, object]]:
     """Attach a verified owner-transfer destination while retaining the current identity for inspection."""
     owner_pattern = r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})"
@@ -109,20 +112,31 @@ def prepare_github_owner_transfer(
                 f"selected repository {repository['relative_path']} is not owned by github.com/{old_owner}"
             )
         name = match.group(2)
-        previous = github_repository(old_owner, name, missing_ok=True)
-        current = github_repository(new_owner, name)
-        expected_id = previous["id"] if previous is not None else repository.get("expected_github_repository_id")
+        target_slug = f"{new_owner}/{name}"
+        recorded = (evidence or {}).get(target_slug.lower())
+        if recorded is not None:
+            expected_id = recorded.get("repository_id")
+            if str(recorded.get("old_full_name", "")).lower() != f"{old_owner}/{name}".lower():
+                raise RuntimeError(f"owner-transfer evidence has the wrong source for {target_slug}")
+            if str(recorded.get("new_full_name", "")).lower() != target_slug.lower():
+                raise RuntimeError(f"owner-transfer evidence has the wrong destination for {target_slug}")
+        else:
+            previous = github_repository(old_owner, name, missing_ok=True)
+            current = github_repository(new_owner, name)
+            expected_id = previous["id"] if previous is not None else repository.get("expected_github_repository_id")
+            if not isinstance(expected_id, int):
+                raise RuntimeError(
+                    f"pre-transfer GitHub repository ID is required for {old_owner}/{name} after its old API route is gone"
+                )
+            assert current is not None
+            if expected_id != current["id"]:
+                raise RuntimeError(
+                    f"GitHub repository ID changed for {old_owner}/{name} -> {new_owner}/{name}"
+                )
+            if str(current.get("full_name", "")).lower() != target_slug.lower():
+                raise RuntimeError(f"GitHub canonical owner is not {new_owner} for repository {name}")
         if not isinstance(expected_id, int):
-            raise RuntimeError(
-                f"pre-transfer GitHub repository ID is required for {old_owner}/{name} after its old API route is gone"
-            )
-        assert current is not None
-        if expected_id != current["id"]:
-            raise RuntimeError(
-                f"GitHub repository ID changed for {old_owner}/{name} -> {new_owner}/{name}"
-            )
-        if str(current.get("full_name", "")).lower() != f"{new_owner}/{name}".lower():
-            raise RuntimeError(f"GitHub canonical owner is not {new_owner} for repository {name}")
+            raise RuntimeError(f"owner-transfer evidence has no numeric repository ID for {target_slug}")
         desired_url = f"git@github.com:{new_owner}/{name}.git"
         prepared.append(
             {
@@ -134,6 +148,24 @@ def prepare_github_owner_transfer(
             }
         )
     return prepared
+
+
+def load_github_owner_transfer_evidence(path: Path) -> dict[str, dict[str, object]]:
+    payload = load_json(path, "GitHub owner-transfer evidence")
+    if payload.get("schema_version") != 1 or not isinstance(payload.get("repositories"), list):
+        raise RuntimeError("GitHub owner-transfer evidence needs schema_version 1 and repositories")
+    evidence: dict[str, dict[str, object]] = {}
+    for item in payload["repositories"]:
+        if not isinstance(item, dict) or not isinstance(item.get("repository_id"), int):
+            raise RuntimeError("GitHub owner-transfer evidence has an invalid repository entry")
+        new_full_name = item.get("new_full_name")
+        if not isinstance(new_full_name, str) or "/" not in new_full_name:
+            raise RuntimeError("GitHub owner-transfer evidence entry has no destination")
+        key = new_full_name.lower()
+        if key in evidence:
+            raise RuntimeError(f"duplicate GitHub owner-transfer evidence for {new_full_name}")
+        evidence[key] = item
+    return evidence
 
 
 def adopt_github_owner_transfer(
@@ -1108,6 +1140,11 @@ def parse_args() -> argparse.Namespace:
     add_target_arguments(transfer, mutable=True)
     transfer.add_argument("--old-owner", required=True, help="current owner recorded in the workspace catalog")
     transfer.add_argument("--new-owner", required=True, help="new canonical GitHub organization or account")
+    transfer.add_argument(
+        "--identity-evidence",
+        type=Path,
+        help="value-free JSON captured by a GitHub-authenticated machine when this machine cannot query the destination",
+    )
     return parser.parse_args()
 
 
@@ -1132,7 +1169,14 @@ def main() -> int:
             raise RuntimeError("no repositories with usable canonical remotes were discovered")
         warnings = source_warnings(repositories)
         if args.command == "transfer-github-owner":
-            repositories = prepare_github_owner_transfer(repositories, args.old_owner, args.new_owner)
+            transfer_evidence = (
+                load_github_owner_transfer_evidence(args.identity_evidence.expanduser().resolve())
+                if args.identity_evidence
+                else None
+            )
+            repositories = prepare_github_owner_transfer(
+                repositories, args.old_owner, args.new_owner, transfer_evidence
+            )
         if args.command == "migrate-github-remotes":
             invalid_transport = [
                 str(repo["relative_path"])

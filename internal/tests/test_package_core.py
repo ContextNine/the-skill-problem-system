@@ -335,6 +335,39 @@ class StandaloneInstallTests(unittest.TestCase):
             launcher = (home / ".local/bin/fleet").read_text(encoding="utf-8")
             self.assertIn(f"--root {json.dumps(str(registered_root.resolve()))}", launcher)
 
+    def test_runtime_upgrade_preserves_existing_source_and_command_root(self) -> None:
+        package = Path(__file__).resolve().parents[2]
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home = root / "user-home"
+            release = root / "downloaded-release"
+            home.mkdir()
+            shutil.copytree(package, release, symlinks=True)
+            install(
+                package,
+                home,
+                apply=True,
+                global_instructions=False,
+                claude_alias=False,
+                discovery_aliases=False,
+            )
+            report = install(
+                release,
+                home,
+                apply=True,
+                global_instructions=False,
+                claude_alias=False,
+                discovery_aliases=False,
+                runtime_upgrade=True,
+            )
+            self.assertTrue(report["ready"])
+            manifest = json.loads(
+                (home / ".agents/state/installed.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(manifest["source_root"], str(package.resolve()))
+            launcher = (home / ".local/bin/fleet").read_text(encoding="utf-8")
+            self.assertIn(f"--root {json.dumps(str(package.resolve()))}", launcher)
+
 
 if __name__ == "__main__":
     unittest.main()

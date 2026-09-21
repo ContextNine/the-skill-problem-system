@@ -22,7 +22,7 @@ import working_repo_skills
 
 INSTALL_MARKER = ".fleet-install.json"
 MANAGED_TEXT_MARKER = "fleet.managed"
-PACKAGE_VERSION = "0.2.13"
+PACKAGE_VERSION = "0.2.14"
 ICLOUD_DUPLICATE_RE = re.compile(r"^.+ \d+(?:\.[^.]+)?$")
 
 
@@ -47,6 +47,17 @@ class InstallError(RuntimeError):
     pass
 
 
+def installed_command_root(home: Path) -> Path | None:
+    launcher = home / ".local/bin/fleet"
+    if not launcher.is_file() or not managed_file(launcher):
+        return None
+    match = re.search(r'--root ("(?:[^"\\]|\\.)*"|[^\s]+)', launcher.read_text(encoding="utf-8"))
+    if match is None:
+        return None
+    raw = match.group(1)
+    return Path(json.loads(raw) if raw.startswith('"') else raw).resolve()
+
+
 def installed_source(home: Path) -> Path | None:
     manifest = installed_state_root(home) / "installed.json"
     if not manifest.is_file():
@@ -57,15 +68,11 @@ def installed_source(home: Path) -> Path | None:
         raise InstallError(f"installed ownership manifest is invalid: {exc}") from exc
     source = value.get("source_root")
     if source is None:
-        launcher = home / ".local/bin/fleet"
-        if launcher.is_file() and managed_file(launcher):
-            match = re.search(r'--root ("(?:[^"\\]|\\.)*"|[^\s]+)', launcher.read_text(encoding="utf-8"))
-            if match:
-                raw = match.group(1)
-                root = Path(json.loads(raw) if raw.startswith('"') else raw).resolve()
-                candidate = root / "_system/agents" if (root / "_system/agents/edit/settings").is_dir() else root
-                if (candidate / "edit/settings/fleet/machines.json").is_file() and (candidate / "internal/src/fleet.py").is_file():
-                    return candidate
+        root = installed_command_root(home)
+        if root is not None:
+            candidate = root / "_system/agents" if (root / "_system/agents/edit/settings").is_dir() else root
+            if (candidate / "edit/settings/fleet/machines.json").is_file() and (candidate / "internal/src/fleet.py").is_file():
+                return candidate
         raise InstallError(f"installed skill source is unknown; select and adopt it explicitly: {manifest}")
     if not isinstance(source, str) or not Path(source).is_absolute():
         raise InstallError(f"installed skill source is invalid: {manifest}")
@@ -321,33 +328,43 @@ def install(
     initialize_source: bool = False,
     command_root: Path | None = None,
     adopt_source: bool = False,
+    runtime_upgrade: bool = False,
 ) -> dict[str, Any]:
     source = source.expanduser().resolve()
     home = home.expanduser().resolve()
+    current_command_root = installed_command_root(home) if runtime_upgrade else None
     sync_root = (
         command_root.expanduser().resolve()
         if command_root is not None
-        else source.parents[1] if is_private_source(source) else source
+        else current_command_root
+        or (source.parents[1] if is_private_source(source) else source)
     )
     parts = distribution_paths(source)
     package_target = installed_package_root(home)
     config_target = installed_config_root(home)
     state_target = installed_state_root(home)
     marker = package_target / INSTALL_MARKER
+    installed_manifest = state_target / "installed.json"
+    previous: dict[str, Any] = {}
+    if installed_manifest.is_file():
+        previous = json.loads(installed_manifest.read_text(encoding="utf-8"))
     try:
         owner = installed_source(home)
     except InstallError:
-        if not adopt_source:
+        if not adopt_source and not runtime_upgrade:
             raise
         owner = None
-    if owner is not None and owner != source:
+    if runtime_upgrade and not installed_manifest.is_file():
+        raise InstallError("runtime upgrade requires an existing managed Fleet installation")
+    if not runtime_upgrade and owner is not None and owner != source:
         raise InstallError(f"skill system is already owned by {owner}; refusing competing source {source}")
-    if owner is None and package_target.exists() and not adopt_source:
+    if not runtime_upgrade and owner is None and package_target.exists() and not adopt_source:
         raise InstallError("installed skill source is unknown; use --adopt-source with the verified original source")
+    if runtime_upgrade and (adopt_source or initialize_source):
+        raise InstallError("runtime upgrade preserves the existing source and cannot adopt or initialize one")
     if owner is not None and initialize_source:
         raise InstallError("refusing to initialize an existing editable skill-system source")
-    if owner is not None:
-        previous = json.loads((state_target / "installed.json").read_text(encoding="utf-8"))
+    if owner is not None or runtime_upgrade:
         owned_before = set(previous.get("owned_paths", []))
         global_instructions = global_instructions or str(home / ".agents/instructions/AGENTS.md") in owned_before
         claude_alias = claude_alias or str(home / ".claude/CLAUDE.md") in owned_before
@@ -505,7 +522,8 @@ def install(
             actions.append({"path": str(alias), "status": ensure_managed_symlink(alias, str(skill), apply=apply)})
             owned.append(str(alias))
     manifest = state_target / "installed.json"
-    value = {"schema_version": 1, "package_version": PACKAGE_VERSION, "source_root": str(source), "owned_paths": sorted(set(owned))}
+    source_root = previous.get("source_root") if runtime_upgrade else str(source)
+    value = {"schema_version": 1, "package_version": PACKAGE_VERSION, "source_root": source_root, "owned_paths": sorted(set(owned))}
     manifest_status = "would-write"
     if apply:
         manifest.parent.mkdir(parents=True, exist_ok=True)

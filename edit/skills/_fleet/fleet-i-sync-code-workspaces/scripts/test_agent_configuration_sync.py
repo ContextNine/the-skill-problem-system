@@ -17,7 +17,7 @@ from pathlib import Path
 
 
 SCRIPT_DIRECTORY = Path(__file__).resolve().parent
-AGENTS_ROOT = SCRIPT_DIRECTORY.parents[4]
+VAULT_ROOT = SCRIPT_DIRECTORY.parents[6]
 
 
 def load_module(name: str, filename: str):
@@ -124,8 +124,8 @@ source = "https://example.com/source-only.git"
         (root / "_system/agents/internal").mkdir(parents=True)
         (config / "skills").mkdir(parents=True)
         (config / "integrations").mkdir(parents=True)
-        shutil.copytree(AGENTS_ROOT / "edit/agent-instructions/templates", templates)
-        shutil.copy2(AGENTS_ROOT / "edit/agent-instructions/AGENT-INSTRUCTIONS.md", bundle / "AGENT-INSTRUCTIONS.md")
+        shutil.copytree(VAULT_ROOT / "_system/agents/edit/agent-instructions/templates", templates)
+        shutil.copy2(VAULT_ROOT / "_system/agents/edit/agent-instructions/AGENT-INSTRUCTIONS.md", bundle / "AGENT-INSTRUCTIONS.md")
         (config / "integrations/langfuse.json").write_text(
             json.dumps(
                 {
@@ -232,6 +232,10 @@ source = "/target/local/marketplace"
             self.assertNotIn(str(source), config)
             self.assertEqual(stat.S_IMODE((target / ".codex/config.toml").stat().st_mode), 0o600)
             self.assertEqual(stat.S_IMODE((target / ".agents/instructions/AGENTS.md").stat().st_mode), 0o644)
+            self.assertNotIn(
+                "fleet.managed",
+                (target / ".agents/instructions/AGENTS.md").read_text(encoding="utf-8"),
+            )
             self.assertEqual(
                 stat.S_IMODE((target / ".agents/settings/integrations/langfuse.json").stat().st_mode),
                 0o600,
@@ -250,9 +254,15 @@ source = "/target/local/marketplace"
             self.assertEqual(os.readlink(target / ".claude/CLAUDE.md"), "../.agents/instructions/AGENTS.md")
 
             (target / ".codex/config.toml").write_text("local drift\n", encoding="utf-8")
+            (target / ".agents/instructions/AGENTS.md").write_text("markerless local drift\n", encoding="utf-8")
             second = self.run_worker(target, files, "second")
             self.assertTrue(second["ready"])
             self.assertTrue((target / ".codex/config.toml.backup-second").is_file())
+            self.assertTrue((target / ".agents/instructions/AGENTS.md.backup-second").is_file())
+            self.assertNotEqual(
+                (target / ".agents/instructions/AGENTS.md").read_text(encoding="utf-8"),
+                "markerless local drift\n",
+            )
             third = self.run_worker(target, files, "third")
             self.assertTrue(all(result["status"] == "match" for result in third["results"]))
 
@@ -354,11 +364,11 @@ source = "/target/local/marketplace"
             self.assertEqual(json.loads(installed.read_text()), json.loads(desired.read_text()))
             self.assertTrue(installed.with_name("workspaces.json.backup-test").is_file())
 
-    def test_shared_vault_alias_reconciler_is_dry_run_safe_and_refuses_unmanaged_file(self) -> None:
+    def test_shared_vault_alias_reconciler_replaces_the_owned_target_without_a_marker(self) -> None:
         shared = sync.global_agent_configuration
         sync_spec = importlib.util.spec_from_file_location(
             "sync_skills_shared_agent_test",
-            AGENTS_ROOT / "internal/src/sync_skills.py",
+            VAULT_ROOT / "_system/agents/internal/src/sync_skills.py",
         )
         assert sync_spec and sync_spec.loader
         regular_sync = importlib.util.module_from_spec(sync_spec)
@@ -380,9 +390,13 @@ source = "/target/local/marketplace"
             self.assertTrue(applied["ready"])
             self.assertEqual(os.readlink(root / "CLAUDE.md"), "AGENTS.md")
             (root / "CLAUDE.md").unlink()
-            (root / "CLAUDE.md").write_text("unmanaged\n", encoding="utf-8")
-            with self.assertRaisesRegex(shared.AgentConfigurationError, "unmanaged"):
-                shared.ensure_agent_paths(root, dry_run=True)
+            (root / "CLAUDE.md").write_text("markerless local drift\n", encoding="utf-8")
+            preview = shared.ensure_agent_paths(root, dry_run=True)
+            self.assertFalse(preview["ready"])
+            self.assertEqual((root / "CLAUDE.md").read_text(encoding="utf-8"), "markerless local drift\n")
+            applied = shared.ensure_agent_paths(root, dry_run=False)
+            self.assertTrue(applied["ready"])
+            self.assertEqual(os.readlink(root / "CLAUDE.md"), "AGENTS.md")
 
     def test_registry_consumers_are_forward_compatible_and_inline_secrets_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

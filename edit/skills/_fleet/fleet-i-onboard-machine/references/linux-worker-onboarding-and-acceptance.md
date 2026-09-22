@@ -265,7 +265,6 @@ Conditional auth:
 | Claude Code | `claude auth login` | Claude Code use is needed; credentials remain machine-local |
 | Kimi Code CLI | `kimi login` | Official Kimi Code CLI use is needed; OAuth credentials remain machine-local |
 | OpenCode | `opencode auth login` | OpenCode provider access is needed; credentials remain machine-local |
-| GWS | `gws auth setup`, then `gws auth login --services calendar,drive` | Vault Google Workspace workflows run remotely |
 | gcloud | `gcloud auth login --no-launch-browser` | Direct GCP commands run remotely |
 | rclone | `rclone config` | Remote-storage jobs run remotely |
 | npm | `npm login` | Private registry or publishing needed |

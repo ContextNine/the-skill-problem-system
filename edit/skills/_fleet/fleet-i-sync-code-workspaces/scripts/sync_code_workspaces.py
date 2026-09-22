@@ -75,129 +75,6 @@ def error_text(process: subprocess.CompletedProcess[str]) -> str:
     return value.splitlines()[-1][:500] if value else "command failed"
 
 
-def github_repository(owner: str, name: str, *, missing_ok: bool = False) -> dict[str, object] | None:
-    """Resolve a GitHub repository through gh without handling credentials here."""
-    result = run(["gh", "api", f"repos/{owner}/{name}"])
-    if result.returncode != 0:
-        if missing_ok and "HTTP 404" in (result.stderr or result.stdout):
-            return None
-        raise RuntimeError(f"cannot resolve GitHub repository {owner}/{name}: {error_text(result)}")
-    try:
-        payload = json.loads(result.stdout)
-    except json.JSONDecodeError as exc:
-        raise RuntimeError(f"GitHub returned invalid repository metadata for {owner}/{name}") from exc
-    if not isinstance(payload, dict) or not isinstance(payload.get("id"), int):
-        raise RuntimeError(f"GitHub repository metadata is incomplete for {owner}/{name}")
-    return payload
-
-
-def prepare_github_owner_transfer(
-    repositories: list[dict[str, object]],
-    old_owner: str,
-    new_owner: str,
-    evidence: dict[str, dict[str, object]] | None = None,
-) -> list[dict[str, object]]:
-    """Attach a verified owner-transfer destination while retaining the current identity for inspection."""
-    owner_pattern = r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})"
-    if not re.fullmatch(owner_pattern, old_owner) or not re.fullmatch(owner_pattern, new_owner):
-        raise RuntimeError("GitHub owners must be ordinary account or organization names")
-    if old_owner.lower() == new_owner.lower():
-        raise RuntimeError("GitHub owner transfer requires different old and new owners")
-    prepared: list[dict[str, object]] = []
-    for repository in repositories:
-        identity = str(repository["remote_identity"])
-        match = re.fullmatch(r"github\.com/([^/]+)/([^/]+)", identity, flags=re.IGNORECASE)
-        if not match or match.group(1).lower() != old_owner.lower():
-            raise RuntimeError(
-                f"selected repository {repository['relative_path']} is not owned by github.com/{old_owner}"
-            )
-        name = match.group(2)
-        target_slug = f"{new_owner}/{name}"
-        recorded = (evidence or {}).get(target_slug.lower())
-        if recorded is not None:
-            expected_id = recorded.get("repository_id")
-            if str(recorded.get("old_full_name", "")).lower() != f"{old_owner}/{name}".lower():
-                raise RuntimeError(f"owner-transfer evidence has the wrong source for {target_slug}")
-            if str(recorded.get("new_full_name", "")).lower() != target_slug.lower():
-                raise RuntimeError(f"owner-transfer evidence has the wrong destination for {target_slug}")
-        else:
-            previous = github_repository(old_owner, name, missing_ok=True)
-            current = github_repository(new_owner, name)
-            expected_id = previous["id"] if previous is not None else repository.get("expected_github_repository_id")
-            if not isinstance(expected_id, int):
-                raise RuntimeError(
-                    f"pre-transfer GitHub repository ID is required for {old_owner}/{name} after its old API route is gone"
-                )
-            assert current is not None
-            if expected_id != current["id"]:
-                raise RuntimeError(
-                    f"GitHub repository ID changed for {old_owner}/{name} -> {new_owner}/{name}"
-                )
-            if str(current.get("full_name", "")).lower() != target_slug.lower():
-                raise RuntimeError(f"GitHub canonical owner is not {new_owner} for repository {name}")
-        if not isinstance(expected_id, int):
-            raise RuntimeError(f"owner-transfer evidence has no numeric repository ID for {target_slug}")
-        desired_url = f"git@github.com:{new_owner}/{name}.git"
-        prepared.append(
-            {
-                **repository,
-                "remote_url": desired_url,
-                "remote_display": desired_url,
-                "transfer_target_identity": f"github.com/{new_owner}/{name}",
-                "github_repository_id": expected_id,
-            }
-        )
-    return prepared
-
-
-def load_github_owner_transfer_evidence(path: Path) -> dict[str, dict[str, object]]:
-    payload = load_json(path, "GitHub owner-transfer evidence")
-    if payload.get("schema_version") != 1 or not isinstance(payload.get("repositories"), list):
-        raise RuntimeError("GitHub owner-transfer evidence needs schema_version 1 and repositories")
-    evidence: dict[str, dict[str, object]] = {}
-    for item in payload["repositories"]:
-        if not isinstance(item, dict) or not isinstance(item.get("repository_id"), int):
-            raise RuntimeError("GitHub owner-transfer evidence has an invalid repository entry")
-        new_full_name = item.get("new_full_name")
-        if not isinstance(new_full_name, str) or "/" not in new_full_name:
-            raise RuntimeError("GitHub owner-transfer evidence entry has no destination")
-        key = new_full_name.lower()
-        if key in evidence:
-            raise RuntimeError(f"duplicate GitHub owner-transfer evidence for {new_full_name}")
-        evidence[key] = item
-    return evidence
-
-
-def adopt_github_owner_transfer(
-    catalog_path: Path,
-    transferred_remotes: dict[str, str],
-    old_owner: str,
-    new_owner: str,
-) -> list[dict[str, str]]:
-    """Persist verified GitHub owner changes to exact catalog entries."""
-    catalog = load_catalog(catalog_path)
-    entries = catalog["entries"]
-    changes: list[dict[str, str]] = []
-    for entry_id, verified_new_url in sorted(transferred_remotes.items()):
-        entry = entries.get(entry_id)
-        if not isinstance(entry, dict):
-            raise RuntimeError(f"catalog entry {entry_id!r} is missing")
-        configured = entry.get("remote")
-        old_url = str(configured) if isinstance(configured, str) else ""
-        expected_prefix = f"git@github.com:{old_owner}/"
-        if old_url and (
-            not old_url.lower().startswith(expected_prefix.lower()) or not old_url.endswith(".git")
-        ):
-            raise RuntimeError(f"catalog entry {entry_id!r} is not owned by {old_owner}")
-        new_url = verified_new_url
-        if not new_url.lower().startswith(f"git@github.com:{new_owner}/".lower()) or not new_url.endswith(".git"):
-            raise RuntimeError(f"catalog entry {entry_id!r} has an invalid verified destination")
-        entry["remote"] = new_url
-        changes.append({"entry": entry_id, "from": old_url or "derived-from-checkout", "to": new_url})
-    atomic_write_json(catalog_path, catalog, sort_keys=False)
-    return changes
-
-
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
@@ -334,11 +211,8 @@ def record_source_run(
 
 
 def vault_root() -> Path:
-    try:
-        resolved = run(["vault", "root"])
-    except FileNotFoundError:
-        resolved = None
-    if resolved is not None and resolved.returncode == 0 and output(resolved):
+    resolved = run(["vault", "root"])
+    if resolved.returncode == 0 and output(resolved):
         return Path(output(resolved)).resolve()
     fallback = run(["git", "rev-parse", "--show-toplevel"])
     if fallback.returncode == 0 and output(fallback):
@@ -370,17 +244,6 @@ def current_machine_id(root: Path) -> str:
     if not value:
         raise RuntimeError("current machine has no Vault identity; use vault machine identify")
     return value
-
-
-def resolve_source_identity(args: argparse.Namespace) -> tuple[str, Path | None]:
-    """Use explicit installed configuration without requiring the private Vault root."""
-    source_id_value = getattr(args, "source_id", None)
-    source_id = source_id_value.strip() if isinstance(source_id_value, str) and source_id_value.strip() else None
-    machine_registry = getattr(args, "machine_registry", None)
-    if source_id and machine_registry and args.catalog:
-        return source_id, None
-    root = vault_root()
-    return source_id or current_machine_id(root), root
 
 
 def remote_details(url: str) -> tuple[str | None, str, str | None]:
@@ -501,11 +364,10 @@ def select_specs(catalog: dict[str, object], args: argparse.Namespace, source_ro
         for index, supplied in enumerate(args.path, start=1):
             candidate = supplied if supplied.is_absolute() else source_root / supplied
             candidate = validate_under_code(candidate, source_root)
-            relative = candidate.relative_to(source_root).as_posix()
             specs.append(
                 normalize_spec(
                     f"path-{index}",
-                    {"path": relative, "discovery": "auto", "required": True},
+                    {"path": str(candidate), "discovery": "auto", "required": True},
                     defaults,
                 )
             )
@@ -644,7 +506,6 @@ def inspect_source_repository(
             "project_relative_path": project_relative,
             "catalog_relative_path": catalog_relative_path or relative,
             "source_relocated": bool(catalog_relative_path and catalog_relative_path != relative),
-            "expected_github_repository_id": spec.get("github_repository_id"),
         },
         None,
     )
@@ -1093,10 +954,6 @@ def add_selection_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--entry", action="append", default=[], help="catalog entry ID; repeatable")
     parser.add_argument("--path", action="append", default=[], type=Path, help="repository or recursively scanned path; repeatable")
     parser.add_argument("--source-root", type=Path, help="executing machine's Code root; defaults to the machine registry")
-    parser.add_argument(
-        "--source-id",
-        help="registered source machine ID; with explicit registry and catalog, avoids private Vault discovery",
-    )
     parser.add_argument("--catalog", type=Path, help="repositories.json override")
     parser.add_argument("--json", action="store_true", help="emit JSON")
     parser.add_argument(
@@ -1147,31 +1004,15 @@ def parse_args() -> argparse.Namespace:
     )
     add_selection_arguments(migrate)
     add_target_arguments(migrate, mutable=True)
-    transfer = subparsers.add_parser(
-        "transfer-github-owner",
-        help="rewrite remotes after a GitHub owner transfer verified by immutable repository ID",
-    )
-    add_selection_arguments(transfer)
-    add_target_arguments(transfer, mutable=True)
-    transfer.add_argument("--old-owner", required=True, help="current owner recorded in the workspace catalog")
-    transfer.add_argument("--new-owner", required=True, help="new canonical GitHub organization or account")
-    transfer.add_argument(
-        "--identity-evidence",
-        type=Path,
-        help="value-free JSON captured by a GitHub-authenticated machine when this machine cannot query the destination",
-    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
     try:
-        source_id, root = resolve_source_identity(args)
-        machine_path = getattr(args, "machine_registry", None)
-        if machine_path is None:
-            if root is None:
-                raise RuntimeError("the default machine registry requires a resolved Vault root")
-            machine_path = root / "_system/agents/edit/settings/fleet/machines.json"
+        root = vault_root()
+        source_id = current_machine_id(root)
+        machine_path = args.machine_registry or root / "_system/agents/edit/settings/fleet/machines.json"
         machine_registry = load_machines(machine_path.expanduser().resolve())
         source_matches = [machine for machine in machine_registry["machines"] if isinstance(machine, dict) and machine.get("id") == source_id]
         if len(source_matches) != 1:
@@ -1179,26 +1020,13 @@ def main() -> int:
         source_root = (args.source_root or machine_code_root(source_matches[0])).expanduser().resolve()
         if not source_root.is_dir():
             raise RuntimeError(f"source Code root is not a directory: {source_root}")
-        catalog_path = args.catalog
-        if catalog_path is None:
-            if root is None:
-                raise RuntimeError("the default workspace catalog requires a resolved Vault root")
-            catalog_path = root / "_system/agents/edit/settings/fleet/workspaces.json"
+        catalog_path = args.catalog or root / "_system/agents/edit/settings/fleet/workspaces.json"
         catalog = load_catalog(catalog_path.expanduser().resolve())
         specs, selection = select_specs(catalog, args, source_root)
         repositories, skipped = discover_specs(specs, source_root)
         if not repositories:
             raise RuntimeError("no repositories with usable canonical remotes were discovered")
         warnings = source_warnings(repositories)
-        if args.command == "transfer-github-owner":
-            transfer_evidence = (
-                load_github_owner_transfer_evidence(args.identity_evidence.expanduser().resolve())
-                if args.identity_evidence
-                else None
-            )
-            repositories = prepare_github_owner_transfer(
-                repositories, args.old_owner, args.new_owner, transfer_evidence
-            )
         if args.command == "migrate-github-remotes":
             invalid_transport = [
                 str(repo["relative_path"])
@@ -1263,11 +1091,9 @@ def main() -> int:
         primary_config_source = source_id == machine_registry["primary_machine_id"]
         sync_personal_configuration = (
             primary_config_source
-            and args.command not in {"migrate-github-remotes", "transfer-github-owner"}
+            and args.command != "migrate-github-remotes"
             and not args.skip_personal_configuration
         )
-        if sync_personal_configuration and root is None:
-            root = vault_root()
         agent_bundle = (
             agent_configuration.load_source_bundle(Path.home(), root=root, registry=machine_registry)
             if sync_personal_configuration
@@ -1345,16 +1171,13 @@ def main() -> int:
                 return 1
         run_id = new_run_id() if apply else None
         selections = [(machine, repositories_for_machine(repositories, str(machine["id"]))) for machine in targets]
-        if args.command in {"migrate-github-remotes", "transfer-github-owner"}:
+        if args.command == "migrate-github-remotes":
             source_preflight = workspace_worker.preflight_repositories(repositories)
-            source_repositories = [repository for repository in repositories if repository.get("source_present")]
             source_remote_results = [
-                (
-                    workspace_worker.reconcile_github_owner_transfer
-                    if args.command == "transfer-github-owner"
-                    else workspace_worker.reconcile_remote
-                )(source_root / str(repository["relative_path"]), repository, False)
-                for repository in source_repositories
+                workspace_worker.reconcile_remote(
+                    source_root / str(repository["relative_path"]), repository, False
+                )
+                for repository in repositories
             ]
             report["source_remote_preflight"] = source_preflight
             report["source_remote_results"] = source_remote_results
@@ -1446,15 +1269,12 @@ def main() -> int:
                     print_target_report(report)
                 return 1 if preflight_fatal else 2
 
-        if apply and args.command in {"migrate-github-remotes", "transfer-github-owner"}:
-            source_repositories = [repository for repository in repositories if repository.get("source_present")]
+        if apply and args.command == "migrate-github-remotes":
             report["source_remote_results"] = [
-                (
-                    workspace_worker.reconcile_github_owner_transfer
-                    if args.command == "transfer-github-owner"
-                    else workspace_worker.reconcile_remote
-                )(source_root / str(repository["relative_path"]), repository, True)
-                for repository in source_repositories
+                workspace_worker.reconcile_remote(
+                    source_root / str(repository["relative_path"]), repository, True
+                )
+                for repository in repositories
             ]
             if any(
                 result.get("status") in BLOCKING_STATUSES
@@ -1599,16 +1419,6 @@ def main() -> int:
         report["mode"] = "apply" if apply else "preview"
         report["targets"] = target_reports
         all_targets_applied = all(target.get("ok") and target.get("applied") for target in target_reports)
-        if apply and args.command == "transfer-github-owner" and all_targets_applied:
-            report["catalog_owner_changes"] = adopt_github_owner_transfer(
-                catalog_path.expanduser().resolve(),
-                {
-                    str(repository["entry_id"]): str(repository["remote_url"])
-                    for repository in repositories
-                },
-                args.old_owner,
-                args.new_owner,
-            )
         if apply and run_id and all_targets_applied:
             try:
                 report["source_history"] = record_source_run(

@@ -11,7 +11,6 @@ BUSINESS_PACK = Path("_system/templates/teamspaces/business")
 PERSONAL_BRAND_PACK = Path("_system/templates/teamspaces/personal-brand")
 GTM_PACK = Path("_system/templates/gtm/scaffold")
 BUSINESS_ROOTS = ("company",)
-RELATIONSHIP_ROOTS = ("relationships", "_obsidian/bases")
 
 
 def vault_root() -> Path:
@@ -32,11 +31,11 @@ def validate_context(root: Path, context: str) -> Path:
     return context_root
 
 
-def selected_sources(pack: Path, identity_type: str, *, relationships: bool) -> list[Path]:
+def selected_sources(pack: Path, identity_type: str) -> list[Path]:
     if identity_type == "personal-brand":
         return sorted(path for path in (pack / "brand").rglob("*") if path.is_file())
     sources: list[Path] = []
-    for root_name in (*BUSINESS_ROOTS, *(RELATIONSHIP_ROOTS if relationships else ())):
+    for root_name in BUSINESS_ROOTS:
         source_root = pack / root_name
         if source_root.is_file():
             sources.append(source_root)
@@ -55,7 +54,7 @@ def destination_relative(relative: Path, context_root: Path) -> Path:
     return relative
 
 
-def apply(context: str, identity_type: str, *, write: bool, relationships: bool = False) -> int:
+def apply(context: str, identity_type: str, *, write: bool) -> int:
     root = vault_root()
     context_root = validate_context(root, context)
     pack_relative = PERSONAL_BRAND_PACK if identity_type == "personal-brand" else BUSINESS_PACK
@@ -66,7 +65,7 @@ def apply(context: str, identity_type: str, *, write: bool, relationships: bool 
     if identity_type == "company" and not gtm_pack.is_dir():
         raise SystemExit(f"Missing GTM scaffold: {gtm_pack}")
     changed = 0
-    sources = [(source, pack) for source in selected_sources(pack, identity_type, relationships=relationships)]
+    sources = [(source, pack) for source in selected_sources(pack, identity_type)]
     if identity_type == "company":
         sources.extend((source, gtm_pack) for source in sorted(gtm_pack.rglob("*")) if source.is_file())
     for source, source_root in sources:
@@ -80,7 +79,9 @@ def apply(context: str, identity_type: str, *, write: bool, relationships: bool 
         print(f"{action} {target.relative_to(root)}")
         if write:
             target.parent.mkdir(parents=True, exist_ok=True)
-            content = source.read_bytes().replace(b"{{teamspace}}", context.encode("utf-8"))
+            content = source.read_bytes()
+            if source.suffix.lower() != ".xlsx":
+                content = content.replace(b"{{teamspace}}", context.encode("utf-8"))
             target.write_bytes(content)
         changed += 1
     if changed == 0:
@@ -92,12 +93,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--teamspace", dest="context", required=True)
     parser.add_argument("--identity-type", choices=("company", "personal-brand"), required=True)
-    parser.add_argument("--relationships", action="store_true", help="Also add missing relationship CRM files for a company.")
     parser.add_argument("--apply", action="store_true")
     args = parser.parse_args()
-    if args.relationships and args.identity_type != "company":
-        parser.error("--relationships applies only to company teamspaces")
-    return 0 if apply(args.context, args.identity_type, write=args.apply, relationships=args.relationships) >= 0 else 1
+    return 0 if apply(args.context, args.identity_type, write=args.apply) >= 0 else 1
 
 
 if __name__ == "__main__":

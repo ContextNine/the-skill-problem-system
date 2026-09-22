@@ -25,7 +25,8 @@ SKILL_ID = "fleet-i-manage-rclone-google-drive"
 SAFE_ID = re.compile(r"[a-z0-9][a-z0-9._-]*")
 SAFE_REMOTE = re.compile(r"[a-z0-9][a-z0-9_]*")
 SHA256 = re.compile(r"[0-9a-f]{64}")
-CLIENT_SECRET_SERVICE = "ctx9-rclone-google-drive-client-secret"
+ENV_NAME = re.compile(r"[A-Z][A-Z0-9_]*")
+BINDINGS_CHILD_MARKER = "CTX9_RCLONE_SECRET_BINDINGS_CHILD"
 
 
 class BackupError(RuntimeError):
@@ -65,8 +66,8 @@ def safe_component(value: Any, label: str) -> str:
 
 
 def validate_desired(value: dict[str, Any]) -> dict[str, Any]:
-    if value.get("schema_version") != 1 or not isinstance(value.get("enabled"), bool):
-        raise BackupError("desired state needs schema_version 1 and enabled")
+    if value.get("schema_version") != 2 or not isinstance(value.get("enabled"), bool):
+        raise BackupError("desired state needs schema_version 2 and enabled")
     remote_name = value.get("remote_name")
     machines = value.get("allowed_machines")
     drive = value.get("google_drive")
@@ -92,7 +93,13 @@ def validate_desired(value: dict[str, Any]) -> dict[str, Any]:
         raise BackupError("retention mode must be explicit-retirement-only")
     if retention.get("automatic_deletion") is not False:
         raise BackupError("automatic retention deletion is forbidden")
-    for field in ("oauth_client_id", "shared_drive_id", "root_folder_id"):
+    if "oauth_client_id" in drive or "oauth_client_secret" in drive:
+        raise BackupError("raw OAuth application credentials are forbidden in desired state")
+    for field in ("oauth_client_id_binding", "oauth_client_secret_binding"):
+        item = drive.get(field)
+        if not isinstance(item, str) or not ENV_NAME.fullmatch(item):
+            raise BackupError(f"Google Drive {field} must be an environment binding name")
+    for field in ("shared_drive_id", "root_folder_id"):
         item = drive.get(field)
         if item is not None and (not isinstance(item, str) or not item.strip()):
             raise BackupError(f"Google Drive {field} must be a non-empty string or null")
@@ -106,7 +113,12 @@ def desired_missing(desired: dict[str, Any]) -> list[str]:
         missing.append("allowed_machines")
     missing.extend(
         f"google_drive.{field}"
-        for field in ("oauth_client_id", "shared_drive_id", "root_folder_id")
+        for field in (
+            "oauth_client_id_binding",
+            "oauth_client_secret_binding",
+            "shared_drive_id",
+            "root_folder_id",
+        )
         if not drive.get(field)
     )
     return missing
@@ -131,38 +143,26 @@ def password_command(machine_id: str) -> str:
     return output.getvalue()
 
 
-def native_client_secret(machine_id: str) -> str:
-    if sys.platform == "darwin":
-        command = [
-            "/usr/bin/security",
-            "find-generic-password",
-            "-a",
-            machine_id,
-            "-s",
-            CLIENT_SECRET_SERVICE,
-            "-w",
-        ]
-    elif sys.platform.startswith("linux"):
-        command = [
-            shutil.which("secret-tool") or "/usr/bin/secret-tool",
-            "lookup",
-            "ctx9-provider",
-            "rclone-google-drive-client-secret",
-            "ctx9-resource",
-            "codefoldersync-backups",
-            "ctx9-machine",
-            machine_id,
-        ]
-    else:
-        raise BackupError("unsupported platform for native secret custody")
-    try:
-        completed = subprocess.run(command, check=False, capture_output=True, text=True)
-    except OSError as error:
-        raise BackupError("native OAuth client-secret custody is unavailable") from error
-    value = completed.stdout.rstrip("\r\n")
-    if completed.returncode != 0 or not value:
-        raise BackupError("native OAuth client-secret custody is unavailable")
-    return value
+def binding_environment(desired: dict[str, Any]) -> dict[str, str]:
+    if os.environ.get(BINDINGS_CHILD_MARKER) != "1":
+        raise BackupError("OAuth application credentials must come from Secret Bindings")
+    drive = desired["google_drive"]
+    client_id_name = drive["oauth_client_id_binding"]
+    client_secret_name = drive["oauth_client_secret_binding"]
+    client_id = os.environ.get(client_id_name)
+    client_secret = os.environ.get(client_secret_name)
+    if not client_id or not client_secret:
+        raise BackupError("required OAuth application bindings are unavailable")
+    environment = os.environ.copy()
+    environment.pop(client_id_name, None)
+    environment.pop(client_secret_name, None)
+    environment.pop(BINDINGS_CHILD_MARKER, None)
+    remote = re.sub(r"[^A-Za-z0-9]", "_", desired["remote_name"]).upper()
+    environment[f"RCLONE_CONFIG_{remote}_CLIENT_ID"] = client_id
+    environment[f"RCLONE_CONFIG_{remote}_CLIENT_SECRET"] = client_secret
+    environment.pop("RCLONE_CONFIG_PASS", None)
+    environment.pop("RCLONE_PASSWORD_COMMAND", None)
+    return environment
 
 
 class Rclone:
@@ -175,12 +175,7 @@ class Rclone:
         self.machine_id = machine_id
 
     def _environment(self) -> dict[str, str]:
-        environment = os.environ.copy()
-        remote = re.sub(r"[^A-Za-z0-9]", "_", self.desired["remote_name"]).upper()
-        environment[f"RCLONE_CONFIG_{remote}_CLIENT_SECRET"] = native_client_secret(self.machine_id)
-        environment.pop("RCLONE_CONFIG_PASS", None)
-        environment.pop("RCLONE_PASSWORD_COMMAND", None)
-        return environment
+        return binding_environment(self.desired)
 
     def command(self, *arguments: str) -> list[str]:
         return [
@@ -289,7 +284,7 @@ def verify_remote(rclone: Rclone, live: bool) -> dict[str, Any]:
     drive = desired["google_drive"]
     matches = {
         "type": actual.get("type") == "drive",
-        "oauth_client_id": actual.get("client_id") == drive["oauth_client_id"],
+        "oauth_client_id_not_persisted": not actual.get("client_id"),
         "scope": actual.get("scope") == "drive.file",
         "shared_drive_id": actual.get("team_drive") == drive["shared_drive_id"],
         "root_folder_id": actual.get("root_folder_id") == drive["root_folder_id"],
@@ -314,7 +309,8 @@ def command_plan(desired: dict[str, Any], machine_id: str, executable: str) -> d
         actions.append("complete and review non-secret desired Google Drive identifiers")
     actions.extend(
         [
-            "enroll native OAuth client secret and generated config unlock through fleet-i-onboard-machine",
+            "save the OAuth application credentials as reviewed Secret Bindings personal globals",
+            "generate the target-local config unlock through fleet-i-onboard-machine",
             "complete target-local OAuth and encrypted Rclone configuration",
             "verify policy and run the approved acceptance sentinel",
         ]
@@ -409,6 +405,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--desired", type=Path)
     parser.add_argument("--rclone", default="rclone")
+    parser.add_argument("--bindings-child", action="store_true", help=argparse.SUPPRESS)
     subparsers = parser.add_subparsers(dest="command", required=True)
     for name in ("plan", "configure", "verify", "acceptance-test", "retirement-plan"):
         command = subparsers.add_parser(name)
@@ -436,10 +433,80 @@ def approved(arguments: argparse.Namespace) -> None:
         raise BackupError("live mutation requires --approve")
 
 
+def child_arguments(arguments: argparse.Namespace, desired_path: Path) -> list[str]:
+    result = [
+        "--desired",
+        str(desired_path),
+        "--rclone",
+        arguments.rclone,
+        "--bindings-child",
+        arguments.command,
+        "--machine-id",
+        arguments.machine_id,
+    ]
+    if arguments.command == "verify" and arguments.live:
+        result.append("--live")
+    if arguments.command in {"configure", "acceptance-test", "backup", "download"}:
+        result.append("--approve")
+    if arguments.command == "backup":
+        result.extend(["--snapshot-id", arguments.snapshot_id, "--source", str(arguments.source.resolve())])
+    if arguments.command == "download":
+        result.extend(
+            [
+                "--source-machine-id",
+                arguments.source_machine_id,
+                "--snapshot-id",
+                arguments.snapshot_id,
+                "--destination",
+                str(arguments.destination.resolve()),
+            ]
+        )
+    return result
+
+
+def run_with_secret_bindings(arguments: argparse.Namespace, desired_path: Path) -> int:
+    executable = shutil.which("secret-bindings")
+    if not executable:
+        raise BackupError("Secret Bindings CLI is unavailable")
+    drive = validate_desired(load_json(desired_path, "Rclone Google Drive desired state"))["google_drive"]
+    binding_names = [drive["oauth_client_id_binding"], drive["oauth_client_secret_binding"]]
+    with tempfile.TemporaryDirectory(prefix="ctx9-rclone-bindings-") as temporary:
+        root = Path(temporary)
+        initialized = subprocess.run(
+            ["git", "init", "--quiet", str(root)], check=False, capture_output=True, text=True
+        )
+        if initialized.returncode != 0:
+            raise BackupError("cannot create the value-free Secret Bindings contract")
+        (root / ".env.base").write_text(
+            "".join(f"{name}=\n" for name in binding_names), encoding="utf-8"
+        )
+        environment = os.environ.copy()
+        environment[BINDINGS_CHILD_MARKER] = "1"
+        completed = subprocess.run(
+            [
+                executable,
+                "exec",
+                "--globals",
+                "--environment",
+                "local",
+                "--contract",
+                ".env.base",
+                "--",
+                str(Path(sys.executable).resolve()),
+                str(Path(__file__).resolve()),
+                *child_arguments(arguments, desired_path),
+            ],
+            cwd=root,
+            env=environment,
+            check=False,
+        )
+        return completed.returncode
+
+
 def main() -> int:
     arguments = build_parser().parse_args()
     try:
-        desired_path = arguments.desired or default_desired_path()
+        desired_path = (arguments.desired or default_desired_path()).resolve()
         desired = validate_desired(load_json(desired_path, "Rclone Google Drive desired state"))
         require_machine(desired, arguments.machine_id)
         if arguments.command == "plan":
@@ -462,23 +529,23 @@ def main() -> int:
             )
             return 0
         require_configured(desired)
+        if arguments.command in {"configure", "acceptance-test", "backup", "download"}:
+            approved(arguments)
+        if not arguments.bindings_child:
+            return run_with_secret_bindings(arguments, desired_path)
         rclone = Rclone(arguments.rclone, desired, arguments.machine_id)
         if arguments.command == "configure":
-            approved(arguments)
             rclone.run("config", interactive=True)
             emit(verify_remote(rclone, live=False))
         elif arguments.command == "verify":
             emit(verify_remote(rclone, arguments.live))
         elif arguments.command == "acceptance-test":
-            approved(arguments)
             emit(command_acceptance(rclone))
         elif arguments.command == "backup":
-            approved(arguments)
             if not SAFE_ID.fullmatch(arguments.snapshot_id):
                 raise BackupError("snapshot id is unsafe")
             emit(command_backup(rclone, arguments.source.resolve(), arguments.snapshot_id))
         elif arguments.command == "download":
-            approved(arguments)
             if not SAFE_ID.fullmatch(arguments.snapshot_id):
                 raise BackupError("snapshot id is unsafe")
             require_machine(desired, arguments.source_machine_id)

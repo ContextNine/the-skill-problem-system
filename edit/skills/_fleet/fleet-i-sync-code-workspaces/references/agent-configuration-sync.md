@@ -47,7 +47,7 @@ Plugin tables are not ordinary configuration. The Codex CLI owns them on each ho
 
 `bootstrap`, `reconcile`, and `refresh` preview or apply agent configuration for every selected eligible target. `doctor` verifies it. The explicit onboarding form accepts one disabled reviewed target with `--provision-disabled`; ordinary runs require enabled targets with `global_agents_eligible: true`.
 
-This is convergence on each normal sync run, not a background daemon. `fleet sync` applies approved dependencies, workspaces, workspace-built commands, skills, settings, and instructions to every enabled target by default. Changes made in generated home files are backed up and replaced by the versioned source on the next apply. Each changed target path receives an adjacent UTC-stamped backup before atomic replacement.
+This is convergence on each normal sync run, not a background daemon. `fleet sync` applies approved dependencies, workspaces, workspace-built commands, skills, settings, and instructions to every enabled target by default. Fleet owns the exact target paths declared by the sync payload and installed ownership manifest. Managed files contain no ownership comments. Changes made in generated home files are backed up and replaced by the versioned source on the next apply. Each changed target path receives an adjacent UTC-stamped backup before atomic replacement.
 
 ### Commands
 

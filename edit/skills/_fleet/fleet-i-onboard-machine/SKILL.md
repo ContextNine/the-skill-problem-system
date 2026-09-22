@@ -1,6 +1,6 @@
 ---
 name: fleet-i-onboard-machine
-description: Onboards, rebuilds, replaces, recovers, or accepts a Mac or Linux machine as a complete fleet member. Use when the user asks to set up a new primary Mac, add a worker Mac, add a Linux worker, rebuild or replace a machine, enroll it in fleet access, or finish machine acceptance.
+description: Use when the user asks to set up a new primary Mac, add a worker Mac, add a Linux worker, rebuild or replace a machine, enroll it in fleet access, or finish machine acceptance. Also used when asking about machine local secret locations.
 ---
 
 # Fleet · Onboard Machine
@@ -16,6 +16,8 @@ Read [Fleet Shell Mesh](references/fleet-shell-mesh.md) when provisioning or ver
 For Tailscale, use `scripts/setup_tailscale_access.py` for preview-first official installation, non-secret desired-state application, sanitized status, and the exact unavoidable authentication or macOS approval checkpoint. Do not replace it with improvised install commands.
 
 Read GitHub Fleet Authentication. Use `scripts/github_fleet_auth.py` for dedicated per-machine GitHub SSH keys. Stage `scripts/linux_secret_service.py` for terminal-only Linux Secret Service creation, unlock, or accidental-newline repair. Stage `scripts/macos_gh_keychain.py` when an existing valid Mac OAuth session falls back to plaintext because its exact `gh` Keychain records are incomplete or stale. Keep OAuth/API login and SSH Git transport as separate acceptance gates.
+
+Read [Google Workspace CLI Authentication](references/google-workspace-cli-authentication.md) before installing, authenticating, reauthorizing, or repairing `gws` on any machine. Its complete everyday service grant is the single source of truth. Never substitute a narrower login in a role-specific onboarding document.
 
 Read [Machine-local Secrets](references/machine-local-secrets.md), then [Machine-local Secrets and Enrollment](references/machine-local-secrets-and-enrollment.md). Treat `_system/agents/edit/settings/fleet/machine-secrets.json` as the non-secret ownership and procedure registry, and `_system/agents/internal/generated/state/machine-secrets.lock.json` as sanitized confirmed state only. Enroll the per-machine ctx9 GitLab group-read credential before any workspace installer needs private packages. Use each credential's owning script; do not improvise copies or turn provider/service secrets into fleet-machine secrets.
 

@@ -20,7 +20,10 @@ Treat `SKILL.md` as the entry point for prerequisites, durable safety rules, rou
 
 Keep public defaults and schemas under `internal/defaults/` and `internal/schemas/`. Never store credential values in the repository. Preserve provenance and license notices when importing a skill.
 
-- If you discover that the skill file will be long (> 300 lines), create additional docs under references/ grouped logically.
+- If you discover that the skill file will be long (> 500 lines), create additional docs under references/ grouped logically.
+- Skills should often be composable, with logical groupings of responsibility under references or into separate skills. You can do this automatically when you notice this can be done, but if it's a big change to an existing skill, notify me.
+- Rewrite both the "what" (capability) and the "when" (trigger context) in the description.
+- Provide constraints not procedures ("e g. Always run tests before x", not "step 1, step 2"). Step by step should be in scripts.
 - Keep references one level deep and give each one a clear responsibility.
 - Keep detail inline when splitting it would only add indirection.
 - Follow the user's requested structure when they specify one.
@@ -93,6 +96,7 @@ The `-i-` marker is only for Vault-owned sources. Repository and GH names retain
 | `_finance` | `finance` |
 | `_gws` | `gws` |
 | `_fleet` | `fleet` |
+| `_integrations` | `integrations` |
 | `_marketing` | `marketing` |
 | `_spreadsheets` | `spreadsheets` |
 | `_vault` | `vault` |

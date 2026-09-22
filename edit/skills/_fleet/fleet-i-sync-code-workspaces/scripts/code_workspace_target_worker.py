@@ -361,94 +361,6 @@ def reconcile_remote(destination: Path, source: dict[str, object], apply: bool) 
     }
 
 
-def reconcile_github_owner_transfer(
-    destination: Path, source: dict[str, object], apply: bool
-) -> dict[str, object]:
-    """Rewrite one GitHub remote after the controller proves the repository ID is unchanged."""
-    relative = str(source["relative_path"])
-    if not destination.exists() and not destination.is_symlink():
-        return {"path": relative, "status": "missing", "detail": "repository is not bootstrapped"}
-    target_identity = source.get("transfer_target_identity")
-    repository_id = source.get("github_repository_id")
-    if not isinstance(target_identity, str) or not isinstance(repository_id, int):
-        return {"path": relative, "status": "blocked", "detail": "owner transfer lacks verified GitHub identity"}
-    remote_name, current_url = choose_remote(destination)
-    current_identity = canonical_remote(current_url) if current_url else None
-    allowed_identities = {str(source["remote_identity"]), target_identity}
-    if not remote_name or not current_url or current_identity not in allowed_identities:
-        return {
-            "path": relative,
-            "status": "conflict",
-            "detail": "target remote matches neither the previous nor transferred GitHub identity",
-        }
-    inspection_source = {**source, "remote_identity": current_identity}
-    state, problem = inspect_repository(destination, inspection_source)
-    if problem:
-        return problem
-    assert state is not None
-    if state["dirty"]:
-        return {"path": relative, "status": "blocked", "detail": "working tree is dirty"}
-    if not state["branch"]:
-        return {"path": relative, "status": "blocked", "detail": "repository is detached"}
-    if not state["upstream"] or state["divergence_error"]:
-        return {"path": relative, "status": "blocked", "detail": "upstream divergence cannot be verified"}
-    if state["ahead"] != 0 or state["behind"] != 0:
-        return {
-            "path": relative,
-            "status": "blocked",
-            "detail": f"repository is ahead {state['ahead']} and behind {state['behind']}",
-        }
-    old_url = str(state["configured_remote_url"])
-    desired_url = str(source["remote_url"])
-    if old_url == desired_url and current_identity == target_identity:
-        return {
-            "path": relative,
-            "status": "owner-current",
-            "detail": f"{remote_name} already uses transferred GitHub owner",
-            "github_repository_id": repository_id,
-        }
-    ssh_command = git(destination, "config", "--local", "--get", "core.sshCommand")
-    if ssh_command.returncode == 0 and output(ssh_command):
-        return {
-            "path": relative,
-            "status": "blocked",
-            "detail": "repo-specific core.sshCommand requires manual review before owner transfer",
-        }
-    planned = {
-        "path": relative,
-        "status": "planned-owner-transfer",
-        "detail": f"change {remote_name} to transferred GitHub owner for repository ID {repository_id}",
-        "old_url": old_url,
-        "new_url": desired_url,
-        "github_repository_id": repository_id,
-    }
-    if not apply:
-        return planned
-    changed = git(destination, "remote", "set-url", remote_name, desired_url)
-    if changed.returncode != 0:
-        return {**planned, "status": "error", "detail": f"remote update failed: {error_text(changed)}"}
-    literal = configured_remote_url(destination, remote_name)
-    verified = run(
-        ["git", "ls-remote", "--exit-code", desired_url, "HEAD"],
-        env=noninteractive_git_environment(),
-    )
-    if literal == desired_url and canonical_remote(literal) == target_identity and verified.returncode == 0:
-        return {
-            **planned,
-            "status": "owner-updated",
-            "detail": f"updated and verified {remote_name} for GitHub repository ID {repository_id}",
-        }
-    rollback = git(destination, "remote", "set-url", remote_name, old_url)
-    rollback_detail = "restored prior URL" if rollback.returncode == 0 else f"rollback failed: {error_text(rollback)}"
-    failure = "configured owner verification failed" if literal != desired_url else f"remote access failed: {error_text(verified)}"
-    return {
-        **planned,
-        "status": "error",
-        "detail": f"{failure}; {rollback_detail}",
-        "rolled_back": rollback.returncode == 0,
-    }
-
-
 def clone_missing(destination: Path, source: dict[str, object], apply: bool) -> dict[str, object]:
     relative = str(source["relative_path"])
     branch = source.get("clone_branch")
@@ -848,14 +760,7 @@ def main() -> int:
         source_machine_id = str(payload.get("source_machine_id") or "unknown")
         run_id = str(payload.get("run_id") or "")
         allow_dirty_relocation = bool(payload.get("allow_dirty_relocation"))
-        if operation not in {
-            "bootstrap",
-            "reconcile",
-            "refresh",
-            "doctor",
-            "migrate-github-remotes",
-            "transfer-github-owner",
-        }:
+        if operation not in {"bootstrap", "reconcile", "refresh", "doctor", "migrate-github-remotes"}:
             raise ValueError("invalid operation")
         if operation == "doctor" and apply:
             raise ValueError("doctor cannot apply changes")
@@ -866,13 +771,7 @@ def main() -> int:
 
         preflight = (
             preflight_repositories(repositories)
-            if operation in {
-                "bootstrap",
-                "reconcile",
-                "refresh",
-                "migrate-github-remotes",
-                "transfer-github-owner",
-            }
+            if operation in {"bootstrap", "reconcile", "refresh", "migrate-github-remotes"}
             else {"ok": True, "results": []}
         )
         if apply and not preflight["ok"]:
@@ -940,8 +839,6 @@ def main() -> int:
                     result = refresh_repository(destination, source, apply)
                 elif operation == "migrate-github-remotes":
                     result = reconcile_remote(destination, source, apply)
-                elif operation == "transfer-github-owner":
-                    result = reconcile_github_owner_transfer(destination, source, apply)
                 else:
                     result = doctor_repository(destination, source)
                 results.append(result)

@@ -9,8 +9,6 @@ status: enabled
 
 The canonical remote identity is the stable repository key; the Code-relative catalog path is desired fleet layout. URL credentials, query strings, fragments, local remotes, and ambiguous remotes are never persisted or used for relocation.
 
-A GitHub owner transfer is an explicit exception to textual remote identity stability. The transfer workflow proves the old and new slugs resolve to the same numeric GitHub repository ID, then records the new canonical SSH URL in the catalog and every selected checkout. Ordinary reconciliation and transport migration never infer this relationship from redirects.
-
 Transport is desired state but is not repository identity. A literal same-identity URL that differs from the catalog is `transport-drift`. The migrator reads the literal `remote.<name>.url` so a global `insteadOf` rewrite cannot hide drift. It updates only the unambiguous named remote after fleet-wide access preflight, verifies the literal URL and remote access, and restores the old sanitized URL if verification fails. An idempotent second pass returns `transport-current`.
 
 For an exact catalog entry whose source path is missing, discovery scans the selected machine's resolved Code root for its configured remote. One match is reported as catalog drift. Multiple matches block adoption. `--adopt-source-layout` permits the detected path for preview; with `--apply`, it atomically updates that Code-root-relative entry in private `fleet/workspaces.json` before target work. Commit and push that private config change so later runs share the new desired layout.

@@ -1,31 +1,21 @@
 ---
-name: gws-i-custom-calendar
-description: Manages Matt Derman's Google Calendar with direct GWS CLI commands and preserves shared Google Workspace OAuth scopes. Use when the user asks to inspect a calendar, create or update events, add travel or appointments, time block work, set up the Time Blocks calendar, or fix GWS Calendar authentication.
+name: vault-i-custom-calendar
+description: Manages Matt Derman's Google Calendar with direct GWS CLI commands and Vault-owned calendar routing. Use when the user asks to inspect a calendar, create or update events, add travel or appointments, time block work, set up the Time Blocks calendar, or fix GWS Calendar authentication.
 ---
 
-# GWS · Custom Calendar
+# Vault · Custom Calendar
 
 Use the `gws` CLI directly. The legacy `vault gcal` wrapper and automatic TaskNotes calendar mirror no longer exist.
 
 ## Instance config
 
-Before a Calendar write, read `_system/agents/edit/settings/skills/config/gws-i-custom-calendar/README.md` and its `private/config.json` from `vault root`. Require schema version 1, non-empty calendar IDs, timezone, and positive durations. Use the configured IDs directly. Do not query `calendarList` during normal operation.
+Before a Calendar write, read `_system/agents/edit/settings/skills/config/vault-i-custom-calendar/README.md` and its `private/config.json` from `vault root`. Require schema version 1, non-empty calendar IDs, timezone, and positive durations. Use the configured IDs directly. Do not query `calendarList` during normal operation.
 
 If config is missing or invalid, stop with setup guidance. If Google rejects a configured ID, list calendars once. When exactly one owned calendar matches the configured summary, use its ID and repair the private config. Otherwise stop rather than guessing or creating a duplicate.
 
 ## Authentication
 
-Start with `gws auth status`. Run `gws auth setup` only when the OAuth client is missing.
-
-For initial login and every reauthorization, preserve the complete everyday grant:
-
-```bash
-gws auth login --services gmail,calendar,drive,sheets,docs,slides,tasks
-```
-
-Never reauthorize with a narrower service list because login replaces the stored grant. Do not log in before normal commands. Reauthorize only when credentials are missing, a new service is needed, or Google returns an authentication or insufficient-scope error.
-
-After auth work, prove Calendar access with a harmless agenda read. If status is correct but calls still return `401` or `403`, move the disposable `token_cache.json` from the GWS config directory to Trash, retry the read, then rerun the canonical login only if needed. Keep the encrypted credentials file intact.
+Use `$fleet-i-onboard-machine` and read its Google Workspace CLI Authentication reference before any authentication, reauthorization, or token repair. Start with `gws auth status`, preserve the complete everyday grant, and prove Calendar access with a harmless agenda read after auth work.
 
 ## Defaults
 

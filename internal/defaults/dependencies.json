@@ -674,23 +674,23 @@
         "recipes": {
           "macos": {
             "manager": "github-python-installer",
-            "version": "0.3.17",
+            "version": "0.3.24",
             "archive": {
-              "url": "https://github.com/ContextNine/ctx9/releases/download/v0.3.17/ctx9-0.3.17.tar.gz",
-              "sha256": "6861b933e5d4e776ac626e277f4cd8d248853d9cb43736d557e09c7d8097e247"
+              "url": "https://github.com/ContextNine/ctx9/releases/download/v0.3.24/ctx9-0.3.24.tar.gz",
+              "sha256": "8fcca5aea84b59c24c5488f47921541f354ba3a8bce0dfcf93a6a1d15b9b1d7d"
             },
-            "archive_root": "ctx9-0.3.17",
+            "archive_root": "ctx9-0.3.24",
             "installer": "scripts/install.py",
             "arguments": []
           },
           "linux": {
             "manager": "github-python-installer",
-            "version": "0.3.17",
+            "version": "0.3.24",
             "archive": {
-              "url": "https://github.com/ContextNine/ctx9/releases/download/v0.3.17/ctx9-0.3.17.tar.gz",
-              "sha256": "6861b933e5d4e776ac626e277f4cd8d248853d9cb43736d557e09c7d8097e247"
+              "url": "https://github.com/ContextNine/ctx9/releases/download/v0.3.24/ctx9-0.3.24.tar.gz",
+              "sha256": "8fcca5aea84b59c24c5488f47921541f354ba3a8bce0dfcf93a6a1d15b9b1d7d"
             },
-            "archive_root": "ctx9-0.3.17",
+            "archive_root": "ctx9-0.3.24",
             "installer": "scripts/install.py",
             "arguments": []
           }
@@ -700,7 +700,7 @@
           "args": [
             "--version"
           ],
-          "minimum": "0.3.17"
+          "minimum": "0.3.24"
         }
       }
     },
@@ -786,53 +786,7 @@
             "vault",
             "--json"
           ],
-          "exact": "0.2.16"
-        }
-      }
-    },
-    {
-      "id": "codex-repo-sync",
-      "kind": "package",
-      "platforms": [
-        "macos",
-        "linux"
-      ],
-      "groups": [
-        "agent-baseline",
-        "ctx9-tools"
-      ],
-      "eligibility": "enabled-agent-machines",
-      "required_by": [
-        "fleet-i-onboard-machine",
-        "fleet-i-sync-code-workspaces",
-        "fleet-sync"
-      ],
-      "lifecycle_doc": "dependencies/ctx9.md",
-      "requires": [
-        "ctx9-launcher"
-      ],
-      "contract": {
-        "adapter": "package",
-        "install_policy": "required",
-        "update_policy": "declared-recipe",
-        "recipes": {
-          "macos": {
-            "manager": "ctx9-component",
-            "package": "codex-repo-sync"
-          },
-          "linux": {
-            "manager": "ctx9-component",
-            "package": "codex-repo-sync"
-          }
-        },
-        "verify": {
-          "command": "ctx9",
-          "args": [
-            "doctor",
-            "codex-repo-sync",
-            "--json"
-          ],
-          "exact": "0.1.1"
+          "exact": "0.3.1"
         }
       }
     },
@@ -972,6 +926,48 @@
       }
     },
     {
+      "id": "notion-cli",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "agent-baseline"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "notion-cli",
+        "integrations-i-notion"
+      ],
+      "lifecycle_doc": "dependencies/package-managers.md",
+      "requires": [
+        "node24"
+      ],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "npm",
+            "package": "ntn@0.23.8"
+          },
+          "linux": {
+            "manager": "npm",
+            "package": "ntn@0.23.8"
+          }
+        },
+        "verify": {
+          "command": "ntn",
+          "args": [
+            "--version"
+          ],
+          "minimum": "0.23.8"
+        }
+      }
+    },
+    {
       "id": "agent-canvas",
       "kind": "package",
       "platforms": [
@@ -1009,6 +1005,47 @@
             "--version"
           ],
           "minimum": "0.13.0"
+        }
+      }
+    },
+    {
+      "id": "todoist-cli",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "skill-runtime"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "todoist-cli"
+      ],
+      "lifecycle_doc": "dependencies/package-managers.md",
+      "requires": [
+        "node24"
+      ],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "npm",
+            "package": "@doist/todoist-cli@5.3.10"
+          },
+          "linux": {
+            "manager": "npm",
+            "package": "@doist/todoist-cli@5.3.10"
+          }
+        },
+        "verify": {
+          "command": "td",
+          "args": [
+            "--version"
+          ],
+          "exact": "5.3.10"
         }
       }
     },
@@ -1824,7 +1861,8 @@
       "eligibility": "enabled-agent-machines",
       "required_by": [
         "fleet-i-onboard-machine",
-        "fleet-sync"
+        "fleet-sync",
+        "k3s-infrastructure-manage-utm-tracking-links"
       ],
       "lifecycle_doc": "dependencies/secret-bindings.md",
       "requires": [

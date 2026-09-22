@@ -132,7 +132,7 @@ Before enablement and again after reboot, prove:
 3. `AGENTS.md`, `_library`, `_system`, teamspace folders, hidden paths, filenames with spaces and Unicode, symlinks, and representative large media are readable.
 4. `.git` exists as the shared pointer but `git -C "$(vault root)" rev-parse --git-dir` fails.
 5. A harmless write, read, and delete probe succeeds through the mounted worktree without waiting for iCloud upload.
-6. `ctx9 doctor codex-repo-sync --json` remains healthy in Code repositories and performs no Vault Git work in the mount.
+6. Code-repository tooling performs no Vault Git work in the mount.
 7. `systemctl --user is-enabled vault-remote.service` passes only after first acceptance.
 8. Restart the client and host, then prove unattended inbound SSH, automatic mount recovery, fresh host identity, and read-write health.
 

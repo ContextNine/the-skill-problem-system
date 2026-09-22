@@ -19,7 +19,7 @@ description: Audits and fixes technical, on-page, entity, indexing, performance,
 3. Follow [Next.js Fix Patterns](references/nextjs-fix-patterns.md) while tracing App Router metadata, route handlers, middleware, rendering gates, and multi-tenant behavior.
 4. Compare findings with [Known Failure Patterns](references/known-failure-patterns.md); verify each against current state before reporting it.
 5. Run Lighthouse mobile and desktop. Treat lab data as diagnostic, not field Core Web Vitals or a ranking score.
-6. Hand GTM, GA4, Consent Mode, and data-layer work to [Google Marketing Measurement](../marketing-google-marketing-measurement/SKILL.md). Hand managed campaign URLs to [Manage UTM Tracking Links](../marketing-manage-utm-tracking-links/SKILL.md).
+6. Hand GTM, GA4, Consent Mode, and data-layer work to [Google Marketing Measurement](../marketing-google-marketing-measurement/SKILL.md). Hand managed campaign URLs to `$k3s-infrastructure-manage-utm-tracking-links`.
 
 ## Fix Order
 

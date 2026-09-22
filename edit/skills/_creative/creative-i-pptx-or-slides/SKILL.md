@@ -9,6 +9,10 @@ Choose one route before authoring. Follow the user's named route when they speci
 
 ## Claude
 
+### Default Claude PowerPoint
+
+Use Claude's built-in PowerPoint and PPTX capabilities for straightforward deck creation, editing, and native `.pptx` delivery. Prefer it when the request does not need Witan's lower-level scripting or Frontend Slides' HTML and motion workflow.
+
 ### Witan PPTX
 
 Use `$witan-pptx-officejs` for editable `.pptx` files, native PowerPoint objects, charts, scripted changes, rendering, linting, or precise inspection. Prefer it for PowerPoint deliverables.

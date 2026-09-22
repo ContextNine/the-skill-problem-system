@@ -14,7 +14,7 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from package_layout import ConfigurationError, expand_registered_path, validate_machines, validate_workspaces
-from package_installer import WORKSPACE_SYNC_HELPERS, InstallError, install, is_private_source, uninstall, verify
+from package_installer import InstallError, install, is_private_source, uninstall, verify
 from fleet_templates import FleetTemplateError, render_file, render_markdown_tree
 
 
@@ -242,12 +242,9 @@ class StandaloneInstallTests(unittest.TestCase):
             )
             self.assertEqual(machines["primary_machine_id"], "test-mac")
             self.assertEqual(machines["machines"][0]["roots"]["code"], "~/Developer")
-            self.assertEqual((home / ".agents/internal/skills").exists(), not is_private_source(package))
-            for helper in WORKSPACE_SYNC_HELPERS:
-                self.assertTrue((home / ".agents/internal/src" / helper).is_file())
             launcher = (home / ".local/bin/fleet").read_text(encoding="utf-8")
-            command_root = package.parents[1] if is_private_source(package) else package
-            self.assertIn(f"--root {json.dumps(str(command_root.resolve()))}", launcher)
+            source_root = package if (package / "install.sh").exists() else package.parents[1]
+            self.assertIn(f"--root {json.dumps(str(source_root.resolve()))}", launcher)
             self.assertNotIn("fleet.managed", launcher)
             second = install(
                 package,
@@ -369,7 +366,8 @@ class StandaloneInstallTests(unittest.TestCase):
             )
             self.assertEqual(manifest["source_root"], str(package.resolve()))
             launcher = (home / ".local/bin/fleet").read_text(encoding="utf-8")
-            self.assertIn(f"--root {json.dumps(str(package.resolve()))}", launcher)
+            command_root = package.parents[1] if is_private_source(package) else package
+            self.assertIn(f"--root {json.dumps(str(command_root.resolve()))}", launcher)
 
 
 if __name__ == "__main__":

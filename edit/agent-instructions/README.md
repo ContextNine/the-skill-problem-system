@@ -12,6 +12,6 @@ Edit files directly under `templates/` for specific text:
 
 The machine registry owns identity, the default Code root, access routes, Vault participation, and variant choice. The workspace registry owns each repository's optional non-secret `development` target and service names. Never put credentials or connection URLs there. Markdown owns all instruction wording. For syntax and precedence, see the Fleet templating reference in `../skills/_agents/agents-i-write-or-edit-a-skill/references/fleet-templating.md`.
 
-`fleet sync --skills --instructions --dry-run` previews generated destinations; `fleet sync --skills --instructions` applies them. The generated global file is `~/.agents/instructions/AGENTS.md`, with Codex and optional Claude links. The Vault root `AGENTS.md` is a separate, direct-edit project instruction file.
+`fleet sync --skills --instructions --dry-run` previews generated destinations; `fleet sync --skills --instructions` applies them. The generated global file is `~/.agents/instructions/AGENTS.md`, with Codex and optional Claude links. Fleet owns these exact target paths and replaces differing content without embedding ownership comments. The Vault root `AGENTS.md` is a separate, direct-edit project instruction file.
 
 The public skill-system package and public Vault can be installed independently. Run `fleet source path` to find the authoritative editable agent package and `fleet config path` to find its installed settings. A later Vault install does not silently move or replace an existing standalone skill-system source.

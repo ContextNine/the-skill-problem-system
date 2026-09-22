@@ -16,7 +16,7 @@ Read [Authentication and Custody](references/authentication-and-custody.md) befo
 python3 scripts/rclone_google_drive.py plan --machine-id <machine-id>
 ```
 
-3. Stop on missing Rclone, desired IDs, native credentials, or explicit approval. Use `$fleet-i-update-dependencies` for installation and `$fleet-i-onboard-machine` for credential enrollment.
+3. Stop on missing Rclone, desired IDs, Personal Globals, target-local config unlock, or explicit approval. Use `$fleet-i-update-dependencies` for installation, `$secret-bindings-cli` for the OAuth application bindings, and `$fleet-i-onboard-machine` for the config unlock.
 4. After target-local enrollment and OAuth authorization, verify the encrypted configuration and exact policy:
 
 ```bash
@@ -47,5 +47,5 @@ python3 scripts/rclone_google_drive.py download --machine-id <recovery-machine-i
 - Use the exact dedicated remote and root from desired state. Never enumerate or mutate another Drive hierarchy.
 - Upload with `--immutable`; verify with `rclone check --download`. Automatic retention deletion is forbidden.
 - OAuth tokens are created independently on each target. Never copy Rclone configs or tokens between machines.
-- Rclone config passwords and the OAuth client secret stay in native custody. Do not use plaintext environment files or persistent secret environment variables.
+- The OAuth client ID and secret live only in the configured Secret Bindings personal globals and enter the Rclone child environment transiently. Target OAuth tokens stay in independently encrypted Rclone configs. Config passwords stay in native custody. Do not use plaintext environment files or persistent secret environment variables.
 - Live create, upload, download, delete, OAuth, or config writes require explicit approval. Retirement is plan-only until separately approved.

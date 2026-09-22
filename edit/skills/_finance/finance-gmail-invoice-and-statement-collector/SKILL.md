@@ -24,20 +24,13 @@ Read Finance & Biz before saving. It owns the canonical record locations and tax
 
 Read `$gws-shared` and `$gws-gmail` when Gmail command details matter.
 
-`gws` must be installed and authenticated:
+`gws` must be installed and authenticated. Install approved dependencies when needed:
 
 ```bash
 "$(vault root)/_system/deps/install.py"
-gws auth login
 ```
 
-Use `gws auth login` as the normal path. It should open browser OAuth when a GWS client config already exists. If it says no OAuth client is configured, then run:
-
-```bash
-gws auth setup --project "<google_cloud_project from config>" --login
-```
-
-Prefer configured personal Google Cloud project. Setup flow may ask for Desktop OAuth client ID/secret only when no local client config exists yet.
+Use `$fleet-i-onboard-machine` and read its Google Workspace CLI Authentication reference before any login, reauthorization, or token repair. Do not use a generic or Gmail-only login because it can replace the shared everyday grant. When OAuth client setup is actually missing, prefer the configured personal Google Cloud project from this skill's private config.
 
 ## Behavior
 

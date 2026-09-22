@@ -12,7 +12,7 @@ Read the references needed for the task:
 - [Double Opt-in and Delivery](references/double-opt-in-and-delivery.md) for every gated resource.
 - [Full VSL Page](references/full-vsl-page.md) for long-form post-opt-in selling.
 - [Minimal Download Page](references/minimal-download-page.md) for intentionally small delivery pages.
-- [Impression Adapter](references/impression-adapter.md) or [Personal Monorepo Adapter](references/personal-monorepo-adapter.md) for repository-specific source locations.
+- [Impression Adapter](references/impression-adapter.md) or Context Nine Monorepo Adapter for repository-specific source locations.
 
 ## Default workflow
 
@@ -22,8 +22,9 @@ Read the references needed for the task:
 4. Redirect a confirmed lead to `confirmationDestinationUrl`; tenant-local configs may use `confirmationDestinationPath`.
 5. Let that destination expose the actual `downloadUrl` and any optional VSL or upsell.
 6. Use `$publisher-file-upload` for requested public or lead-magnet assets.
-7. Use `$marketing-manage-utm-tracking-links` only when the user explicitly invokes it for managed campaign links.
-8. Validate tenant/offer isolation, accessibility, mobile layout, analytics, and the complete email-to-download journey.
+7. When the journey uses Plunk, use `$k3s-infrastructure-manage-plunk`.
+8. Use `$k3s-infrastructure-manage-utm-tracking-links` only when the user explicitly invokes it for managed campaign links.
+9. Validate tenant/offer isolation, accessibility, mobile layout, analytics, and the complete email-to-download journey.
 
 ## Boundaries
 

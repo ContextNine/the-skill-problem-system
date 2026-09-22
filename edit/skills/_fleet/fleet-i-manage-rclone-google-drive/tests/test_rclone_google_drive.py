@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, call, patch
 
 
 SCRIPT = Path(__file__).parents[1] / "scripts/rclone_google_drive.py"
@@ -110,6 +110,47 @@ class DesiredStateTests(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             with self.assertRaisesRegex(rclone_google_drive.BackupError, "Secret Bindings"):
                 rclone_google_drive.binding_environment(desired())
+
+
+class ConfigurationTests(unittest.TestCase):
+    def test_creates_only_the_exact_absent_remote(self) -> None:
+        rclone = Mock()
+        rclone.desired = desired()
+        rclone.run.return_value.stdout = ""
+        accepted = {"ready": True}
+        with patch.object(rclone_google_drive, "verify_remote", return_value=accepted):
+            report = rclone_google_drive.configure_remote(rclone)
+        self.assertEqual(report, accepted)
+        self.assertEqual(
+            rclone.run.call_args_list,
+            [
+                call("listremotes"),
+                call(
+                    "config",
+                    "create",
+                    "ctx9_codefoldersync_backups",
+                    "drive",
+                    "scope",
+                    "drive.file",
+                    "team_drive",
+                    "shared-drive-id",
+                    "root_folder_id",
+                    "root-folder-id",
+                    "config_is_local",
+                    "true",
+                    "--no-output",
+                    interactive=True,
+                ),
+            ],
+        )
+
+    def test_refuses_to_replace_an_existing_remote(self) -> None:
+        rclone = Mock()
+        rclone.desired = desired()
+        rclone.run.return_value.stdout = "ctx9_codefoldersync_backups:\n"
+        with self.assertRaisesRegex(rclone_google_drive.BackupError, "already exists"):
+            rclone_google_drive.configure_remote(rclone)
+        rclone.run.assert_called_once_with("listremotes")
 
 
 class BundleTests(unittest.TestCase):

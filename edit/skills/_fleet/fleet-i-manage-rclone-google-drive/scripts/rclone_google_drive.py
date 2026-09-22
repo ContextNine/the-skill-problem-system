@@ -303,6 +303,35 @@ def verify_remote(rclone: Rclone, live: bool) -> dict[str, Any]:
     return {"ready": True, "encrypted": True, "matches": matches, "live_read": live}
 
 
+def configure_remote(rclone: Rclone) -> dict[str, Any]:
+    desired = rclone.desired
+    configured = {
+        line.strip().removesuffix(":")
+        for line in rclone.run("listremotes").stdout.splitlines()
+        if line.strip()
+    }
+    if desired["remote_name"] in configured:
+        raise BackupError("desired Rclone remote already exists; verify it instead of replacing it")
+    drive = desired["google_drive"]
+    rclone.run(
+        "config",
+        "create",
+        desired["remote_name"],
+        "drive",
+        "scope",
+        "drive.file",
+        "team_drive",
+        drive["shared_drive_id"],
+        "root_folder_id",
+        drive["root_folder_id"],
+        "config_is_local",
+        "true",
+        "--no-output",
+        interactive=True,
+    )
+    return verify_remote(rclone, live=False)
+
+
 def command_plan(desired: dict[str, Any], machine_id: str, executable: str) -> dict[str, Any]:
     require_machine(desired, machine_id)
     missing = desired_missing(desired)
@@ -541,8 +570,7 @@ def main() -> int:
             return run_with_secret_bindings(arguments, desired_path)
         rclone = Rclone(arguments.rclone, desired, arguments.machine_id)
         if arguments.command == "configure":
-            rclone.run("config", interactive=True)
-            emit(verify_remote(rclone, live=False))
+            emit(configure_remote(rclone))
         elif arguments.command == "verify":
             emit(verify_remote(rclone, arguments.live))
         elif arguments.command == "acceptance-test":

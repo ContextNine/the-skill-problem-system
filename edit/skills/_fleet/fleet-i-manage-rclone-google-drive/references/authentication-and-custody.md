@@ -10,4 +10,14 @@ Native records:
 
 - macOS config unlock: Keychain generic password service `ctx9-rclone-config-unlock`, account `<machine-id>`.
 - Linux config unlock: Secret Service attributes `ctx9-provider=rclone-config-unlock`, `ctx9-resource=codefoldersync-backups`, `ctx9-machine=<machine-id>`.
+
+Preview target-local creation, then apply it on the target. The helper refuses to replace an existing value and reports only sanitized state:
+
+```bash
+python3 scripts/rclone_config_unlock.py generate --machine-id <machine-id>
+python3 scripts/rclone_config_unlock.py generate --machine-id <machine-id> --apply
+python3 scripts/rclone_config_unlock.py inspect --machine-id <machine-id>
+```
+
+On macOS, run the apply command from the logged-in user's GUI session if Keychain rejects an SSH process with `User interaction is not allowed`. Do not work around that boundary by placing the generated value in argv, a file, shell history, or synchronized settings.
 Run `configure --approve` only after the desired IDs, both Personal Globals, and the target-local config unlock exist. It opens Rclone's target-local interactive configuration with protected child-only injection. Create exactly the desired remote, authorize that target's account, omit persisted `client_id` and `client_secret` fields, enable configuration encryption, then let `verify` reject any mismatch. Do not display redacted configuration without reviewing it again; Rclone warns that redaction is not a proof that every sensitive field is safe to publish.

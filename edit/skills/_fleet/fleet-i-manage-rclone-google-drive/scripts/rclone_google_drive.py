@@ -137,7 +137,13 @@ def require_configured(desired: dict[str, Any]) -> None:
 
 def password_command(machine_id: str) -> str:
     helper = Path(__file__).with_name("rclone_config_unlock.py").resolve()
-    fields = [str(Path(sys.executable).resolve()), str(helper), machine_id]
+    fields = [
+        str(Path(sys.executable).resolve()),
+        str(helper),
+        "read",
+        "--machine-id",
+        machine_id,
+    ]
     output = io.StringIO()
     csv.writer(output, delimiter=" ", quotechar='"', lineterminator="").writerow(fields)
     return output.getvalue()

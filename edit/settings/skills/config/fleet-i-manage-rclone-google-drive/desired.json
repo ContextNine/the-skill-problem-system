@@ -1,17 +1,18 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "enabled": false,
-  "remote_name": "code_backups",
+  "remote_name": "ctx9_codefoldersync_backups",
   "allowed_machines": [],
   "google_drive": {
-    "oauth_client_id": null,
+    "oauth_client_id_binding": "GOOGLE_PERSONAL_OAUTH_CLIENT_ID",
+    "oauth_client_secret_binding": "GOOGLE_PERSONAL_OAUTH_CLIENT_SECRET",
     "scope": "drive.file",
     "shared_drive_id": null,
     "root_folder_id": null
   },
   "paths": {
-    "backup_prefix": "Code Backups",
-    "acceptance_prefix": ".backup-acceptance"
+    "backup_prefix": "CodeFolderSync Backups",
+    "acceptance_prefix": ".ctx9-acceptance"
   },
   "retention": {
     "mode": "explicit-retirement-only",

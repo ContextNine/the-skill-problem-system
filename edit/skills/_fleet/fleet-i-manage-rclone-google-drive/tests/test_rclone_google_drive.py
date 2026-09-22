@@ -78,7 +78,7 @@ class DesiredStateTests(unittest.TestCase):
         fields = next(csv.reader(io.StringIO(encoded), delimiter=" ", quotechar='"'))
         self.assertTrue(Path(fields[0]).is_absolute())
         self.assertTrue(Path(fields[1]).is_absolute())
-        self.assertEqual(fields[2], "worker-linux")
+        self.assertEqual(fields[2:], ["read", "--machine-id", "worker-linux"])
 
     def test_maps_personal_globals_only_into_the_rclone_child_environment(self) -> None:
         value = desired()

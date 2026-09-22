@@ -17,6 +17,8 @@ python3 scripts/rclone_google_drive.py plan --machine-id <machine-id>
 ```
 
 3. Stop on missing Rclone, desired IDs, Personal Globals, target-local config unlock, or explicit approval. Use `$fleet-i-update-dependencies` for installation, `$secret-bindings-cli` for the OAuth application bindings, and `$fleet-i-onboard-machine` for the config unlock.
+
+Preview and create the independent target-local unlock with `scripts/rclone_config_unlock.py generate --machine-id <machine-id>` and the reviewed `--apply` form. Never replace an existing value automatically.
 4. After target-local enrollment and OAuth authorization, verify the encrypted configuration and exact policy:
 
 ```bash

@@ -1020,6 +1020,7 @@ def main() -> int:
         source_root = (args.source_root or machine_code_root(source_matches[0])).expanduser().resolve()
         if not source_root.is_dir():
             raise RuntimeError(f"source Code root is not a directory: {source_root}")
+        workspace_ownership = workspace_worker.codefoldersync_ownership(source_root)
         catalog_path = args.catalog or root / "_system/agents/edit/settings/fleet/workspaces.json"
         catalog = load_catalog(catalog_path.expanduser().resolve())
         specs, selection = select_specs(catalog, args, source_root)
@@ -1047,6 +1048,7 @@ def main() -> int:
             "repositories": [public_repository(repo) for repo in repositories],
             "skipped": skipped,
             "warnings": warnings,
+            "workspace_ownership": workspace_ownership,
         }
         if args.command == "discover":
             if args.json:
@@ -1056,7 +1058,15 @@ def main() -> int:
                 print_discovery(report)
             return 2 if any(item["required"] for item in skipped) else 0
 
-        apply = bool(getattr(args, "apply", False))
+        if workspace_ownership["owner"] == "blocked":
+            raise RuntimeError(str(workspace_ownership["detail"]))
+        requested_apply = bool(getattr(args, "apply", False))
+        apply = requested_apply and workspace_ownership["owner"] != "codefoldersync"
+        report["requested_apply"] = requested_apply
+        if requested_apply and workspace_ownership["owner"] == "codefoldersync":
+            warnings.append(
+                "CodeFolderSync V3 normal lifecycle owns this Code root; workspace apply was reduced to a read-only report"
+            )
         relocations = [repo for repo in repositories if repo.get("source_relocated")]
         if relocations and not getattr(args, "adopt_source_layout", False):
             details = ", ".join(
@@ -1416,7 +1426,11 @@ def main() -> int:
                 agent_report.get("ready", True)
             ) and bool(plugin_report.get("ready", True))
             target_reports.append(workspace_report)
-        report["mode"] = "apply" if apply else "preview"
+        report["mode"] = (
+            "codefoldersync-report-only"
+            if requested_apply and workspace_ownership["owner"] == "codefoldersync"
+            else "apply" if apply else "preview"
+        )
         report["targets"] = target_reports
         all_targets_applied = all(target.get("ok") and target.get("applied") for target in target_reports)
         if apply and run_id and all_targets_applied:

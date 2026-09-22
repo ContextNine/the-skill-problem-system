@@ -74,6 +74,39 @@ class WorkspaceReconciliationTests(unittest.TestCase):
             "codex_project_root": ".",
         }
 
+    def write_codefoldersync_config(self, *, lifecycle: str = "normal") -> Path:
+        control = self.code_root / ".codefoldersync"
+        control.mkdir()
+        config = {
+            "schemaVersion": 3,
+            "protocolVersion": 3,
+            "revision": 4,
+            "folderId": "fixture-folder",
+            "folderName": "fixture",
+            "root": str(self.code_root),
+            "stateDir": str(self.root / "codefoldersync-state"),
+            "peerId": "fixture-peer",
+            "peerName": "fixture-machine",
+            "hub": {"kind": "local", "path": str(self.root / "hub")},
+            "authority": {"peerId": "fixture-peer", "publicKey": "fixture-public-key"},
+            "peers": [
+                {
+                    "peerId": "fixture-peer",
+                    "peerName": "fixture-machine",
+                    "role": "authority",
+                    "root": str(self.code_root),
+                    "publicKey": "fixture-public-key",
+                }
+            ],
+            "ignoreDigest": "fixture-ignore-digest",
+            "lifecycle": lifecycle,
+            "backupWitness": "fixture-witness",
+            "signature": "fixture-signature",
+        }
+        path = control / "config.json"
+        path.write_text(json.dumps(config) + "\n", encoding="utf-8")
+        return path
+
     def reconcile(self, relative: str, *, apply: bool, run_id: str, allow_dirty: bool = False) -> dict[str, object]:
         source = self.source(relative)
         destination = self.code_root / relative
@@ -406,6 +439,214 @@ class WorkspaceReconciliationTests(unittest.TestCase):
         self.assertIsNone(response["history"])
         self.assertFalse(absent_code_root.exists())
 
+    def test_normal_codefoldersync_target_reports_drift_without_mutation(self) -> None:
+        destination = self.clone("repository")
+        self.write_codefoldersync_config()
+        head_before = subprocess.run(
+            ["git", "-C", str(destination), "rev-parse", "HEAD"],
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+        ).stdout.strip()
+        payload = {
+            "operation": "reconcile",
+            "apply": True,
+            "target_root": str(self.code_root),
+            "repositories": [self.source("repository")],
+            "machine_id": "target",
+            "source_machine_id": "source",
+            "run_id": "must-not-be-recorded",
+        }
+        output_buffer = io.StringIO()
+        with (
+            mock.patch.object(worker, "remote_ref", return_value=(True, True)),
+            mock.patch.object(worker, "preflight_repositories", side_effect=AssertionError("mutation preflight ran")),
+            mock.patch.object(
+                worker,
+                "prerequisites",
+                return_value={"git": "git", "codex": "codex", "codex_auth": "authenticated"},
+            ),
+            mock.patch.object(sys, "stdin", io.StringIO(json.dumps(payload))),
+            mock.patch.object(sys, "stdout", output_buffer),
+        ):
+            self.assertEqual(worker.main(), 0)
+        response = json.loads(output_buffer.getvalue())
+        head_after = subprocess.run(
+            ["git", "-C", str(destination), "rev-parse", "HEAD"],
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+        ).stdout.strip()
+        self.assertEqual(response["mode"], "codefoldersync-report-only")
+        self.assertEqual(response["ownership"]["owner"], "codefoldersync")
+        self.assertFalse(response["applied"])
+        self.assertEqual(response["results"][0]["status"], "attention")
+        self.assertIn("remote branch differs", response["results"][0]["detail"])
+        self.assertEqual(head_after, head_before)
+        self.assertFalse((self.code_root / ".workspace-sync").exists())
+
+    def test_invalid_codefoldersync_marker_blocks_workspace_apply(self) -> None:
+        self.assertEqual(worker.codefoldersync_ownership(self.code_root)["owner"], "workspace-sync")
+        config_path = self.write_codefoldersync_config(lifecycle="adoption")
+        adoption = worker.codefoldersync_ownership(self.code_root)
+        self.assertEqual(adoption["owner"], "workspace-sync")
+        self.assertEqual(adoption["lifecycle"], "adoption")
+        config_path.write_text("{}\n", encoding="utf-8")
+        payload = {
+            "operation": "bootstrap",
+            "apply": True,
+            "target_root": str(self.code_root),
+            "repositories": [self.source("repository")],
+            "machine_id": "target",
+            "source_machine_id": "source",
+            "run_id": "must-not-be-recorded",
+        }
+        output_buffer = io.StringIO()
+        with (
+            mock.patch.object(worker, "preflight_repositories", side_effect=AssertionError("mutation preflight ran")),
+            mock.patch.object(
+                worker,
+                "prerequisites",
+                return_value={"git": "git", "codex": "codex", "codex_auth": "authenticated"},
+            ),
+            mock.patch.object(sys, "stdin", io.StringIO(json.dumps(payload))),
+            mock.patch.object(sys, "stdout", output_buffer),
+        ):
+            self.assertEqual(worker.main(), 0)
+        response = json.loads(output_buffer.getvalue())
+        self.assertEqual(response["mode"], "ownership-blocked")
+        self.assertEqual(response["ownership"]["owner"], "blocked")
+        self.assertFalse(response["applied"])
+        self.assertFalse((self.code_root / "repository").exists())
+        self.assertFalse((self.code_root / ".workspace-sync").exists())
+
+    def test_normal_codefoldersync_source_reduces_controller_apply_to_report_only(self) -> None:
+        destination = self.clone("repository")
+        self.write_codefoldersync_config()
+        head_before = subprocess.run(
+            ["git", "-C", str(destination), "rev-parse", "HEAD"],
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+        ).stdout.strip()
+        args = mock.Mock(
+            command="reconcile",
+            source_root=self.code_root,
+            catalog=None,
+            profile=None,
+            entry=[],
+            path=[],
+            json=True,
+            apply=True,
+            target=[],
+            machine_registry=None,
+            provision_disabled=False,
+            skip_personal_configuration=False,
+            allow_remote_only_source=True,
+            allow_dirty_relocation=False,
+            adopt_source_layout=False,
+        )
+        repository = {
+            "entry_id": "repository",
+            "relative_path": "repository",
+            "catalog_relative_path": "repository",
+            "remote_url": self.remote_url,
+            "remote_display": self.remote_url,
+            "remote_identity": self.remote_identity,
+            "project_relative_path": "repository",
+            "machines": ["*"],
+            "dirty": False,
+            "ahead": 0,
+        }
+        target = {
+            "id": "target",
+            "display_name": "Target",
+            "home": "/srv/example-linux/target",
+            "platform": "linux",
+            "global_agents_eligible": True,
+        }
+        source_preview = {"ok": True, "ready": True, "applied": False, "results": []}
+        agent_preview = {"ok": True, "ready": True, "applied": False, "results": []}
+        plugin_preview = {
+            "ok": True,
+            "ready": True,
+            "applied": False,
+            "preflight": {"ok": True, "checks": []},
+            "marketplaces": [],
+            "plugins": [],
+        }
+        target_preview = {
+            "id": "target",
+            "display_name": "Target",
+            "ok": True,
+            "ready": True,
+            "applied": False,
+            "mode": "codefoldersync-report-only",
+            "preflight": {"ok": True, "results": []},
+            "results": [{"path": "repository", "status": "ready", "detail": "read-only"}],
+            "project_paths": [str(destination)],
+            "history": None,
+        }
+        output_buffer = io.StringIO()
+        with (
+            mock.patch.object(controller, "parse_args", return_value=args),
+            mock.patch.object(controller, "vault_root", return_value=self.root),
+            mock.patch.object(controller, "current_machine_id", return_value="primary"),
+            mock.patch.object(controller, "load_catalog", return_value={}),
+            mock.patch.object(controller, "select_specs", return_value=([{}], "test")),
+            mock.patch.object(controller, "discover_specs", return_value=([repository], [])),
+            mock.patch.object(controller, "source_warnings", return_value=[]),
+            mock.patch.object(
+                controller,
+                "load_machines",
+                return_value={"primary_machine_id": "primary", "machines": [{"id": "primary"}, target]},
+            ),
+            mock.patch.object(controller, "resolve_targets", return_value=[target]),
+            mock.patch.object(controller.agent_configuration, "load_source_bundle", return_value={}),
+            mock.patch.object(
+                controller.agent_configuration,
+                "reconcile_source_alias",
+                return_value=source_preview,
+            ) as source_alias,
+            mock.patch.object(
+                controller.agent_configuration,
+                "invoke_target",
+                return_value=agent_preview,
+            ) as agent_target,
+            mock.patch.object(
+                controller.plugin_reconciliation,
+                "build_desired_inventory",
+                return_value={"schema_version": 1, "source_cli_version": "test", "plugins": []},
+            ),
+            mock.patch.object(
+                controller.plugin_reconciliation,
+                "reconcile",
+                return_value=plugin_preview,
+            ) as source_plugins,
+            mock.patch.object(controller, "invoke_target", return_value=target_preview) as workspace_target,
+            mock.patch.object(controller, "invoke_plugin_target", return_value=plugin_preview) as plugin_target,
+            mock.patch.object(sys, "stdout", output_buffer),
+        ):
+            self.assertEqual(controller.main(), 0)
+
+        response = json.loads(output_buffer.getvalue())
+        self.assertEqual(response["mode"], "codefoldersync-report-only")
+        self.assertTrue(response["requested_apply"])
+        self.assertEqual(response["workspace_ownership"]["owner"], "codefoldersync")
+        self.assertTrue(all(not call.kwargs["apply"] for call in agent_target.call_args_list))
+        self.assertTrue(all(not call.args[3] for call in workspace_target.call_args_list))
+        self.assertTrue(all(not call.kwargs["apply"] for call in plugin_target.call_args_list))
+        self.assertTrue(all(not call.kwargs["apply"] for call in source_alias.call_args_list))
+        self.assertTrue(all(not call.args[0]["apply"] for call in source_plugins.call_args_list))
+        self.assertFalse((self.code_root / ".workspace-sync").exists())
+        head_after = subprocess.run(
+            ["git", "-C", str(destination), "rev-parse", "HEAD"],
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+        ).stdout.strip()
+        self.assertEqual(head_after, head_before)
+
     def test_target_remote_path_uses_registered_terminal_profile(self) -> None:
         machine = {"id": "worker", "terminal_profile": {"remote_path": "/custom/bin:/usr/bin:/bin"}}
         self.assertEqual(controller.target_environment_path(machine), "/custom/bin:/usr/bin:/bin")
@@ -423,6 +664,7 @@ class WorkspaceReconciliationTests(unittest.TestCase):
         environment = worker.noninteractive_git_environment()
         self.assertEqual(environment["GIT_TERMINAL_PROMPT"], "0")
         self.assertEqual(environment["GCM_INTERACTIVE"], "Never")
+        self.assertEqual(environment["GIT_OPTIONAL_LOCKS"], "0")
         self.assertEqual(environment["GIT_ASKPASS"], "/usr/bin/false")
         self.assertEqual(environment["SSH_ASKPASS_REQUIRE"], "never")
         self.assertIn("BatchMode=yes", environment["GIT_SSH_COMMAND"])

@@ -26,6 +26,17 @@ For each desired repository:
 
 Repeated reconciliation returns `already-present` and performs no Git or filesystem mutation.
 
+### CodeFolderSync ownership handoff
+
+The controller and target worker inspect the physical `.codefoldersync/config.json` below each selected Code root before any mutation. The marker must be a bounded regular JSON file, identify schema and protocol 3, match the exact root and enrolled local peer, contain the core signed-projection fields, and declare lifecycle `adoption` or `normal`. This structural check is a mutation boundary, not a replacement for CodeFolderSync's signature verifier.
+
+- No control directory means workspace sync retains ownership.
+- A valid `adoption` projection keeps workspace sync authoritative until cutover.
+- A valid `normal` projection makes repository operations report-only. The worker uses read-only Git inspection and remote-head comparison, returns `applied: false`, and writes no history.
+- A symlinked, incomplete, malformed, oversized, root-mismatched, or otherwise invalid control directory blocks repository mutation.
+
+When the source root is `normal`, the controller reduces the whole requested workspace apply to preview mode before source history, remote migration, catalog adoption, personal agent configuration, plugin reconciliation, or target repository work can apply. Target workers repeat the ownership check independently so a stale controller cannot bypass the boundary.
+
 ### Noninteractive preflight
 
 Workspace operations are SSH/CLI-only. Screen Sharing, GUI terminals, Computer Use, AppleScript, clipboard transfer, and processes launched into a GUI login session are prohibited as execution or credential fallbacks.

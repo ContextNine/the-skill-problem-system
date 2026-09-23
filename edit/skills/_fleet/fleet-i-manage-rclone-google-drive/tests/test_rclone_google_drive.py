@@ -61,6 +61,17 @@ class DesiredStateTests(unittest.TestCase):
             Path("/tmp/agent-settings/skills/config/fleet-i-manage-rclone-google-drive/desired.json"),
         )
 
+    def test_resolves_standard_installed_commands_when_ssh_path_omits_them(self) -> None:
+        expected = Path("/opt/homebrew/bin/rclone")
+        with (
+            patch.object(rclone_google_drive.shutil, "which", return_value=None),
+            patch.object(Path, "is_file", autospec=True) as is_file,
+            patch.object(Path, "resolve", autospec=True, side_effect=lambda path: path),
+        ):
+            is_file.side_effect = lambda path: path == expected
+            result = rclone_google_drive.resolve_executable("rclone")
+        self.assertEqual(result, str(expected))
+
     def test_classifies_rclone_errors_without_returning_provider_text(self) -> None:
         message = "provider request contains private-id: directory not found"
         self.assertEqual(rclone_google_drive.classify_rclone_failure(message), "not_found")

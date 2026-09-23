@@ -51,13 +51,32 @@ def load_json(path: Path, label: str) -> dict[str, Any]:
     return value
 
 
+def resolve_executable(executable: str) -> str | None:
+    candidates: list[Path] = []
+    if "/" in executable:
+        candidates.append(Path(executable))
+    else:
+        resolved = shutil.which(executable)
+        if resolved:
+            candidates.append(Path(resolved))
+        candidates.extend(
+            [
+                Path.home() / ".local/bin" / executable,
+                Path("/opt/homebrew/bin") / executable,
+                Path("/usr/local/bin") / executable,
+                Path("/usr/bin") / executable,
+            ]
+        )
+    for candidate in candidates:
+        if candidate.is_file():
+            return str(candidate.resolve())
+    return None
+
+
 def default_desired_path() -> Path:
-    executable = shutil.which("fleet")
+    executable = resolve_executable("fleet")
     if not executable:
-        installed = Path.home() / ".local/bin/fleet"
-        if not installed.is_file():
-            raise BackupError("installed agent configuration is unavailable")
-        executable = str(installed)
+        raise BackupError("installed agent configuration is unavailable")
     completed = subprocess.run(
         [executable, "config", "path"], check=False, capture_output=True, text=True
     )
@@ -247,10 +266,10 @@ def extract_oauth_token(output: str) -> str:
 
 class Rclone:
     def __init__(self, executable: str, desired: dict[str, Any], machine_id: str) -> None:
-        resolved = shutil.which(executable) if "/" not in executable else executable
-        if not resolved or not Path(resolved).is_file():
+        resolved = resolve_executable(executable)
+        if not resolved:
             raise BackupError("rclone is not installed")
-        self.executable = str(Path(resolved).resolve())
+        self.executable = resolved
         self.desired = desired
         self.machine_id = machine_id
 
@@ -588,8 +607,7 @@ def configure_remote_over_ssh(
 def command_plan(desired: dict[str, Any], machine_id: str, executable: str) -> dict[str, Any]:
     require_machine(desired, machine_id)
     missing = desired_missing(desired)
-    resolved = shutil.which(executable) if "/" not in executable else executable
-    installed = bool(resolved and Path(resolved).is_file())
+    installed = resolve_executable(executable) is not None
     actions = []
     if not installed:
         actions.append("preview and approve rclone installation through fleet-i-update-dependencies")
@@ -791,7 +809,7 @@ def child_arguments(arguments: argparse.Namespace, desired_path: Path) -> list[s
 
 
 def run_with_secret_bindings(arguments: argparse.Namespace, desired_path: Path) -> int:
-    executable = shutil.which("secret-bindings")
+    executable = resolve_executable("secret-bindings")
     if not executable:
         raise BackupError("Secret Bindings CLI is unavailable")
     drive = validate_desired(load_json(desired_path, "Rclone Google Drive desired state"))["google_drive"]

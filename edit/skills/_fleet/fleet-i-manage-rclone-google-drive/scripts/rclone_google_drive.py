@@ -26,7 +26,10 @@ SAFE_ID = re.compile(r"[a-z0-9][a-z0-9._-]*")
 SAFE_REMOTE = re.compile(r"[a-z0-9][a-z0-9_]*")
 SHA256 = re.compile(r"[0-9a-f]{64}")
 ENV_NAME = re.compile(r"[A-Z][A-Z0-9_]*")
+SSH_ALIAS = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
+REMOTE_SCRIPT = re.compile(r"/[A-Za-z0-9._/-]+")
 BINDINGS_CHILD_MARKER = "CTX9_RCLONE_SECRET_BINDINGS_CHILD"
+MAX_OAUTH_TOKEN_BYTES = 64 * 1024
 
 
 class BackupError(RuntimeError):
@@ -166,6 +169,9 @@ def binding_environment(desired: dict[str, Any]) -> dict[str, str]:
     remote = re.sub(r"[^A-Za-z0-9]", "_", desired["remote_name"]).upper()
     environment[f"RCLONE_CONFIG_{remote}_CLIENT_ID"] = client_id
     environment[f"RCLONE_CONFIG_{remote}_CLIENT_SECRET"] = client_secret
+    environment["RCLONE_DRIVE_CLIENT_ID"] = client_id
+    environment["RCLONE_DRIVE_CLIENT_SECRET"] = client_secret
+    environment["RCLONE_DRIVE_SCOPE"] = "drive.file"
     environment.pop("RCLONE_CONFIG_PASS", None)
     environment.pop("RCLONE_PASSWORD_COMMAND", None)
     return environment
@@ -177,6 +183,57 @@ def redact_sensitive(value: str, sensitive_values: list[str]) -> str:
         if sensitive:
             redacted = redacted.replace(sensitive, "[REDACTED]")
     return redacted
+
+
+def classify_rclone_failure(output: str) -> str:
+    lowered = output.lower()
+    categories = (
+        ("insufficient authentication scopes", "insufficient_scope"),
+        ("insufficientpermissions", "permission_denied"),
+        ("permission denied", "permission_denied"),
+        ("couldn't find root directory", "root_not_found"),
+        ("root folder id", "root_not_found"),
+        ("not found", "not_found"),
+        ("error 404", "not_found"),
+        ("error 403", "permission_denied"),
+        ("error 401", "authentication_failed"),
+    )
+    for marker, category in categories:
+        if marker in lowered:
+            return category
+    return "unclassified"
+
+
+def canonical_oauth_token(value: str) -> str:
+    if not value or len(value.encode("utf-8")) > MAX_OAUTH_TOKEN_BYTES:
+        raise BackupError("OAuth token response is missing or too large")
+    try:
+        token = json.loads(value)
+    except json.JSONDecodeError as error:
+        raise BackupError("OAuth token response is unreadable") from error
+    if not isinstance(token, dict):
+        raise BackupError("OAuth token response is invalid")
+    for field in ("access_token", "refresh_token", "token_type"):
+        if not isinstance(token.get(field), str) or not token[field]:
+            raise BackupError("OAuth token response is incomplete")
+    return json.dumps(token, separators=(",", ":"), sort_keys=True)
+
+
+def extract_oauth_token(output: str) -> str:
+    decoder = json.JSONDecoder()
+    for offset, character in enumerate(output):
+        if character != "{":
+            continue
+        try:
+            value, _ = decoder.raw_decode(output[offset:])
+        except json.JSONDecodeError:
+            continue
+        if isinstance(value, dict) and all(
+            isinstance(value.get(field), str) and value[field]
+            for field in ("access_token", "refresh_token", "token_type")
+        ):
+            return canonical_oauth_token(json.dumps(value))
+    raise BackupError("Rclone authorization did not return a usable token")
 
 
 class Rclone:
@@ -213,7 +270,10 @@ class Rclone:
             env=self._environment(),
         )
         if completed.returncode != 0:
-            raise BackupError(f"rclone command failed with exit {completed.returncode}")
+            category = classify_rclone_failure(completed.stdout + completed.stderr)
+            raise BackupError(
+                f"rclone command failed with exit {completed.returncode} ({category})"
+            )
         return completed
 
     def run_oauth(self, *arguments: str) -> None:
@@ -244,6 +304,41 @@ class Rclone:
             raise
         if return_code != 0:
             raise BackupError(f"rclone OAuth command failed with exit {return_code}")
+
+    def authorize_token(self) -> str:
+        completed = subprocess.run(
+            [
+                self.executable,
+                "--log-level",
+                "ERROR",
+                "--stats",
+                "0",
+                "authorize",
+                "drive",
+            ],
+            check=False,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            env=self._environment(),
+        )
+        if completed.returncode != 0:
+            raise BackupError(f"rclone remote authorization failed with exit {completed.returncode}")
+        return extract_oauth_token(completed.stdout)
+
+    def run_oauth_input(self, token: str, *arguments: str) -> None:
+        completed = subprocess.run(
+            self.command(*arguments),
+            check=False,
+            input=canonical_oauth_token(token) + "\n",
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            env=self._environment(),
+        )
+        if completed.returncode != 0:
+            raise BackupError(f"rclone remote configuration failed with exit {completed.returncode}")
 
 
 def remote_path(desired: dict[str, Any], *components: str) -> str:
@@ -308,12 +403,12 @@ def validate_bundle(root: Path, snapshot_id: str, machine_id: str) -> dict[str, 
     return {"artifact_count": len(artifacts), "file_count": len(expected), "total_bytes": total}
 
 
-def parse_redacted(text: str, remote_name: str) -> dict[str, str]:
+def parse_config(text: str, remote_name: str) -> dict[str, str]:
     parser = configparser.ConfigParser(interpolation=None)
     try:
         parser.read_string(text)
     except configparser.Error as error:
-        raise BackupError("rclone returned an unreadable redacted configuration") from error
+        raise BackupError("rclone returned an unreadable configuration") from error
     if remote_name not in parser:
         raise BackupError("desired Rclone remote is missing")
     return dict(parser[remote_name])
@@ -322,8 +417,8 @@ def parse_redacted(text: str, remote_name: str) -> dict[str, str]:
 def verify_remote(rclone: Rclone, live: bool) -> dict[str, Any]:
     desired = rclone.desired
     rclone.run("config", "encryption", "check")
-    redacted = rclone.run("config", "redacted", desired["remote_name"]).stdout
-    actual = parse_redacted(redacted, desired["remote_name"])
+    configuration = rclone.run("config", "show", desired["remote_name"]).stdout
+    actual = parse_config(configuration, desired["remote_name"])
     drive = desired["google_drive"]
     matches = {
         "type": actual.get("type") == "drive",
@@ -340,7 +435,7 @@ def verify_remote(rclone: Rclone, live: bool) -> dict[str, Any]:
     return {"ready": True, "encrypted": True, "matches": matches, "live_read": live}
 
 
-def configure_remote(rclone: Rclone) -> dict[str, Any]:
+def require_absent_encrypted_remote(rclone: Rclone) -> None:
     desired = rclone.desired
     try:
         rclone.run("config", "encryption", "check")
@@ -360,6 +455,11 @@ def configure_remote(rclone: Rclone) -> dict[str, Any]:
     }
     if desired["remote_name"] in configured:
         raise BackupError("desired Rclone remote already exists; verify it instead of replacing it")
+
+
+def configure_remote(rclone: Rclone) -> dict[str, Any]:
+    desired = rclone.desired
+    require_absent_encrypted_remote(rclone)
     drive = desired["google_drive"]
     rclone.run_oauth(
         "config",
@@ -377,6 +477,75 @@ def configure_remote(rclone: Rclone) -> dict[str, Any]:
         "--no-output",
     )
     return verify_remote(rclone, live=False)
+
+
+def configure_remote_from_token(rclone: Rclone, token: str) -> dict[str, Any]:
+    desired = rclone.desired
+    require_absent_encrypted_remote(rclone)
+    drive = desired["google_drive"]
+    rclone.run_oauth_input(
+        token,
+        "config",
+        "create",
+        desired["remote_name"],
+        "drive",
+        "scope",
+        "drive.file",
+        "team_drive",
+        drive["shared_drive_id"],
+        "root_folder_id",
+        drive["root_folder_id"],
+        "config_is_local",
+        "false",
+        "--no-output",
+    )
+    return verify_remote(rclone, live=False)
+
+
+def configure_remote_over_ssh(
+    rclone: Rclone,
+    target_machine_id: str,
+    ssh_alias: str,
+    target_script: str,
+) -> dict[str, Any]:
+    require_machine(rclone.desired, target_machine_id)
+    if target_machine_id == rclone.machine_id:
+        raise BackupError("remote configuration target must be another machine")
+    if not SSH_ALIAS.fullmatch(ssh_alias):
+        raise BackupError("SSH alias is unsafe")
+    if not REMOTE_SCRIPT.fullmatch(target_script):
+        raise BackupError("target controller path must be absolute and safe")
+    token = rclone.authorize_token()
+    completed = subprocess.run(
+        [
+            "ssh",
+            "-T",
+            "-o",
+            "BatchMode=yes",
+            "-o",
+            "ConnectTimeout=15",
+            ssh_alias,
+            "python3",
+            target_script,
+            "configure-token",
+            "--machine-id",
+            target_machine_id,
+            "--approve",
+        ],
+        check=False,
+        input=token + "\n",
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    if completed.returncode != 0:
+        raise BackupError(f"remote Rclone configuration failed with exit {completed.returncode}")
+    return {
+        "ready": True,
+        "target_machine_id": target_machine_id,
+        "token_transfer": "authenticated-ssh-stdin",
+        "remote_output_returned": False,
+    }
 
 
 def command_plan(desired: dict[str, Any], machine_id: str, executable: str) -> dict[str, Any]:
@@ -489,13 +658,25 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--rclone", default="rclone")
     parser.add_argument("--bindings-child", action="store_true", help=argparse.SUPPRESS)
     subparsers = parser.add_subparsers(dest="command", required=True)
-    for name in ("plan", "configure", "verify", "acceptance-test", "retirement-plan"):
+    for name in (
+        "plan",
+        "configure",
+        "configure-token",
+        "remote-configure",
+        "verify",
+        "acceptance-test",
+        "retirement-plan",
+    ):
         command = subparsers.add_parser(name)
         command.add_argument("--machine-id", required=True)
-        if name in {"configure", "acceptance-test"}:
+        if name in {"configure", "configure-token", "remote-configure", "acceptance-test"}:
             command.add_argument("--approve", action="store_true")
         if name == "verify":
             command.add_argument("--live", action="store_true")
+        if name == "remote-configure":
+            command.add_argument("--target-machine-id", required=True)
+            command.add_argument("--ssh-alias", required=True)
+            command.add_argument("--target-script", required=True)
     backup = subparsers.add_parser("backup")
     backup.add_argument("--machine-id", required=True)
     backup.add_argument("--snapshot-id", required=True)
@@ -530,6 +711,19 @@ def child_arguments(arguments: argparse.Namespace, desired_path: Path) -> list[s
         result.append("--live")
     if arguments.command in {"configure", "acceptance-test", "backup", "download"}:
         result.append("--approve")
+    if arguments.command in {"configure-token", "remote-configure"}:
+        result.append("--approve")
+    if arguments.command == "remote-configure":
+        result.extend(
+            [
+                "--target-machine-id",
+                arguments.target_machine_id,
+                "--ssh-alias",
+                arguments.ssh_alias,
+                "--target-script",
+                arguments.target_script,
+            ]
+        )
     if arguments.command == "backup":
         result.extend(["--snapshot-id", arguments.snapshot_id, "--source", str(arguments.source.resolve())])
     if arguments.command == "download":
@@ -611,13 +805,32 @@ def main() -> int:
             )
             return 0
         require_configured(desired)
-        if arguments.command in {"configure", "acceptance-test", "backup", "download"}:
+        if arguments.command in {
+            "configure",
+            "configure-token",
+            "remote-configure",
+            "acceptance-test",
+            "backup",
+            "download",
+        }:
             approved(arguments)
         if not arguments.bindings_child:
             return run_with_secret_bindings(arguments, desired_path)
         rclone = Rclone(arguments.rclone, desired, arguments.machine_id)
         if arguments.command == "configure":
             emit(configure_remote(rclone))
+        elif arguments.command == "configure-token":
+            token = sys.stdin.read(MAX_OAUTH_TOKEN_BYTES + 1)
+            emit(configure_remote_from_token(rclone, canonical_oauth_token(token.strip())))
+        elif arguments.command == "remote-configure":
+            emit(
+                configure_remote_over_ssh(
+                    rclone,
+                    arguments.target_machine_id,
+                    arguments.ssh_alias,
+                    arguments.target_script,
+                )
+            )
         elif arguments.command == "verify":
             emit(verify_remote(rclone, arguments.live))
         elif arguments.command == "acceptance-test":

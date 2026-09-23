@@ -19,7 +19,7 @@ python3 scripts/rclone_google_drive.py plan --machine-id <machine-id>
 3. Stop on missing Rclone, desired IDs, Personal Globals, target-local config unlock, or explicit approval. Use `$fleet-i-update-dependencies` for installation, `$secret-bindings-cli` for the OAuth application bindings, and `$fleet-i-onboard-machine` for the config unlock.
 
 Preview and create the independent target-local unlock with `scripts/rclone_config_unlock.py generate --machine-id <machine-id>` and the reviewed `--apply` form. Never replace an existing value automatically.
-4. Run `configure --approve` from the target's logged-in GUI session. It creates the exact remote, opens target-local OAuth, and refuses to replace an existing remote. Then verify the encrypted configuration and exact policy:
+4. Run `configure --approve` from the target's logged-in GUI session. It creates the exact remote, opens target-local OAuth, and refuses to replace an existing remote. For a headless target, run `remote-configure --approve` from the signed-in source machine. The controller completes Rclone authorization locally and sends the token only through authenticated SSH stdin to the target controller. Then verify the encrypted configuration and exact policy:
 
 ```bash
 python3 scripts/rclone_google_drive.py verify --machine-id <machine-id> --live
@@ -48,6 +48,6 @@ python3 scripts/rclone_google_drive.py download --machine-id <recovery-machine-i
 - Google Drive receives ciphertext and a sanitized ciphertext witness only. Reject plaintext, symlinks, nested payloads, and unbound files.
 - Use the exact dedicated remote and root from desired state. Never enumerate or mutate another Drive hierarchy.
 - Upload with `--immutable`; verify with `rclone check --download`. Automatic retention deletion is forbidden.
-- OAuth tokens are created independently on each target. Never copy Rclone configs or tokens between machines.
+- OAuth tokens are created independently for each target. Never copy Rclone configs. A headless target may receive its fresh token only through the controller's authenticated SSH stdin flow. Never return a token to the terminal, clipboard, a file, an argument, or logs.
 - The OAuth client ID and secret live only in the configured Secret Bindings personal globals and enter the Rclone child environment transiently. Encrypt a new config before OAuth. Credential-bearing Rclone processes must never inherit the terminal; capture and scrub exact application credential values from OAuth output. Target OAuth tokens stay in independently encrypted Rclone configs. Config passwords stay in native custody. Do not use plaintext environment files or persistent secret environment variables.
 - Live create, upload, download, delete, OAuth, or config writes require explicit approval. Retirement is plan-only until separately approved.

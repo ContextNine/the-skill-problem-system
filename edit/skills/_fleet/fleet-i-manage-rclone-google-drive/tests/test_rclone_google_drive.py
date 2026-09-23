@@ -42,6 +42,10 @@ def desired(enabled: bool = True) -> dict[str, object]:
 
 
 class DesiredStateTests(unittest.TestCase):
+    def test_classifies_rclone_errors_without_returning_provider_text(self) -> None:
+        message = "provider request contains private-id: directory not found"
+        self.assertEqual(rclone_google_drive.classify_rclone_failure(message), "not_found")
+
     def test_requires_drive_file_and_no_automatic_deletion(self) -> None:
         value = desired()
         value["google_drive"]["scope"] = "drive"  # type: ignore[index]
@@ -106,6 +110,9 @@ class DesiredStateTests(unittest.TestCase):
             environment["RCLONE_CONFIG_CTX9_CODEFOLDERSYNC_BACKUPS_CLIENT_SECRET"],
             "synthetic-client-secret",
         )
+        self.assertEqual(environment["RCLONE_DRIVE_CLIENT_ID"], "synthetic-client-id")
+        self.assertEqual(environment["RCLONE_DRIVE_CLIENT_SECRET"], "synthetic-client-secret")
+        self.assertEqual(environment["RCLONE_DRIVE_SCOPE"], "drive.file")
 
     def test_rejects_direct_execution_without_secret_bindings(self) -> None:
         with patch.dict(os.environ, {}, clear=True):
@@ -114,6 +121,50 @@ class DesiredStateTests(unittest.TestCase):
 
 
 class ConfigurationTests(unittest.TestCase):
+    def test_verifies_boundaries_from_private_process_output(self) -> None:
+        rclone = Mock()
+        rclone.desired = desired()
+        rclone.run.side_effect = [
+            Mock(stdout=""),
+            Mock(
+                stdout="""[ctx9_codefoldersync_backups]
+type = drive
+scope = drive.file
+team_drive = shared-drive-id
+root_folder_id = root-folder-id
+token = synthetic-sensitive-token
+"""
+            ),
+        ]
+        report = rclone_google_drive.verify_remote(rclone, live=False)
+        self.assertTrue(report["ready"])
+        self.assertEqual(
+            rclone.run.call_args_list,
+            [
+                call("config", "encryption", "check"),
+                call("config", "show", "ctx9_codefoldersync_backups"),
+            ],
+        )
+        self.assertNotIn("token", json.dumps(report))
+
+    def test_rejects_persisted_application_credentials(self) -> None:
+        rclone = Mock()
+        rclone.desired = desired()
+        rclone.run.side_effect = [
+            Mock(stdout=""),
+            Mock(
+                stdout="""[ctx9_codefoldersync_backups]
+type = drive
+scope = drive.file
+team_drive = shared-drive-id
+root_folder_id = root-folder-id
+client_id = forbidden
+"""
+            ),
+        ]
+        with self.assertRaisesRegex(rclone_google_drive.BackupError, "desired policy"):
+            rclone_google_drive.verify_remote(rclone, live=False)
+
     def test_creates_only_the_exact_absent_remote(self) -> None:
         rclone = Mock()
         rclone.desired = desired()
@@ -198,6 +249,96 @@ class ConfigurationTests(unittest.TestCase):
         self.assertEqual(popen.call_args.kwargs["stdin"], subprocess.DEVNULL)
         self.assertEqual(popen.call_args.kwargs["stdout"], subprocess.PIPE)
         self.assertEqual(popen.call_args.kwargs["stderr"], subprocess.STDOUT)
+
+    def test_authorize_token_keeps_credentials_out_of_arguments_and_output(self) -> None:
+        rclone = object.__new__(rclone_google_drive.Rclone)
+        rclone.executable = "/usr/bin/rclone"
+        rclone.desired = desired()
+        rclone.machine_id = "worker-mac"
+        environment = {
+            "RCLONE_DRIVE_CLIENT_ID": "synthetic-client-id",
+            "RCLONE_DRIVE_CLIENT_SECRET": "synthetic-secret",
+        }
+        token = {
+            "access_token": "access",
+            "refresh_token": "refresh",
+            "token_type": "Bearer",
+            "expiry": "2030-01-01T00:00:00Z",
+        }
+        completed = Mock(returncode=0, stdout=f"safe progress\n{json.dumps(token)}\n")
+        with (
+            patch.object(rclone, "_environment", return_value=environment),
+            patch.object(rclone_google_drive.subprocess, "run", return_value=completed) as run,
+        ):
+            result = rclone.authorize_token()
+        self.assertEqual(json.loads(result), token)
+        arguments = run.call_args.args[0]
+        self.assertNotIn("synthetic-client-id", arguments)
+        self.assertNotIn("synthetic-secret", arguments)
+        self.assertEqual(run.call_args.kwargs["stdin"], subprocess.DEVNULL)
+        self.assertEqual(run.call_args.kwargs["stdout"], subprocess.PIPE)
+        self.assertEqual(run.call_args.kwargs["stderr"], subprocess.STDOUT)
+
+    def test_remote_configure_sends_token_only_over_ssh_stdin(self) -> None:
+        rclone = Mock()
+        rclone.desired = desired()
+        rclone.machine_id = "worker-mac"
+        token = json.dumps(
+            {
+                "access_token": "access",
+                "refresh_token": "refresh",
+                "token_type": "Bearer",
+            }
+        )
+        rclone.authorize_token.return_value = token
+        completed = Mock(returncode=0, stdout="sanitized remote output")
+        with patch.object(
+            rclone_google_drive.subprocess, "run", return_value=completed
+        ) as run:
+            report = rclone_google_drive.configure_remote_over_ssh(
+                rclone,
+                "worker-linux",
+                "worker-linux",
+                "/opt/ctx9/rclone_google_drive.py",
+            )
+        self.assertTrue(report["ready"])
+        self.assertEqual(report["token_transfer"], "authenticated-ssh-stdin")
+        self.assertEqual(run.call_args.kwargs["input"], token + "\n")
+        self.assertNotIn(token, run.call_args.args[0])
+        self.assertEqual(run.call_args.kwargs["stdout"], subprocess.PIPE)
+        self.assertEqual(run.call_args.kwargs["stderr"], subprocess.STDOUT)
+
+    def test_remote_configure_rejects_shell_metacharacters_in_target_path(self) -> None:
+        rclone = Mock()
+        rclone.desired = desired()
+        rclone.machine_id = "worker-mac"
+        with self.assertRaisesRegex(rclone_google_drive.BackupError, "absolute and safe"):
+            rclone_google_drive.configure_remote_over_ssh(
+                rclone,
+                "worker-linux",
+                "worker-linux",
+                "/opt/controller.py;touch /tmp/unsafe",
+            )
+        rclone.authorize_token.assert_not_called()
+
+    def test_configure_from_token_passes_token_only_through_stdin(self) -> None:
+        rclone = Mock()
+        rclone.desired = desired()
+        token = json.dumps(
+            {
+                "access_token": "access",
+                "refresh_token": "refresh",
+                "token_type": "Bearer",
+            }
+        )
+        with (
+            patch.object(rclone_google_drive, "require_absent_encrypted_remote"),
+            patch.object(rclone_google_drive, "verify_remote", return_value={"ready": True}),
+        ):
+            report = rclone_google_drive.configure_remote_from_token(rclone, token)
+        self.assertTrue(report["ready"])
+        self.assertEqual(rclone.run_oauth_input.call_args.args[0], token)
+        self.assertNotIn(token, rclone.run_oauth_input.call_args.args[1:])
 
     def test_refuses_to_replace_an_existing_remote(self) -> None:
         rclone = Mock()

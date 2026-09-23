@@ -30,6 +30,7 @@ SSH_ALIAS = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
 REMOTE_SCRIPT = re.compile(r"/[A-Za-z0-9._/-]+")
 BINDINGS_CHILD_MARKER = "CTX9_RCLONE_SECRET_BINDINGS_CHILD"
 MAX_OAUTH_TOKEN_BYTES = 64 * 1024
+ALLOWED_DRIVE_SCOPES = frozenset({"drive.file", "drive.file,drive.readonly"})
 
 
 class BackupError(RuntimeError):
@@ -86,8 +87,10 @@ def validate_desired(value: dict[str, Any]) -> dict[str, Any]:
         raise BackupError("enabled backup needs at least one allowed machine")
     if len(set(machines)) != len(machines):
         raise BackupError("desired allowed_machines contains duplicates")
-    if not isinstance(drive, dict) or drive.get("scope") != "drive.file":
-        raise BackupError("Google Drive scope must be drive.file")
+    if not isinstance(drive, dict) or drive.get("scope") not in ALLOWED_DRIVE_SCOPES:
+        raise BackupError(
+            "Google Drive scope must be drive.file or drive.file,drive.readonly"
+        )
     if not isinstance(paths, dict):
         raise BackupError("desired paths are missing")
     safe_component(paths.get("backup_prefix"), "backup prefix")
@@ -171,7 +174,7 @@ def binding_environment(desired: dict[str, Any]) -> dict[str, str]:
     environment[f"RCLONE_CONFIG_{remote}_CLIENT_SECRET"] = client_secret
     environment["RCLONE_DRIVE_CLIENT_ID"] = client_id
     environment["RCLONE_DRIVE_CLIENT_SECRET"] = client_secret
-    environment["RCLONE_DRIVE_SCOPE"] = "drive.file"
+    environment["RCLONE_DRIVE_SCOPE"] = drive["scope"]
     environment.pop("RCLONE_CONFIG_PASS", None)
     environment.pop("RCLONE_PASSWORD_COMMAND", None)
     return environment
@@ -423,7 +426,7 @@ def verify_remote(rclone: Rclone, live: bool) -> dict[str, Any]:
     matches = {
         "type": actual.get("type") == "drive",
         "oauth_client_id_not_persisted": not actual.get("client_id"),
-        "scope": actual.get("scope") == "drive.file",
+        "scope": actual.get("scope") == drive["scope"],
         "shared_drive_id": actual.get("team_drive") == drive["shared_drive_id"],
         "root_folder_id": actual.get("root_folder_id") == drive["root_folder_id"],
         "client_secret_not_persisted": not actual.get("client_secret"),
@@ -467,7 +470,7 @@ def configure_remote(rclone: Rclone) -> dict[str, Any]:
         desired["remote_name"],
         "drive",
         "scope",
-        "drive.file",
+        drive["scope"],
         "team_drive",
         drive["shared_drive_id"],
         "root_folder_id",
@@ -490,13 +493,41 @@ def configure_remote_from_token(rclone: Rclone, token: str) -> dict[str, Any]:
         desired["remote_name"],
         "drive",
         "scope",
-        "drive.file",
+        drive["scope"],
         "team_drive",
         drive["shared_drive_id"],
         "root_folder_id",
         drive["root_folder_id"],
         "config_is_local",
         "false",
+        "--no-output",
+    )
+    return verify_remote(rclone, live=False)
+
+
+def reauthorize_remote(rclone: Rclone) -> dict[str, Any]:
+    desired = rclone.desired
+    rclone.run("config", "encryption", "check")
+    configuration = rclone.run("config", "show", desired["remote_name"]).stdout
+    actual = parse_config(configuration, desired["remote_name"])
+    drive = desired["google_drive"]
+    safe_existing_remote = {
+        "type": actual.get("type") == "drive",
+        "oauth_client_id_not_persisted": not actual.get("client_id"),
+        "shared_drive_id": actual.get("team_drive") == drive["shared_drive_id"],
+        "root_folder_id": actual.get("root_folder_id") == drive["root_folder_id"],
+        "client_secret_not_persisted": not actual.get("client_secret"),
+    }
+    if not all(safe_existing_remote.values()):
+        raise BackupError("existing Rclone remote is not safe to reauthorize")
+    rclone.run_oauth(
+        "config",
+        "update",
+        desired["remote_name"],
+        "scope",
+        drive["scope"],
+        "config_is_local",
+        "true",
         "--no-output",
     )
     return verify_remote(rclone, live=False)
@@ -661,6 +692,7 @@ def build_parser() -> argparse.ArgumentParser:
     for name in (
         "plan",
         "configure",
+        "reauthorize",
         "configure-token",
         "remote-configure",
         "verify",
@@ -669,7 +701,13 @@ def build_parser() -> argparse.ArgumentParser:
     ):
         command = subparsers.add_parser(name)
         command.add_argument("--machine-id", required=True)
-        if name in {"configure", "configure-token", "remote-configure", "acceptance-test"}:
+        if name in {
+            "configure",
+            "reauthorize",
+            "configure-token",
+            "remote-configure",
+            "acceptance-test",
+        }:
             command.add_argument("--approve", action="store_true")
         if name == "verify":
             command.add_argument("--live", action="store_true")
@@ -709,7 +747,13 @@ def child_arguments(arguments: argparse.Namespace, desired_path: Path) -> list[s
     ]
     if arguments.command == "verify" and arguments.live:
         result.append("--live")
-    if arguments.command in {"configure", "acceptance-test", "backup", "download"}:
+    if arguments.command in {
+        "configure",
+        "reauthorize",
+        "acceptance-test",
+        "backup",
+        "download",
+    }:
         result.append("--approve")
     if arguments.command in {"configure-token", "remote-configure"}:
         result.append("--approve")
@@ -807,6 +851,7 @@ def main() -> int:
         require_configured(desired)
         if arguments.command in {
             "configure",
+            "reauthorize",
             "configure-token",
             "remote-configure",
             "acceptance-test",
@@ -819,6 +864,8 @@ def main() -> int:
         rclone = Rclone(arguments.rclone, desired, arguments.machine_id)
         if arguments.command == "configure":
             emit(configure_remote(rclone))
+        elif arguments.command == "reauthorize":
+            emit(reauthorize_remote(rclone))
         elif arguments.command == "configure-token":
             token = sys.stdin.read(MAX_OAUTH_TOKEN_BYTES + 1)
             emit(configure_remote_from_token(rclone, canonical_oauth_token(token.strip())))

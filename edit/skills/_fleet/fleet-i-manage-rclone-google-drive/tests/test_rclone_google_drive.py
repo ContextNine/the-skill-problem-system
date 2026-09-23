@@ -20,7 +20,7 @@ rclone_google_drive = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(rclone_google_drive)
 
 
-def desired(enabled: bool = True) -> dict[str, object]:
+def desired(enabled: bool = True, scope: str = "drive.file") -> dict[str, object]:
     return {
         "schema_version": 2,
         "enabled": enabled,
@@ -29,7 +29,7 @@ def desired(enabled: bool = True) -> dict[str, object]:
         "google_drive": {
             "oauth_client_id_binding": "GOOGLE_PERSONAL_OAUTH_CLIENT_ID",
             "oauth_client_secret_binding": "GOOGLE_PERSONAL_OAUTH_CLIENT_SECRET",
-            "scope": "drive.file",
+            "scope": scope,
             "shared_drive_id": "shared-drive-id",
             "root_folder_id": "root-folder-id",
         },
@@ -46,7 +46,9 @@ class DesiredStateTests(unittest.TestCase):
         message = "provider request contains private-id: directory not found"
         self.assertEqual(rclone_google_drive.classify_rclone_failure(message), "not_found")
 
-    def test_requires_drive_file_and_no_automatic_deletion(self) -> None:
+    def test_allows_only_the_reviewed_drive_scopes_and_no_automatic_deletion(self) -> None:
+        rclone_google_drive.validate_desired(desired(scope="drive.file,drive.readonly"))
+
         value = desired()
         value["google_drive"]["scope"] = "drive"  # type: ignore[index]
         with self.assertRaisesRegex(rclone_google_drive.BackupError, "drive.file"):
@@ -113,6 +115,20 @@ class DesiredStateTests(unittest.TestCase):
         self.assertEqual(environment["RCLONE_DRIVE_CLIENT_ID"], "synthetic-client-id")
         self.assertEqual(environment["RCLONE_DRIVE_CLIENT_SECRET"], "synthetic-client-secret")
         self.assertEqual(environment["RCLONE_DRIVE_SCOPE"], "drive.file")
+
+    def test_maps_the_approved_shared_drive_scope_into_rclone(self) -> None:
+        value = desired(scope="drive.file,drive.readonly")
+        with patch.dict(
+            os.environ,
+            {
+                rclone_google_drive.BINDINGS_CHILD_MARKER: "1",
+                "GOOGLE_PERSONAL_OAUTH_CLIENT_ID": "synthetic-client-id",
+                "GOOGLE_PERSONAL_OAUTH_CLIENT_SECRET": "synthetic-client-secret",
+            },
+            clear=True,
+        ):
+            environment = rclone_google_drive.binding_environment(value)
+        self.assertEqual(environment["RCLONE_DRIVE_SCOPE"], "drive.file,drive.readonly")
 
     def test_rejects_direct_execution_without_secret_bindings(self) -> None:
         with patch.dict(os.environ, {}, clear=True):
@@ -221,6 +237,38 @@ client_id = forbidden
             ],
         )
         rclone.run_oauth.assert_called_once()
+
+    def test_reauthorizes_only_an_exact_existing_remote(self) -> None:
+        rclone = Mock()
+        rclone.desired = desired(scope="drive.file,drive.readonly")
+        rclone.run.side_effect = [
+            Mock(stdout=""),
+            Mock(
+                stdout="""[ctx9_codefoldersync_backups]
+type = drive
+scope = drive.file
+team_drive = shared-drive-id
+root_folder_id = root-folder-id
+token = synthetic-sensitive-token
+"""
+            ),
+        ]
+        with patch.object(
+            rclone_google_drive, "verify_remote", return_value={"ready": True}
+        ) as verify:
+            report = rclone_google_drive.reauthorize_remote(rclone)
+        self.assertTrue(report["ready"])
+        rclone.run_oauth.assert_called_once_with(
+            "config",
+            "update",
+            "ctx9_codefoldersync_backups",
+            "scope",
+            "drive.file,drive.readonly",
+            "config_is_local",
+            "true",
+            "--no-output",
+        )
+        verify.assert_called_once_with(rclone, live=False)
 
     def test_scrubs_application_credentials_from_oauth_output(self) -> None:
         rclone = object.__new__(rclone_google_drive.Rclone)

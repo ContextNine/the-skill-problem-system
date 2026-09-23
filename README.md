@@ -26,3 +26,9 @@ Then tell your agent:
 - I publish approved skills while keeping generated projections and user-selected exclusions private.
 
 The wizard installs the editable source in the folder you choose. `fleet source path` shows that folder later. The installed runtime and generated instructions live under `~/.agents/`; `fleet config path` shows its installed settings. A Context Vault is optional. If you install one later, its installer can connect it to this existing source without moving your skills.
+
+## Releases
+
+Every version tag publishes a deterministic source archive, SHA-256 checksum,
+full source commit record, and GitHub attestations. The verification contract is
+documented in [`docs/release.md`](docs/release.md).

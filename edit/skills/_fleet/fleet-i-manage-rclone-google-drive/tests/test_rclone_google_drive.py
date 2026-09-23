@@ -353,6 +353,8 @@ token = synthetic-sensitive-token
         arguments = run.call_args.args[0]
         self.assertNotIn("synthetic-client-id", arguments)
         self.assertNotIn("synthetic-secret", arguments)
+        self.assertIn("--password-command", arguments)
+        self.assertIn("--ask-password=false", arguments)
         self.assertEqual(run.call_args.kwargs["stdin"], subprocess.DEVNULL)
         self.assertEqual(run.call_args.kwargs["stdout"], subprocess.PIPE)
         self.assertEqual(run.call_args.kwargs["stderr"], subprocess.STDOUT)

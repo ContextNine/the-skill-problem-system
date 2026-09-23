@@ -335,15 +335,7 @@ class Rclone:
 
     def authorize_token(self) -> str:
         completed = subprocess.run(
-            [
-                self.executable,
-                "--log-level",
-                "ERROR",
-                "--stats",
-                "0",
-                "authorize",
-                "drive",
-            ],
+            self.command("authorize", "drive"),
             check=False,
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,

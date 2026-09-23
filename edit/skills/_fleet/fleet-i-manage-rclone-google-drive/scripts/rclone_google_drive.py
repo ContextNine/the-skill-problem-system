@@ -52,8 +52,14 @@ def load_json(path: Path, label: str) -> dict[str, Any]:
 
 
 def default_desired_path() -> Path:
+    executable = shutil.which("fleet")
+    if not executable:
+        installed = Path.home() / ".local/bin/fleet"
+        if not installed.is_file():
+            raise BackupError("installed agent configuration is unavailable")
+        executable = str(installed)
     completed = subprocess.run(
-        ["fleet", "config", "path"], check=False, capture_output=True, text=True
+        [executable, "config", "path"], check=False, capture_output=True, text=True
     )
     root = completed.stdout.strip()
     if completed.returncode != 0 or not root:

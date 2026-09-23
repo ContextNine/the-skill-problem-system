@@ -42,6 +42,25 @@ def desired(enabled: bool = True, scope: str = "drive.file") -> dict[str, object
 
 
 class DesiredStateTests(unittest.TestCase):
+    def test_resolves_the_installed_fleet_command_when_ssh_path_omits_it(self) -> None:
+        installed = Path.home() / ".local/bin/fleet"
+        completed = Mock(returncode=0, stdout="/tmp/agent-settings\n")
+        with (
+            patch.object(rclone_google_drive.shutil, "which", return_value=None),
+            patch.object(Path, "is_file", return_value=True),
+            patch.object(
+                rclone_google_drive.subprocess, "run", return_value=completed
+            ) as run,
+        ):
+            result = rclone_google_drive.default_desired_path()
+        self.assertEqual(
+            run.call_args.args[0], [str(installed), "config", "path"]
+        )
+        self.assertEqual(
+            result,
+            Path("/tmp/agent-settings/skills/config/fleet-i-manage-rclone-google-drive/desired.json"),
+        )
+
     def test_classifies_rclone_errors_without_returning_provider_text(self) -> None:
         message = "provider request contains private-id: directory not found"
         self.assertEqual(rclone_google_drive.classify_rclone_failure(message), "not_found")

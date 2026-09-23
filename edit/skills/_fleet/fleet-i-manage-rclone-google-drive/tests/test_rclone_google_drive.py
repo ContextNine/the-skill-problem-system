@@ -7,6 +7,7 @@ import io
 import json
 import os
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import Mock, call, patch
@@ -124,25 +125,79 @@ class ConfigurationTests(unittest.TestCase):
         self.assertEqual(
             rclone.run.call_args_list,
             [
+                call("config", "encryption", "check"),
                 call("listremotes"),
-                call(
-                    "config",
-                    "create",
-                    "ctx9_codefoldersync_backups",
-                    "drive",
-                    "scope",
-                    "drive.file",
-                    "team_drive",
-                    "shared-drive-id",
-                    "root_folder_id",
-                    "root-folder-id",
-                    "config_is_local",
-                    "true",
-                    "--no-output",
-                    interactive=True,
-                ),
             ],
         )
+        rclone.run_oauth.assert_called_once_with(
+            "config",
+            "create",
+            "ctx9_codefoldersync_backups",
+            "drive",
+            "scope",
+            "drive.file",
+            "team_drive",
+            "shared-drive-id",
+            "root_folder_id",
+            "root-folder-id",
+            "config_is_local",
+            "true",
+            "--no-output",
+        )
+
+    def test_encrypts_a_new_empty_config_before_oauth(self) -> None:
+        rclone = Mock()
+        rclone.desired = desired()
+        empty = Mock(stdout="")
+        success = Mock(stdout="")
+        rclone.run.side_effect = [
+            rclone_google_drive.BackupError("not encrypted"),
+            empty,
+            success,
+            success,
+            empty,
+        ]
+        with patch.object(rclone_google_drive, "verify_remote", return_value={"ready": True}):
+            rclone_google_drive.configure_remote(rclone)
+        self.assertEqual(
+            rclone.run.call_args_list,
+            [
+                call("config", "encryption", "check"),
+                call("listremotes"),
+                call("config", "encryption", "set"),
+                call("config", "encryption", "check"),
+                call("listremotes"),
+            ],
+        )
+        rclone.run_oauth.assert_called_once()
+
+    def test_scrubs_application_credentials_from_oauth_output(self) -> None:
+        rclone = object.__new__(rclone_google_drive.Rclone)
+        rclone.executable = "/usr/bin/rclone"
+        rclone.desired = desired()
+        rclone.machine_id = "worker-linux"
+        environment = {
+            "RCLONE_CONFIG_CTX9_CODEFOLDERSYNC_BACKUPS_CLIENT_ID": "synthetic-client-id",
+            "RCLONE_CONFIG_CTX9_CODEFOLDERSYNC_BACKUPS_CLIENT_SECRET": "synthetic-secret",
+        }
+        process = Mock()
+        process.stdout = iter(
+            ["default synthetic-client-id / synthetic-secret; open browser\n"]
+        )
+        process.wait.return_value = 0
+        output = io.StringIO()
+        with (
+            patch.object(rclone, "_environment", return_value=environment),
+            patch.object(rclone_google_drive.subprocess, "Popen", return_value=process) as popen,
+            patch.object(rclone_google_drive.sys, "stdout", output),
+        ):
+            rclone.run_oauth("config", "create")
+        self.assertNotIn("synthetic-client-id", output.getvalue())
+        self.assertNotIn("synthetic-secret", output.getvalue())
+        self.assertEqual(output.getvalue(), "default [REDACTED] / [REDACTED]; open browser\n")
+        self.assertEqual(popen.call_args.kwargs["stdin"], subprocess.DEVNULL)
+        self.assertEqual(popen.call_args.kwargs["stdout"], subprocess.PIPE)
+        self.assertEqual(popen.call_args.kwargs["stderr"], subprocess.STDOUT)
 
     def test_refuses_to_replace_an_existing_remote(self) -> None:
         rclone = Mock()
@@ -150,7 +205,11 @@ class ConfigurationTests(unittest.TestCase):
         rclone.run.return_value.stdout = "ctx9_codefoldersync_backups:\n"
         with self.assertRaisesRegex(rclone_google_drive.BackupError, "already exists"):
             rclone_google_drive.configure_remote(rclone)
-        rclone.run.assert_called_once_with("listremotes")
+        self.assertEqual(
+            rclone.run.call_args_list,
+            [call("config", "encryption", "check"), call("listremotes")],
+        )
+        rclone.run_oauth.assert_not_called()
 
 
 class BundleTests(unittest.TestCase):

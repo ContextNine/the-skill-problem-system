@@ -171,6 +171,14 @@ def binding_environment(desired: dict[str, Any]) -> dict[str, str]:
     return environment
 
 
+def redact_sensitive(value: str, sensitive_values: list[str]) -> str:
+    redacted = value
+    for sensitive in sensitive_values:
+        if sensitive:
+            redacted = redacted.replace(sensitive, "[REDACTED]")
+    return redacted
+
+
 class Rclone:
     def __init__(self, executable: str, desired: dict[str, Any], machine_id: str) -> None:
         resolved = shutil.which(executable) if "/" not in executable else executable
@@ -196,17 +204,46 @@ class Rclone:
             *arguments,
         ]
 
-    def run(self, *arguments: str, interactive: bool = False) -> subprocess.CompletedProcess[str]:
+    def run(self, *arguments: str) -> subprocess.CompletedProcess[str]:
         completed = subprocess.run(
             self.command(*arguments),
             check=False,
-            capture_output=not interactive,
+            capture_output=True,
             text=True,
             env=self._environment(),
         )
         if completed.returncode != 0:
             raise BackupError(f"rclone command failed with exit {completed.returncode}")
         return completed
+
+    def run_oauth(self, *arguments: str) -> None:
+        environment = self._environment()
+        remote = re.sub(r"[^A-Za-z0-9]", "_", self.desired["remote_name"]).upper()
+        sensitive_values = [
+            environment[f"RCLONE_CONFIG_{remote}_CLIENT_ID"],
+            environment[f"RCLONE_CONFIG_{remote}_CLIENT_SECRET"],
+        ]
+        process = subprocess.Popen(
+            self.command(*arguments),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+            env=environment,
+        )
+        assert process.stdout is not None
+        try:
+            for line in process.stdout:
+                sys.stdout.write(redact_sensitive(line, sensitive_values))
+                sys.stdout.flush()
+            return_code = process.wait()
+        except BaseException:
+            process.terminate()
+            process.wait()
+            raise
+        if return_code != 0:
+            raise BackupError(f"rclone OAuth command failed with exit {return_code}")
 
 
 def remote_path(desired: dict[str, Any], *components: str) -> str:
@@ -305,6 +342,17 @@ def verify_remote(rclone: Rclone, live: bool) -> dict[str, Any]:
 
 def configure_remote(rclone: Rclone) -> dict[str, Any]:
     desired = rclone.desired
+    try:
+        rclone.run("config", "encryption", "check")
+    except BackupError:
+        readable = rclone.run("listremotes")
+        if readable.stdout.strip():
+            raise BackupError(
+                "unencrypted Rclone configuration is not empty; refusing automatic encryption"
+            )
+        rclone.run("config", "encryption", "set")
+        rclone.run("config", "encryption", "check")
+
     configured = {
         line.strip().removesuffix(":")
         for line in rclone.run("listremotes").stdout.splitlines()
@@ -313,7 +361,7 @@ def configure_remote(rclone: Rclone) -> dict[str, Any]:
     if desired["remote_name"] in configured:
         raise BackupError("desired Rclone remote already exists; verify it instead of replacing it")
     drive = desired["google_drive"]
-    rclone.run(
+    rclone.run_oauth(
         "config",
         "create",
         desired["remote_name"],
@@ -327,7 +375,6 @@ def configure_remote(rclone: Rclone) -> dict[str, Any]:
         "config_is_local",
         "true",
         "--no-output",
-        interactive=True,
     )
     return verify_remote(rclone, live=False)
 

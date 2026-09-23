@@ -412,13 +412,40 @@ token = synthetic-sensitive-token
             }
         )
         with (
-            patch.object(rclone_google_drive, "require_absent_encrypted_remote"),
+            patch.object(
+                rclone_google_drive, "require_absent_encrypted_remote", return_value=False
+            ),
             patch.object(rclone_google_drive, "verify_remote", return_value={"ready": True}),
         ):
             report = rclone_google_drive.configure_remote_from_token(rclone, token)
         self.assertTrue(report["ready"])
-        self.assertEqual(rclone.run_oauth_input.call_args.args[0], token)
-        self.assertNotIn(token, rclone.run_oauth_input.call_args.args[1:])
+        self.assertEqual(rclone.run_reconnect_input.call_args.args[0], token)
+        self.assertNotIn(token, rclone.run_reconnect_input.call_args.args[1:])
+        self.assertEqual(rclone.run.call_args.args[:3], ("config", "create", "ctx9_codefoldersync_backups"))
+
+    def test_reconnect_passes_token_only_through_stdin(self) -> None:
+        rclone = object.__new__(rclone_google_drive.Rclone)
+        rclone.executable = "/usr/bin/rclone"
+        rclone.desired = desired()
+        rclone.machine_id = "worker-linux"
+        token = json.dumps(
+            {
+                "access_token": "access",
+                "refresh_token": "refresh",
+                "token_type": "Bearer",
+            }
+        )
+        completed = Mock(returncode=0, stdout="")
+        with (
+            patch.object(rclone, "_environment", return_value={}),
+            patch.object(rclone_google_drive.subprocess, "run", return_value=completed) as run,
+        ):
+            rclone.run_reconnect_input(token, "config", "reconnect", "remote:")
+        reconnect_input = run.call_args.kwargs["input"]
+        self.assertEqual(reconnect_input.splitlines()[0], "n")
+        self.assertEqual(json.loads(reconnect_input.splitlines()[1]), json.loads(token))
+        self.assertEqual(reconnect_input.splitlines()[2], "n")
+        self.assertNotIn(token, run.call_args.args[0])
 
     def test_refuses_to_replace_an_existing_remote(self) -> None:
         rclone = Mock()

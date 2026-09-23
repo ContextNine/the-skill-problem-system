@@ -347,11 +347,11 @@ class Rclone:
             raise BackupError(f"rclone remote authorization failed with exit {completed.returncode}")
         return extract_oauth_token(completed.stdout)
 
-    def run_oauth_input(self, token: str, *arguments: str) -> None:
+    def run_reconnect_input(self, token: str, *arguments: str) -> None:
         completed = subprocess.run(
             self.command(*arguments),
             check=False,
-            input=canonical_oauth_token(token) + "\n",
+            input=f"n\n{canonical_oauth_token(token)}\nn\n",
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
@@ -455,7 +455,7 @@ def verify_remote(rclone: Rclone, live: bool) -> dict[str, Any]:
     return {"ready": True, "encrypted": True, "matches": matches, "live_read": live}
 
 
-def require_absent_encrypted_remote(rclone: Rclone) -> None:
+def require_absent_encrypted_remote(rclone: Rclone, allow_incomplete: bool = False) -> bool:
     desired = rclone.desired
     try:
         rclone.run("config", "encryption", "check")
@@ -474,7 +474,23 @@ def require_absent_encrypted_remote(rclone: Rclone) -> None:
         if line.strip()
     }
     if desired["remote_name"] in configured:
+        if allow_incomplete:
+            configuration = rclone.run("config", "show", desired["remote_name"]).stdout
+            actual = parse_config(configuration, desired["remote_name"])
+            drive = desired["google_drive"]
+            safe_incomplete_remote = {
+                "type": actual.get("type") == "drive",
+                "scope": actual.get("scope") == drive["scope"],
+                "oauth_client_id_not_persisted": not actual.get("client_id"),
+                "shared_drive_id": actual.get("team_drive") == drive["shared_drive_id"],
+                "root_folder_id": actual.get("root_folder_id") == drive["root_folder_id"],
+                "client_secret_not_persisted": not actual.get("client_secret"),
+                "token_absent": not actual.get("token"),
+            }
+            if all(safe_incomplete_remote.values()):
+                return True
         raise BackupError("desired Rclone remote already exists; verify it instead of replacing it")
+    return False
 
 
 def configure_remote(rclone: Rclone) -> dict[str, Any]:
@@ -501,23 +517,29 @@ def configure_remote(rclone: Rclone) -> dict[str, Any]:
 
 def configure_remote_from_token(rclone: Rclone, token: str) -> dict[str, Any]:
     desired = rclone.desired
-    require_absent_encrypted_remote(rclone)
+    remote_exists = require_absent_encrypted_remote(rclone, allow_incomplete=True)
     drive = desired["google_drive"]
-    rclone.run_oauth_input(
+    if not remote_exists:
+        rclone.run(
+            "config",
+            "create",
+            desired["remote_name"],
+            "drive",
+            "scope",
+            drive["scope"],
+            "team_drive",
+            drive["shared_drive_id"],
+            "root_folder_id",
+            drive["root_folder_id"],
+            "config_is_local",
+            "false",
+            "--no-output",
+        )
+    rclone.run_reconnect_input(
         token,
         "config",
-        "create",
-        desired["remote_name"],
-        "drive",
-        "scope",
-        drive["scope"],
-        "team_drive",
-        drive["shared_drive_id"],
-        "root_folder_id",
-        drive["root_folder_id"],
-        "config_is_local",
-        "false",
-        "--no-output",
+        "reconnect",
+        f"{desired['remote_name']}:",
     )
     return verify_remote(rclone, live=False)
 

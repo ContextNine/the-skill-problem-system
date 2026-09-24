@@ -3,6 +3,7 @@
   "enabled": false,
   "remote_name": "ctx9_codefoldersync_backups",
   "allowed_machines": [],
+  "config_paths_by_machine": {},
   "google_drive": {
     "oauth_client_id_binding": "GOOGLE_PERSONAL_OAUTH_CLIENT_ID",
     "oauth_client_secret_binding": "GOOGLE_PERSONAL_OAUTH_CLIENT_SECRET",

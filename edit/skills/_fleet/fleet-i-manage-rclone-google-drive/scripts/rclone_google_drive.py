@@ -102,6 +102,7 @@ def validate_desired(value: dict[str, Any]) -> dict[str, Any]:
     drive = value.get("google_drive")
     paths = value.get("paths")
     retention = value.get("retention")
+    config_paths = value.get("config_paths_by_machine", {})
     if not isinstance(remote_name, str) or not SAFE_REMOTE.fullmatch(remote_name):
         raise BackupError("desired remote_name is unsafe")
     if not isinstance(machines, list) or not all(
@@ -112,6 +113,18 @@ def validate_desired(value: dict[str, Any]) -> dict[str, Any]:
         raise BackupError("enabled backup needs at least one allowed machine")
     if len(set(machines)) != len(machines):
         raise BackupError("desired allowed_machines contains duplicates")
+    if not isinstance(config_paths, dict):
+        raise BackupError("desired config_paths_by_machine is invalid")
+    for machine_id, config_path in config_paths.items():
+        if machine_id not in machines:
+            raise BackupError("Rclone config path machine is not allowed")
+        if (
+            not isinstance(config_path, str)
+            or not config_path
+            or not Path(config_path).is_absolute()
+            or any(ord(character) < 32 for character in config_path)
+        ):
+            raise BackupError("Rclone config path must be an absolute path")
     if not isinstance(drive, dict) or drive.get("scope") not in ALLOWED_DRIVE_SCOPES:
         raise BackupError(
             "Google Drive scope must be drive.file or drive.file,drive.readonly"
@@ -277,8 +290,11 @@ class Rclone:
         return binding_environment(self.desired)
 
     def command(self, *arguments: str) -> list[str]:
+        config_path = self.desired.get("config_paths_by_machine", {}).get(self.machine_id)
+        config_arguments = ["--config", config_path] if config_path else []
         return [
             self.executable,
+            *config_arguments,
             "--password-command",
             password_command(self.machine_id),
             "--ask-password=false",

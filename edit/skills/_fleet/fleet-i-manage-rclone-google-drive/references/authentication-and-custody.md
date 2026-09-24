@@ -1,10 +1,12 @@
 # Authentication and custody
 
-The desired file contains only non-secret policy: logical remote name, allowed machine IDs, Secret Bindings variable names, the reviewed OAuth scope, Shared Drive ID, dedicated root folder ID, backup prefixes, and no-delete retention policy. It never contains OAuth application credentials, an OAuth token, an Rclone config password, or an age private identity.
+The desired file contains only non-secret policy: logical remote name, allowed machine IDs, optional absolute per-machine Rclone config paths, Secret Bindings variable names, the reviewed OAuth scope, Shared Drive ID, dedicated root folder ID, backup prefixes, and no-delete retention policy. It never contains OAuth application credentials, an OAuth token, an Rclone config password, or an age private identity.
 
 Use a dedicated Google OAuth desktop client. Start and remain on `drive.file` unless Matt explicitly approves `drive.file,drive.readonly` after the dedicated-root acceptance test proves the narrow scope cannot initialize the Shared Drive. The broader option keeps writes limited to app-created items but can read Drive metadata and content. Google classifies `drive.readonly` as restricted. No other scope is accepted. A Shared Drive ID and dedicated root folder ID are both exact desired-state boundaries, not discovery guesses.
 
 Each enabled machine completes OAuth locally and keeps its token only in that machine's encrypted Rclone config. Never copy an Rclone config. The shared desktop-client ID and secret live in the configured Secret Bindings personal globals. The controller creates an ephemeral value-free contract, launches itself through `secret-bindings exec --globals`, then maps both values into remote-specific variables for the Rclone child only. Neither application credential is written to desired state or Rclone configuration. Each machine independently generates its config-unlock value in Keychain or Secret Service. Rclone receives that value only through the absolute password command.
+
+Use `config_paths_by_machine` only when CodeFolderSync must not share a machine's default Rclone config. Each key must be an allowed machine ID and each value must be an absolute target-local path. Unlisted machines keep Rclone's default config. A dedicated path isolates CodeFolderSync without moving, encrypting, or otherwise changing remotes owned by another service.
 
 Native records:
 

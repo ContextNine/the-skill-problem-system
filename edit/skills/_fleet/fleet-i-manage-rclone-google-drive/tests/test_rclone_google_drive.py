@@ -26,6 +26,7 @@ def desired(enabled: bool = True, scope: str = "drive.file") -> dict[str, object
         "enabled": enabled,
         "remote_name": "ctx9_codefoldersync_backups",
         "allowed_machines": ["primary-mac", "worker-linux", "worker-mac"],
+        "config_paths_by_machine": {},
         "google_drive": {
             "oauth_client_id_binding": "GOOGLE_PERSONAL_OAUTH_CLIENT_ID",
             "oauth_client_secret_binding": "GOOGLE_PERSONAL_OAUTH_CLIENT_SECRET",
@@ -109,6 +110,46 @@ class DesiredStateTests(unittest.TestCase):
         value["google_drive"]["oauth_client_id"] = "forbidden"  # type: ignore[index]
         with self.assertRaisesRegex(rclone_google_drive.BackupError, "forbidden"):
             rclone_google_drive.validate_desired(value)
+
+    def test_accepts_only_absolute_config_paths_for_allowed_machines(self) -> None:
+        value = desired()
+        value["config_paths_by_machine"] = {
+            "primary-mac": "/Users/example/.config/rclone/codefoldersync.conf"
+        }
+        rclone_google_drive.validate_desired(value)
+
+        value["config_paths_by_machine"] = {
+            "unknown-machine": "/tmp/codefoldersync.conf"
+        }
+        with self.assertRaisesRegex(rclone_google_drive.BackupError, "not allowed"):
+            rclone_google_drive.validate_desired(value)
+
+        value["config_paths_by_machine"] = {
+            "primary-mac": ".config/rclone/codefoldersync.conf"
+        }
+        with self.assertRaisesRegex(rclone_google_drive.BackupError, "absolute path"):
+            rclone_google_drive.validate_desired(value)
+
+    def test_selects_a_dedicated_config_only_for_the_mapped_machine(self) -> None:
+        value = desired()
+        value["config_paths_by_machine"] = {
+            "primary-mac": "/Users/example/.config/rclone/codefoldersync.conf"
+        }
+        with patch.object(
+            rclone_google_drive, "resolve_executable", return_value="/usr/bin/rclone"
+        ):
+            primary = rclone_google_drive.Rclone("rclone", value, "primary-mac")
+            worker = rclone_google_drive.Rclone("rclone", value, "worker-linux")
+
+        self.assertEqual(
+            primary.command("listremotes")[:3],
+            [
+                "/usr/bin/rclone",
+                "--config",
+                "/Users/example/.config/rclone/codefoldersync.conf",
+            ],
+        )
+        self.assertNotIn("--config", worker.command("listremotes"))
 
     def test_password_command_is_an_absolute_space_separated_argument_list(self) -> None:
         encoded = rclone_google_drive.password_command("worker-linux")

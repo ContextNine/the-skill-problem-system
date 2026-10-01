@@ -208,6 +208,46 @@ class DesiredStateTests(unittest.TestCase):
 
 
 class ConfigurationTests(unittest.TestCase):
+    def test_managed_launch_works_when_broker_discards_caller_environment(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            policy = root / "desired.json"
+            policy.write_text(json.dumps(desired()))
+            probe = root / "probe.py"
+            probe.write_text(
+                "import os, sys\n"
+                "assert os.environ['CTX9_RCLONE_SECRET_BINDINGS_CHILD'] == '1'\n"
+                "assert os.environ['GOOGLE_PERSONAL_OAUTH_CLIENT_ID'] == 'fixture-id'\n"
+                "assert os.environ['GOOGLE_PERSONAL_OAUTH_CLIENT_SECRET'] == 'fixture-secret'\n"
+                "assert 'UNRELATED_CALLER_VALUE' not in os.environ\n"
+            )
+            arguments = rclone_google_drive.build_parser().parse_args(
+                ["verify", "--machine-id", "primary-mac", "--live"]
+            )
+            actual_run = subprocess.run
+
+            def restricted_broker(command, **kwargs):
+                if command[0] != "/fixture/secret-bindings":
+                    return actual_run(command, **kwargs)
+                child = command[command.index("--") + 1:]
+                child[3] = str(probe)
+                return actual_run(
+                    child,
+                    cwd=kwargs["cwd"],
+                    env={
+                        "GOOGLE_PERSONAL_OAUTH_CLIENT_ID": "fixture-id",
+                        "GOOGLE_PERSONAL_OAUTH_CLIENT_SECRET": "fixture-secret",
+                    },
+                    check=False,
+                )
+
+            with (
+                patch.object(rclone_google_drive, "resolve_executable", return_value="/fixture/secret-bindings"),
+                patch.object(rclone_google_drive.subprocess, "run", side_effect=restricted_broker),
+                patch.dict(os.environ, {"UNRELATED_CALLER_VALUE": "discard-me"}),
+            ):
+                self.assertEqual(rclone_google_drive.run_with_secret_bindings(arguments, policy), 0)
+
     def test_verifies_boundaries_from_private_process_output(self) -> None:
         rclone = Mock()
         rclone.desired = desired()

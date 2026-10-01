@@ -6,6 +6,8 @@ Use a dedicated Google OAuth desktop client. Start and remain on `drive.file` un
 
 Each enabled machine completes OAuth locally and keeps its token only in that machine's encrypted Rclone config. Never copy an Rclone config. The shared desktop-client ID and secret live in the configured Secret Bindings personal globals. The controller creates an ephemeral value-free contract, launches itself through `secret-bindings exec --globals`, then maps both values into remote-specific variables for the Rclone child only. Neither application credential is written to desired state or Rclone configuration. Each machine independently generates its config-unlock value in Keychain or Secret Service. Rclone receives that value only through the absolute password command.
 
+The managed child command sets the non-secret launch marker through `/usr/bin/env` after Secret Bindings constructs its restricted environment. The controller does not depend on the broker preserving caller environment variables.
+
 Use `config_paths_by_machine` only when CodeFolderSync must not share a machine's default Rclone config. Each key must be an allowed machine ID and each value must be an absolute target-local path. Unlisted machines keep Rclone's default config. A dedicated path isolates CodeFolderSync without moving, encrypting, or otherwise changing remotes owned by another service.
 
 Native records:

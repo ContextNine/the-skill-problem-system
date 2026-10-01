@@ -854,8 +854,6 @@ def run_with_secret_bindings(arguments: argparse.Namespace, desired_path: Path) 
         (root / ".env.base").write_text(
             "".join(f"{name}=\n" for name in binding_names), encoding="utf-8"
         )
-        environment = os.environ.copy()
-        environment[BINDINGS_CHILD_MARKER] = "1"
         completed = subprocess.run(
             [
                 executable,
@@ -866,12 +864,13 @@ def run_with_secret_bindings(arguments: argparse.Namespace, desired_path: Path) 
                 "--contract",
                 ".env.base",
                 "--",
+                "/usr/bin/env",
+                f"{BINDINGS_CHILD_MARKER}=1",
                 str(Path(sys.executable).resolve()),
                 str(Path(__file__).resolve()),
                 *child_arguments(arguments, desired_path),
             ],
             cwd=root,
-            env=environment,
             check=False,
         )
         return completed.returncode

@@ -208,6 +208,47 @@ class DesiredStateTests(unittest.TestCase):
 
 
 class ConfigurationTests(unittest.TestCase):
+    def test_token_import_crosses_a_broker_with_disconnected_stdin(self) -> None:
+        token = json.dumps({"access_token": "fixture-access", "refresh_token": "fixture-refresh", "token_type": "Bearer"})
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            policy = root / "desired.json"
+            policy.write_text(json.dumps(desired()))
+            probe = root / "probe.py"
+            probe.write_text(
+                "import importlib.util, pathlib, sys\n"
+                f"spec = importlib.util.spec_from_file_location('controller', {str(SCRIPT)!r})\n"
+                "controller = importlib.util.module_from_spec(spec)\n"
+                "spec.loader.exec_module(controller)\n"
+                "assert sys.stdin.read() == ''\n"
+                "path = pathlib.Path(sys.argv[sys.argv.index('--token-socket') + 1])\n"
+                "assert controller.read_token_socket(path) == controller.canonical_oauth_token("
+                f"{token!r})\n"
+            )
+            arguments = rclone_google_drive.build_parser().parse_args(
+                ["configure-token", "--machine-id", "primary-mac", "--approve"]
+            )
+            actual_run = subprocess.run
+            socket_paths = []
+
+            def restricted_broker(command, **kwargs):
+                if command[0] != "/fixture/secret-bindings":
+                    return actual_run(command, **kwargs)
+                child = command[command.index("--") + 1:]
+                self.assertNotIn(token, child)
+                child[3] = str(probe)
+                socket_paths.append(Path(child[child.index("--token-socket") + 1]))
+                return actual_run(child, cwd=kwargs["cwd"], env={}, stdin=subprocess.DEVNULL, capture_output=True, check=False)
+
+            with (
+                patch.object(rclone_google_drive, "resolve_executable", return_value="/fixture/secret-bindings"),
+                patch.object(rclone_google_drive.subprocess, "run", side_effect=restricted_broker),
+                patch.object(rclone_google_drive.sys, "stdin", io.StringIO(token)),
+            ):
+                self.assertEqual(rclone_google_drive.run_with_secret_bindings(arguments, policy), 0)
+            self.assertTrue(socket_paths)
+            self.assertFalse(socket_paths[0].exists())
+
     def test_managed_launch_works_when_broker_discards_caller_environment(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

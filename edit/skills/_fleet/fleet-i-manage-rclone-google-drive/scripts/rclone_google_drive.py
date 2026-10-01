@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import configparser
+from contextlib import contextmanager
 import csv
 import hashlib
 import io
@@ -14,9 +15,12 @@ from pathlib import Path
 import re
 import secrets
 import shutil
+import socket
+import stat
 import subprocess
 import sys
 import tempfile
+import threading
 from typing import Any
 import uuid
 
@@ -275,6 +279,76 @@ def extract_oauth_token(output: str) -> str:
         ):
             return canonical_oauth_token(json.dumps(value))
     raise BackupError("Rclone authorization did not return a usable token")
+
+
+@contextmanager
+def token_input_socket(root: Path, token: str | None):
+    """Deliver one stdin token to the broker child without storing credential bytes."""
+    if token is None:
+        yield None
+        return
+    path = root / "token.sock"
+    listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    listener.bind(str(path))
+    path.chmod(0o600)
+    listener.listen(1)
+    listener.settimeout(0.25)
+    stopped = threading.Event()
+    failures: list[str] = []
+
+    def deliver() -> None:
+        try:
+            while not stopped.is_set():
+                try:
+                    connection, _ = listener.accept()
+                except socket.timeout:
+                    continue
+                with connection:
+                    connection.settimeout(10)
+                    connection.sendall(token.encode("utf-8"))
+                return
+        except OSError:
+            if not stopped.is_set():
+                failures.append("OAuth token socket transfer failed")
+
+    sender = threading.Thread(target=deliver, daemon=True)
+    sender.start()
+    try:
+        yield path
+        if failures:
+            raise BackupError(failures[0])
+    finally:
+        stopped.set()
+        sender.join(timeout=11)
+        listener.close()
+        path.unlink(missing_ok=True)
+
+
+def read_token_socket(path: Path) -> str:
+    try:
+        parent = path.parent.lstat()
+        details = path.lstat()
+        if (
+            not stat.S_ISDIR(parent.st_mode)
+            or parent.st_uid != os.getuid()
+            or stat.S_IMODE(parent.st_mode) != 0o700
+            or not stat.S_ISSOCK(details.st_mode)
+            or details.st_uid != os.getuid()
+            or stat.S_IMODE(details.st_mode) != 0o600
+        ):
+            raise BackupError("OAuth token socket custody is invalid")
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as connection:
+            connection.settimeout(10)
+            connection.connect(str(path))
+            received = bytearray()
+            while len(received) <= MAX_OAUTH_TOKEN_BYTES:
+                block = connection.recv(min(4096, MAX_OAUTH_TOKEN_BYTES + 1 - len(received)))
+                if not block:
+                    break
+                received.extend(block)
+        return canonical_oauth_token(received.decode("utf-8"))
+    except (OSError, UnicodeDecodeError) as error:
+        raise BackupError("OAuth token socket transfer failed") from error
 
 
 class Rclone:
@@ -742,6 +816,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--desired", type=Path)
     parser.add_argument("--rclone", default="rclone")
     parser.add_argument("--bindings-child", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--token-socket", type=Path, help=argparse.SUPPRESS)
     subparsers = parser.add_subparsers(dest="command", required=True)
     for name in (
         "plan",
@@ -799,6 +874,8 @@ def child_arguments(arguments: argparse.Namespace, desired_path: Path) -> list[s
         "--machine-id",
         arguments.machine_id,
     ]
+    if arguments.token_socket is not None:
+        result[0:0] = ["--token-socket", str(arguments.token_socket)]
     if arguments.command == "verify" and arguments.live:
         result.append("--live")
     if arguments.command in {
@@ -844,6 +921,11 @@ def run_with_secret_bindings(arguments: argparse.Namespace, desired_path: Path) 
         raise BackupError("Secret Bindings CLI is unavailable")
     drive = validate_desired(load_json(desired_path, "Rclone Google Drive desired state"))["google_drive"]
     binding_names = [drive["oauth_client_id_binding"], drive["oauth_client_secret_binding"]]
+    token = (
+        canonical_oauth_token(sys.stdin.read(MAX_OAUTH_TOKEN_BYTES + 1).strip())
+        if arguments.command == "configure-token"
+        else None
+    )
     with tempfile.TemporaryDirectory(prefix="ctx9-rclone-bindings-") as temporary:
         root = Path(temporary)
         initialized = subprocess.run(
@@ -854,26 +936,28 @@ def run_with_secret_bindings(arguments: argparse.Namespace, desired_path: Path) 
         (root / ".env.base").write_text(
             "".join(f"{name}=\n" for name in binding_names), encoding="utf-8"
         )
-        completed = subprocess.run(
-            [
-                executable,
-                "exec",
-                "--globals",
-                "--environment",
-                "local",
-                "--contract",
-                ".env.base",
-                "--",
-                "/usr/bin/env",
-                f"{BINDINGS_CHILD_MARKER}=1",
-                str(Path(sys.executable).resolve()),
-                str(Path(__file__).resolve()),
-                *child_arguments(arguments, desired_path),
-            ],
-            cwd=root,
-            check=False,
-        )
-        return completed.returncode
+        with token_input_socket(root, token) as token_path:
+            arguments.token_socket = token_path
+            completed = subprocess.run(
+                [
+                    executable,
+                    "exec",
+                    "--globals",
+                    "--environment",
+                    "local",
+                    "--contract",
+                    ".env.base",
+                    "--",
+                    "/usr/bin/env",
+                    f"{BINDINGS_CHILD_MARKER}=1",
+                    str(Path(sys.executable).resolve()),
+                    str(Path(__file__).resolve()),
+                    *child_arguments(arguments, desired_path),
+                ],
+                cwd=root,
+                check=False,
+            )
+            return completed.returncode
 
 
 def main() -> int:
@@ -920,8 +1004,9 @@ def main() -> int:
         elif arguments.command == "reauthorize":
             emit(reauthorize_remote(rclone))
         elif arguments.command == "configure-token":
-            token = sys.stdin.read(MAX_OAUTH_TOKEN_BYTES + 1)
-            emit(configure_remote_from_token(rclone, canonical_oauth_token(token.strip())))
+            if arguments.token_socket is None:
+                raise BackupError("managed OAuth token input socket is missing")
+            emit(configure_remote_from_token(rclone, read_token_socket(arguments.token_socket)))
         elif arguments.command == "remote-configure":
             emit(
                 configure_remote_over_ssh(

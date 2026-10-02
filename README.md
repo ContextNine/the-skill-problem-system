@@ -32,3 +32,7 @@ The wizard installs the editable source in the folder you choose. `fleet source 
 Every version tag publishes a deterministic source archive, SHA-256 checksum,
 full source commit record, and GitHub attestations. The verification contract is
 documented in [`docs/release.md`](docs/release.md).
+
+Private-component authentication and release-trust preflight are documented in
+[`docs/private-component-preflight.md`](docs/private-component-preflight.md). Source preparation is separate
+from release acceptance and updating a fleet's installed policy.

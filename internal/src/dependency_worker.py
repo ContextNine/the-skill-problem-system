@@ -68,6 +68,14 @@ class DependencyError(RuntimeError):
     pass
 
 
+PRIVATE_PREFLIGHT_STATES = {
+    "credential-missing", "credential-locked", "credential-unavailable", "credential-expired",
+    "credential-rejected", "access-denied", "release-unavailable", "rate-limited",
+    "transport-unavailable", "invalid-release", "platform-incompatible", "launcher-upgrade-required",
+    "trust-policy-missing", "verifier-unavailable", "trust-rejected",
+}
+
+
 def platform_name() -> str:
     if sys.platform == "darwin":
         return "macos"
@@ -378,6 +386,13 @@ def validate_manifest(
                     raise DependencyError(
                         f"package {package_id} needs an exact credential-free private catalog"
                     )
+                provenance_project = recipe.get("provenance_project")
+                if provenance_project is not None and (
+                    not private_fields or not isinstance(provenance_project, str)
+                    or not re.fullmatch(r"[A-Za-z0-9_-]+(?:/[A-Za-z0-9_.-]+)+", provenance_project)
+                    or any(part in {".", ".."} for part in provenance_project.split("/"))
+                ):
+                    raise DependencyError(f"package {package_id} has an invalid provenance project")
             if manager in {"node-archive", "github-archive"}:
                 version = recipe.get("version")
                 archives = recipe.get("archives")
@@ -770,16 +785,7 @@ def install_package(package: dict[str, Any], recipe: dict[str, Any]) -> None:
             raise DependencyError(f"ctx9 is missing for {package['id']}")
         private_catalog_url = recipe.get("private_catalog_url")
         if private_catalog_url:
-            command = [
-                executable,
-                "--private-catalog-url",
-                str(private_catalog_url),
-                "--credential-binding",
-                str(recipe["credential_binding"]),
-                "install",
-                name,
-                "--json",
-            ]
+            command = private_component_command(executable, package, recipe, "install")
         else:
             command = [executable, "install", name, "--json"]
         process = (
@@ -788,6 +794,8 @@ def install_package(package: dict[str, Any], recipe: dict[str, Any]) -> None:
             else run(command)
         )
         if process.returncode != 0:
+            if private_catalog_url:
+                raise DependencyError(f"install failed for {package['id']}: private-component-install-failed; rerun exact private preflight")
             output = (process.stderr or process.stdout).strip().splitlines()
             raise DependencyError(
                 f"install failed for {package['id']}: {output[-1][:500] if output else 'command failed'}"
@@ -839,6 +847,36 @@ def install_package(package: dict[str, Any], recipe: dict[str, Any]) -> None:
         archive_legacy_command(command_link, str(package["id"]), allow_node_modules=True)
 
 
+def private_component_command(executable: str, package: dict[str, Any], recipe: dict[str, Any], operation: str) -> list[str]:
+    return [executable, "--private-catalog-url", recipe["private_catalog_url"], "--credential-binding", recipe["credential_binding"], "--provenance-project", recipe["provenance_project"], "--expected-version", package["verify"]["exact"], operation, recipe["package"], "--json"]
+
+
+def private_component_preflight(package: dict[str, Any], recipe: dict[str, Any]) -> tuple[bool, str]:
+    """Ask the installed launcher to authenticate and verify this exact release."""
+    executable = shutil.which("ctx9", path=environment()["PATH"])
+    if executable is None:
+        return False, "launcher-upgrade-required"
+    if not recipe.get("provenance_project") or not package["verify"].get("exact"):
+        return False, "trust-policy-missing"
+    try:
+        process = subprocess.run(private_component_command(executable, package, recipe, "preflight"), env=environment(), stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=180, check=False)
+        if process.returncode == 2:
+            return False, "launcher-upgrade-required"
+        result = json.loads(process.stdout)
+        if not isinstance(result, dict) or result.get("schema_version") != 1 or result.get("values_returned") is not False:
+            return False, "invalid-release"
+        if process.returncode != 0 or result.get("ready") is not True:
+            state = result.get("state")
+            return False, state if state in PRIVATE_PREFLIGHT_STATES else "credential-unavailable"
+        host = (platform_name(), {"arm64": "aarch64", "x64": "x86_64"}.get(architecture_name(), architecture_name()))
+        accepted = result.get("state") == "ready" and result.get("trust_verified") is True and result.get("component") == recipe["package"] and result.get("version") == package["verify"]["exact"] and (result.get("platform"), result.get("architecture")) == host and isinstance(result.get("source_commit"), str) and re.fullmatch(r"[a-f0-9]{40}", result["source_commit"]) is not None
+        return (True, "authenticated signed exact catalog") if accepted else (False, "invalid-release")
+    except subprocess.TimeoutExpired:
+        return False, "transport-unavailable"
+    except (OSError, ValueError, TypeError):
+        return False, "credential-unavailable"
+
+
 def install_preflight(package: dict[str, Any], recipe: dict[str, Any], eligible_ids: set[str]) -> tuple[bool, str]:
     manager = recipe["manager"]
     if manager in {"node-archive", "github-archive"}:
@@ -855,14 +893,7 @@ def install_preflight(package: dict[str, Any], recipe: dict[str, Any], eligible_
             or "ctx9-launcher" in eligible_ids
         )
         if recipe.get("private_catalog_url"):
-            helper_available = (Path.home() / ".local/libexec/ctx9/private-read.py").is_file()
-            available = launcher_available and helper_available
-            return (
-                available,
-                "authenticated ctx9 private catalog"
-                if available
-                else "ctx9 launcher or private component enrollment is missing",
-            )
+            return private_component_preflight(package, recipe)
         return launcher_available, "ctx9 component catalog" if launcher_available else "ctx9 launcher is missing"
     if manager in {"brew", "brew-cask"}:
         return (shutil.which("brew", path=environment()["PATH"]) is not None, "Homebrew")
@@ -934,14 +965,16 @@ def reconcile(payload: dict[str, Any]) -> dict[str, Any]:
     eligible_ids = {str(package["id"]) for package in packages}
     preflight = []
     for package, state in zip(packages, before, strict=True):
-        installable, detail = (True, "already verified") if state["ready"] else install_preflight(
-            package, package["platforms"][platform], eligible_ids
+        recipe = package["platforms"][platform]
+        requires_private_preflight = recipe["manager"] == "ctx9-component" and bool(recipe.get("private_catalog_url"))
+        installable, detail = (True, "already verified") if state["ready"] and not requires_private_preflight else install_preflight(
+            package, recipe, eligible_ids
         )
         preflight.append({"id": package["id"], "installable": installable, "detail": detail})
     can_apply = all(item["installable"] for item in preflight) and not reference_state["collisions"]
     if mode == "apply":
         if not can_apply:
-            blocked = [str(item["id"]) for item in preflight if not item["installable"]]
+            blocked = [f"{item['id']} ({item['detail']})" for item in preflight if not item["installable"]]
             raise DependencyError("dependency preflight failed: " + ", ".join(blocked))
         for package, state in zip(packages, before, strict=True):
             if not state["ready"]:
@@ -950,7 +983,7 @@ def reconcile(payload: dict[str, Any]) -> dict[str, Any]:
     if mode == "apply" and reference_selected:
         apply_reference_files(Path.home(), reference_files)
         reference_state = inspect_reference_files(Path.home(), reference_files)
-    ready = all(item["ready"] for item in after) and reference_state["ready"]
+    ready = all(item["ready"] for item in after) and reference_state["ready"] and can_apply
     report = {
         "schema_version": 1,
         "machine_id": str(payload.get("machine_id") or "unknown"),

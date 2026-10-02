@@ -657,14 +657,17 @@ def print_dependency_report(label: str, report: dict[str, Any], result_key: str)
     reference = report.get("reference_package")
     reference_changes = reference.get("changes", []) if isinstance(reference, dict) else []
     reference_collisions = reference.get("collisions", []) if isinstance(reference, dict) else []
+    preflight_blockers = [item for item in report.get("preflight", []) if not item.get("installable")]
     summary = (
         "ready"
-        if not pending and not reference_changes and not reference_collisions
-        else f"{len(pending)} package pending, {len(reference_changes)} reference change(s), {len(reference_collisions)} collision(s)"
+        if not pending and not reference_changes and not reference_collisions and not preflight_blockers
+        else f"{len(pending)} package pending, {len(reference_changes)} reference change(s), {len(reference_collisions)} collision(s), {len(preflight_blockers)} preflight blocker(s)"
     )
     print(f"  {label}: {summary}")
     for item in pending:
         print(f"    - {item.get('id')}: {item.get('detail', 'not ready')}")
+    for item in preflight_blockers:
+        print(f"    - {item.get('id')} preflight: {item.get('detail', 'not ready')}")
     for path in reference_collisions:
         print(f"    - unmanaged reference collision: {path}")
 

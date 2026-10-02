@@ -330,20 +330,21 @@ def run_sync(
     dependency_manifest: dict[str, Any] | None = None,
     *,
     progress: Callable[[str, str, dict[str, Any]], None] | None = None,
+    expected_releases: dict[str, dict[str, str]] | None = None,
 ) -> int:
     arguments = sync_arguments(args, parts, mode)
     if not arguments:
         return 0
     if dependency_manifest is None:
-        if progress is not None:
-            return sync_agents.sync(sync_agents.parse_args(arguments), dependency_progress=progress)
+        if progress is not None or expected_releases is not None:
+            return sync_agents.sync(sync_agents.parse_args(arguments), dependency_progress=progress, expected_releases=expected_releases)
         return subprocess.run([sys.executable, str(PACKAGE_DIRECTORY / "src/sync_agents.py"), *arguments]).returncode
     with tempfile.TemporaryDirectory(prefix="fleet-dependency-manifest-") as directory:
         path = Path(directory) / "dependencies.json"
         path.write_text(json.dumps(dependency_manifest, indent=2) + "\n", encoding="utf-8")
-        if progress is not None:
+        if progress is not None or expected_releases is not None:
             sync_args = sync_agents.parse_args([*arguments, "--dependency-manifest", str(path)])
-            return sync_agents.sync(sync_args, dependency_progress=progress)
+            return sync_agents.sync(sync_args, dependency_progress=progress, expected_releases=expected_releases)
         return subprocess.run(
             [
                 sys.executable,
@@ -368,12 +369,16 @@ def update_exact_component(
     if len(args.dependency) != 1:
         raise FleetUpdateError("--version requires exactly one --dependency")
     candidate = exact_component_manifest(manifest, args.dependency[0], args.version)
+    dependency = next(item for item in candidate["dependencies"] if item["id"] == args.dependency[0])
+    components = {recipe["package"] for recipe in dependency["contract"]["recipes"].values()}
+    if len(components) != 1:
+        raise FleetUpdateError("exact component identity differs between platforms")
     mode = "verify" if args.verify else "dry-run" if args.dry_run else "apply"
     print(f"Mode: {mode}")
     print(f"Dependency: {args.dependency[0]}")
     print(f"Exact version: {args.version}")
     request = {
-        "schema_version": 1, "primary": source_id, "dependency": args.dependency[0], "version": args.version,
+        "schema_version": 1, "primary": source_id, "dependency": args.dependency[0], "component": components.pop(), "version": args.version,
         "manifest_digest": fleet_adoption.digest(candidate), "topology_digest": fleet_adoption.digest(registry),
         "implementation_digest": fleet_adoption.digest({str(Path(module.__file__).name): Path(module.__file__).read_text() for module in (dependency_worker, sync_agents, fleet_adoption, sys.modules[__name__])}),
         "source_root_digest": fleet_adoption.digest(str(args.root)),
@@ -381,18 +386,24 @@ def update_exact_component(
     }
     print(f"Operation: {fleet_adoption.digest(request)}")
     if mode != "apply":
+        binding = fleet_adoption.ReleaseBinding(request)
         def preview_scope(mode: str, event: str, report: dict[str, Any]) -> None:
             if event == "scope":
                 fleet_adoption.validate_scope(request, report)
+            elif event == "finished":
+                binding.observe(report)
         return run_sync(args, parts, mode, candidate, progress=preview_scope)
     with fleet_adoption.adoption_lock(args.home, request) as adoption:
         adoption.stage("preflight")
-        result = run_sync(args, parts, "dry-run", candidate, progress=adoption.target)
+        result = run_sync(args, parts, "dry-run", candidate, progress=adoption.target, expected_releases=adoption.binding.expectations())
         if result != 0:
             adoption.stage("preflight-blocked")
             return result
+        if adoption.binding.release is None:
+            adoption.stage("preflight-blocked")
+            raise FleetUpdateError("adoption-release-unverified")
         adoption.stage("applying")
-        result = run_sync(args, parts, "apply", candidate, progress=adoption.target)
+        result = run_sync(args, parts, "apply", candidate, progress=adoption.target, expected_releases=adoption.binding.expectations())
         if result != 0:
             adoption.interrupted()
             return result
@@ -404,7 +415,7 @@ def update_exact_component(
         adoption.stage("recording")
         changed = write_manifest(manifest_path, candidate)
         adoption.stage("verifying")
-        result = run_sync(args, parts, "verify", progress=adoption.target)
+        result = run_sync(args, parts, "verify", progress=adoption.target, expected_releases=adoption.binding.expectations())
         adoption.stage("complete" if result == 0 else "verification-failed")
         print("Recorded exact fleet desired state." if changed else "Exact fleet desired state was already recorded.")
         return result

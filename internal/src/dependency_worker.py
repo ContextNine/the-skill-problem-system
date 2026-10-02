@@ -74,7 +74,7 @@ PRIVATE_PREFLIGHT_STATES = {
     "credential-missing", "credential-locked", "credential-unavailable", "credential-expired",
     "credential-rejected", "access-denied", "release-unavailable", "rate-limited",
     "transport-unavailable", "invalid-release", "platform-incompatible", "launcher-upgrade-required",
-    "trust-policy-missing", "verifier-unavailable", "trust-rejected",
+    "trust-policy-missing", "verifier-unavailable", "trust-rejected", "release-changed",
 }
 
 
@@ -742,7 +742,7 @@ def install_github_python_installer(package: dict[str, Any], recipe: dict[str, A
             raise DependencyError(f"{package['id']} installer did not report ready")
 
 
-def install_package(package: dict[str, Any], recipe: dict[str, Any]) -> None:
+def install_package(package: dict[str, Any], recipe: dict[str, Any], *, expected_release: dict[str, str] | None = None) -> None:
     manager = recipe["manager"]
     if manager == "node-archive":
         install_node_archive(recipe)
@@ -787,7 +787,7 @@ def install_package(package: dict[str, Any], recipe: dict[str, Any]) -> None:
             raise DependencyError(f"ctx9 is missing for {package['id']}")
         private_catalog_url = recipe.get("private_catalog_url")
         if private_catalog_url:
-            command = private_component_command(executable, package, recipe, "install")
+            command = private_component_command(executable, package, recipe, "install", expected_release=expected_release)
         else:
             command = [executable, "install", name, "--json"]
         process = (
@@ -849,34 +849,42 @@ def install_package(package: dict[str, Any], recipe: dict[str, Any]) -> None:
         archive_legacy_command(command_link, str(package["id"]), allow_node_modules=True)
 
 
-def private_component_command(executable: str, package: dict[str, Any], recipe: dict[str, Any], operation: str) -> list[str]:
-    return [executable, "--private-catalog-url", recipe["private_catalog_url"], "--credential-binding", recipe["credential_binding"], "--provenance-project", recipe["provenance_project"], "--expected-version", package["verify"]["exact"], operation, recipe["package"], "--json"]
+def private_component_command(executable: str, package: dict[str, Any], recipe: dict[str, Any], operation: str, *, expected_release: dict[str, str] | None = None) -> list[str]:
+    command = [executable, "--private-catalog-url", recipe["private_catalog_url"], "--credential-binding", recipe["credential_binding"], "--provenance-project", recipe["provenance_project"], "--expected-version", package["verify"]["exact"]]
+    if expected_release is not None:
+        command.extend(["--expected-source-commit", expected_release["source_commit"], "--expected-catalog-sha256", expected_release["catalog_sha256"]])
+    return [*command, operation, recipe["package"], "--json"]
 
 
-def private_component_preflight(package: dict[str, Any], recipe: dict[str, Any]) -> tuple[bool, str]:
+def private_component_preflight(package: dict[str, Any], recipe: dict[str, Any], *, expected_release: dict[str, str] | None = None) -> tuple[bool, str, dict[str, str] | None]:
     """Ask the installed launcher to authenticate and verify this exact release."""
     executable = shutil.which("ctx9", path=environment()["PATH"])
     if executable is None:
-        return False, "launcher-upgrade-required"
+        return False, "launcher-upgrade-required", None
     if not recipe.get("provenance_project") or not package["verify"].get("exact"):
-        return False, "trust-policy-missing"
+        return False, "trust-policy-missing", None
     try:
-        process = subprocess.run(private_component_command(executable, package, recipe, "preflight"), env=environment(), stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=180, check=False)
+        process = subprocess.run(private_component_command(executable, package, recipe, "preflight", expected_release=expected_release), env=environment(), stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=180, check=False)
         if process.returncode == 2:
-            return False, "launcher-upgrade-required"
+            return False, "launcher-upgrade-required", None
         result = json.loads(process.stdout)
         if not isinstance(result, dict) or result.get("schema_version") != 1 or result.get("values_returned") is not False:
-            return False, "invalid-release"
+            return False, "invalid-release", None
         if process.returncode != 0 or result.get("ready") is not True:
             state = result.get("state")
-            return False, state if state in PRIVATE_PREFLIGHT_STATES else "credential-unavailable"
+            return False, state if state in PRIVATE_PREFLIGHT_STATES else "credential-unavailable", None
         host = (platform_name(), {"arm64": "aarch64", "x64": "x86_64"}.get(architecture_name(), architecture_name()))
         accepted = result.get("state") == "ready" and result.get("trust_verified") is True and result.get("component") == recipe["package"] and result.get("version") == package["verify"]["exact"] and (result.get("platform"), result.get("architecture")) == host and isinstance(result.get("source_commit"), str) and re.fullmatch(r"[a-f0-9]{40}", result["source_commit"]) is not None
-        return (True, "authenticated signed exact catalog") if accepted else (False, "invalid-release")
+        if not accepted or not isinstance(result.get("catalog_sha256"), str) or re.fullmatch(r"[a-f0-9]{64}", result["catalog_sha256"]) is None:
+            return False, "invalid-release", None
+        if expected_release is not None and any(result[key] != expected_release[key] for key in ("source_commit", "catalog_sha256")):
+            return False, "release-changed", None
+        release = {key: result[key] for key in ("component", "version", "source_commit", "catalog_sha256")}
+        return True, "authenticated signed exact catalog", release
     except subprocess.TimeoutExpired:
-        return False, "transport-unavailable"
+        return False, "transport-unavailable", None
     except (OSError, ValueError, TypeError):
-        return False, "credential-unavailable"
+        return False, "credential-unavailable", None
 
 
 def install_preflight(package: dict[str, Any], recipe: dict[str, Any], eligible_ids: set[str]) -> tuple[bool, str]:
@@ -895,7 +903,8 @@ def install_preflight(package: dict[str, Any], recipe: dict[str, Any], eligible_
             or "ctx9-launcher" in eligible_ids
         )
         if recipe.get("private_catalog_url"):
-            return private_component_preflight(package, recipe)
+            installable, detail, _ = private_component_preflight(package, recipe)
+            return installable, detail
         return launcher_available, "ctx9 component catalog" if launcher_available else "ctx9 launcher is missing"
     if manager in {"brew", "brew-cask"}:
         return (shutil.which("brew", path=environment()["PATH"]) is not None, "Homebrew")
@@ -965,14 +974,29 @@ def reconcile(payload: dict[str, Any]) -> dict[str, Any]:
         raise DependencyError(f"unsupported mode: {mode}")
     before = [verify_package(package) for package in packages]
     eligible_ids = {str(package["id"]) for package in packages}
+    expected_releases = payload.get("expected_releases", {})
+    if not isinstance(expected_releases, dict):
+        raise DependencyError("invalid-expected-release", outcome_known=True)
+    for key, value in expected_releases.items():
+        if key not in eligible_ids or not isinstance(value, dict) or set(value) != {"source_commit", "catalog_sha256"}:
+            raise DependencyError("invalid-expected-release", outcome_known=True)
+        if any(
+            not isinstance(value[field], str) or re.fullmatch(rf"[a-f0-9]{{{length}}}", value[field]) is None
+            for field, length in (("source_commit", 40), ("catalog_sha256", 64))
+        ):
+            raise DependencyError("invalid-expected-release", outcome_known=True)
     preflight = []
     for package, state in zip(packages, before, strict=True):
         recipe = package["platforms"][platform]
         requires_private_preflight = recipe["manager"] == "ctx9-component" and bool(recipe.get("private_catalog_url"))
-        installable, detail = (True, "already verified") if state["ready"] and not requires_private_preflight else install_preflight(
-            package, recipe, eligible_ids
-        )
-        preflight.append({"id": package["id"], "installable": installable, "detail": detail})
+        release = None
+        if requires_private_preflight:
+            installable, detail, release = private_component_preflight(package, recipe, expected_release=expected_releases.get(package["id"]))
+        else:
+            if package["id"] in expected_releases:
+                raise DependencyError("invalid-expected-release", outcome_known=True)
+            installable, detail = (True, "already verified") if state["ready"] else install_preflight(package, recipe, eligible_ids)
+        preflight.append({"id": package["id"], "installable": installable, "detail": detail, **({"release": release} if release is not None else {})})
     can_apply = all(item["installable"] for item in preflight) and not reference_state["collisions"]
     if mode == "apply":
         if not can_apply:
@@ -980,7 +1004,8 @@ def reconcile(payload: dict[str, Any]) -> dict[str, Any]:
             raise DependencyError("dependency preflight failed: " + ", ".join(blocked), outcome_known=True)
         for package, state in zip(packages, before, strict=True):
             if not state["ready"]:
-                install_package(package, package["platforms"][platform])
+                release = next(item for item in preflight if item["id"] == package["id"]).get("release")
+                install_package(package, package["platforms"][platform], expected_release=release)
     after = [verify_package(package) for package in packages] if mode == "apply" else before
     if mode == "apply" and reference_selected:
         apply_reference_files(Path.home(), reference_files)

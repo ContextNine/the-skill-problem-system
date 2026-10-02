@@ -235,6 +235,7 @@ def invoke_dependency_targets(
     source_id: str,
     mode: str,
     progress: Callable[[str, str, dict[str, Any]], None] | None = None,
+    expected_releases: dict[str, dict[str, str]] | None = None,
 ) -> list[dict[str, Any]]:
     reports = []
     for machine in machines:
@@ -253,6 +254,7 @@ def invoke_dependency_targets(
                     "vault": machine.get("vault", {}),
                 },
                 "mode": mode,
+                "expected_releases": expected_releases or {},
             },
             local=str(machine["id"]) == source_id,
         )
@@ -738,7 +740,7 @@ def source_alias(
     )
 
 
-def sync(args: argparse.Namespace, *, dependency_progress: Callable[[str, str, dict[str, Any]], None] | None = None) -> int:
+def sync(args: argparse.Namespace, *, dependency_progress: Callable[[str, str, dict[str, Any]], None] | None = None, expected_releases: dict[str, dict[str, str]] | None = None) -> int:
     root = (args.root or agent_configuration.vault_root()).expanduser().resolve()
     agents = resolve_agents_root(root)
     home = (args.home or Path.home()).expanduser().resolve()
@@ -806,6 +808,7 @@ def sync(args: argparse.Namespace, *, dependency_progress: Callable[[str, str, d
             source_id=source_id,
             mode="verify" if args.verify else "dry-run",
             progress=dependency_progress,
+            expected_releases=expected_releases,
         )
 
     workspace_preview: dict[str, Any] | None = None
@@ -994,6 +997,7 @@ def sync(args: argparse.Namespace, *, dependency_progress: Callable[[str, str, d
             source_id=source_id,
             mode="apply",
             progress=dependency_progress,
+            expected_releases=expected_releases,
         )
         dependency_apply.extend(report for report in dependency_preview if report.get("ready") is True)
         if not all(report.get("ok") and report.get("ready") and report.get("outcome_known") is True for report in dependency_apply):
@@ -1114,7 +1118,7 @@ def sync(args: argparse.Namespace, *, dependency_progress: Callable[[str, str, d
     verify_args.verify = True
     verify_args.dry_run = False
     print("Verification:")
-    return sync(verify_args, dependency_progress=dependency_progress)
+    return sync(verify_args, dependency_progress=dependency_progress, expected_releases=expected_releases)
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

@@ -30,16 +30,21 @@ class PrivateDependencyJourney(unittest.TestCase):
             cli.write_text(
                 "#!/usr/bin/env python3\nimport json,os,sys\n"
                 "args=sys.argv[1:]\n"
-                "assert 'preflight' in args and 'install' not in args\n"
+                "assert 'preflight' in args or 'install' in args\n"
                 "assert args[args.index('--provenance-project')+1]=='example/fixture'\n"
                 "assert args[args.index('--expected-version')+1]=='1.5.2'\n"
                 "state=os.environ['FIXTURE_STATE']\n"
+                "if 'install' in args:\n"
+                " assert args[args.index('--expected-source-commit')+1]=='a'*40\n"
+                " assert args[args.index('--expected-catalog-sha256')+1]=='c'*64\n"
+                " print(json.dumps({'ready':False,'state':'release-changed'}));sys.exit(1)\n"
                 "if state=='malformed':\n print('sensitive provider output');sys.exit(1)\n"
-                "report={'schema_version':1,'ready':state=='ready','state':state,'trust_verified':state=='ready','values_returned':False,'component':'secret-bindings','version':'1.5.2','source_commit':'a'*40,'platform':'linux','architecture':'x86_64'}\n"
+                "report={'schema_version':1,'ready':state=='ready','state':state,'trust_verified':state=='ready','values_returned':False,'component':'secret-bindings','version':'1.5.2','source_commit':'a'*40,'catalog_sha256':'c'*64,'platform':'linux','architecture':'x86_64'}\n"
                 "if state=='wrong-version': report.update(ready=True,state='ready',trust_verified=True,version='9.9.9')\n"
                 "print(json.dumps(report));sys.exit(0 if report['ready'] else 1)\n"
             )
             cli.chmod(0o755)
+            install_package = worker.install_package
             with mock.patch.object(worker.Path, "home", return_value=root), mock.patch.object(worker, "platform_name", return_value="linux"), mock.patch.object(worker, "architecture_name", return_value="x64"), mock.patch.object(worker, "verify_package", return_value=ready), mock.patch.object(worker, "install_package", side_effect=AssertionError("readiness changed the installation")):
                 for state in ("credential-locked", "credential-expired", "access-denied", "rate-limited", "verifier-unavailable", "trust-rejected", "wrong-version", "malformed", "ready"):
                     env = {"PATH": str(bin_dir) + os.pathsep + os.defpath, "FIXTURE_STATE": state}
@@ -54,6 +59,20 @@ class PrivateDependencyJourney(unittest.TestCase):
                                 worker.reconcile({**payload, "mode": "apply"})
                             self.assertFalse((root / ".agents").exists())
                 with mock.patch.object(worker, "environment", return_value={"PATH": str(bin_dir) + os.pathsep + os.defpath, "FIXTURE_STATE": "ready"}):
+                    for expected in ({"source_commit": "b" * 40, "catalog_sha256": "c" * 64}, {"source_commit": "a" * 40, "catalog_sha256": "d" * 64}):
+                        blocked = {**payload, "expected_releases": {"secret-bindings": expected}}
+                        self.assertEqual(worker.reconcile(blocked)["preflight"][0]["detail"], "release-changed")
+                        with self.assertRaises(worker.DependencyError):
+                            worker.reconcile({**blocked, "mode": "apply"})
+                        self.assertFalse((root / ".agents").exists())
+                    # The real adapter carries both pins to executable installation.
+                    with mock.patch.object(worker, "install_package", side_effect=install_package), mock.patch.object(worker, "verify_package", return_value={**ready, "ready": False}), mock.patch.object(worker, "run", wraps=worker.run) as run:
+                        with self.assertRaisesRegex(worker.DependencyError, "private-component-install-failed"):
+                            worker.reconcile({**payload, "mode": "apply"})
+                        arguments = run.call_args.args[0]
+                        self.assertEqual(arguments[arguments.index("--expected-source-commit") + 1], "a" * 40)
+                        self.assertEqual(arguments[arguments.index("--expected-catalog-sha256") + 1], "c" * 64)
+                        self.assertFalse((root / ".agents").exists())
                     self.assertTrue(worker.reconcile({**payload, "mode": "apply"})["ready"])
                     self.assertTrue((root / ".agents/state/dependencies.lock.json").is_file())
 

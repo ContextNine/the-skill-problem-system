@@ -56,11 +56,17 @@ class AdoptionJourney(unittest.TestCase):
             fail_once = True
             change_source = False
             fail_final_verify = False
+            drift_after_preview = False
+            sources = {item["id"]: "a" * 40 for item in machines}
+            catalogs = {item["id"]: "c" * 64 for item in machines}
 
             def worker(machine, module, payload, **kwargs):
                 nonlocal fail_once
                 machine_id = machine["id"]
                 desired = payload["manifest"]["dependencies"][0]["contract"]["verify"]["exact"]
+                expected = payload["expected_releases"].get("secret-bindings")
+                if expected is not None and (expected["source_commit"] != sources[machine_id] or expected["catalog_sha256"] != catalogs[machine_id]):
+                    return {"id": machine_id, "ok": True, "ready": False, "can_apply": False, "outcome_known": True, "preflight": [{"id": "secret-bindings", "installable": False, "detail": "release-changed"}], "packages": [], "reference_package": {"changes": [], "collisions": []}}
                 if payload["mode"] == "apply":
                     installs.append(machine_id)
                     if machine_id == "worker-b" and fail_once:
@@ -75,7 +81,10 @@ class AdoptionJourney(unittest.TestCase):
                 recorded = json.loads(manifest_path.read_text())["dependencies"][0]["contract"]["verify"]["exact"]
                 if fail_final_verify and payload["mode"] == "verify" and recorded == "1.6.7":
                     ready = False
-                return {"id": machine_id, "ok": True, "ready": ready, "can_apply": True, "outcome_known": True, "packages": [{"id": "secret-bindings", "ready": ready}], "reference_package": {"ready": True, "changes": [], "collisions": []}}
+                report = {"id": machine_id, "ok": True, "ready": ready, "can_apply": True, "outcome_known": True, "preflight": [{"id": "secret-bindings", "installable": True, "release": {"component": "secret-bindings", "version": desired, "source_commit": sources[machine_id], "catalog_sha256": catalogs[machine_id]}}], "packages": [{"id": "secret-bindings", "ready": ready}], "reference_package": {"ready": True, "changes": [], "collisions": []}}
+                if drift_after_preview and payload["mode"] == "dry-run" and machine_id == "worker-b":
+                    catalogs.update({key: "e" * 64 for key in catalogs})
+                return report
 
             self.bind(stack, registry, worker)
             original = manifest_path.read_bytes()
@@ -84,6 +93,18 @@ class AdoptionJourney(unittest.TestCase):
             self.assertEqual(fleet_update.update(preview), 0)
             self.assertFalse(args.home.exists())
             self.assertEqual(manifest_path.read_bytes(), original)
+            sources["worker-b"] = "b" * 40
+            with self.assertRaisesRegex(fleet_adoption.AdoptionError, "adoption-release-changed"):
+                fleet_update.update(preview)
+            self.assertFalse(args.home.exists())
+            self.assertFalse(installs)
+            sources["worker-b"] = "a" * 40
+            catalogs["worker-b"] = "d" * 64
+            with self.assertRaisesRegex(fleet_adoption.AdoptionError, "adoption-release-changed"):
+                fleet_update.update(preview)
+            self.assertFalse(args.home.exists())
+            self.assertFalse(installs)
+            catalogs["worker-b"] = "c" * 64
             with self.assertRaises(sync_agents.AgentsSyncError):
                 fleet_update.update(args)
             self.assertEqual(installs, ["worker-a", "worker-b"])
@@ -95,9 +116,22 @@ class AdoptionJourney(unittest.TestCase):
             journal = fleet_adoption.read_state(journal_root / f"{operation}.json")
             self.assertEqual(journal["stage"], "partial")
             self.assertEqual(journal["targets"]["worker-a"]["status"], "ready")
+            self.assertEqual(journal["release"]["source_commit"], "a" * 40)
             self.assertNotIn("sensitive", json.dumps(journal))
             for item in journal_root.iterdir():
                 self.assertEqual(item.stat().st_mode & 0o777, 0o600)
+            # Resume cannot adopt a different signed source at the same version.
+            sources.update({key: "b" * 40 for key in sources})
+            self.assertEqual(fleet_update.update(args), 1)
+            self.assertEqual(installs, ["worker-a", "worker-b"])
+            self.assertEqual(manifest_path.read_bytes(), original)
+            self.assertEqual(fleet_adoption.read_state(journal_root / f"{operation}.json")["release"]["source_commit"], "a" * 40)
+            sources.update({key: "a" * 40 for key in sources})
+            catalogs.update({key: "d" * 64 for key in catalogs})
+            self.assertEqual(fleet_update.update(args), 1)
+            self.assertEqual(installs, ["worker-a", "worker-b"])
+            self.assertEqual(manifest_path.read_bytes(), original)
+            catalogs.update({key: "c" * 64 for key in catalogs})
             self.assertEqual(fleet_update.update(args), 0)
             self.assertEqual(installs, ["worker-a", "worker-b", "worker-b", "primary"])
             self.assertEqual(fleet_adoption.read_state(journal_root / "active.json")["operation"], operation)
@@ -132,6 +166,16 @@ class AdoptionJourney(unittest.TestCase):
             self.assertEqual(fleet_update.update(args), 0)
             self.assertEqual(len(installs), after_installs)
             self.assertEqual(fleet_adoption.read_state(journal_root / "active.json")["operation"], failed_record["operation"])
+            # Catalog drift after an accepted preview is caught before any target activates.
+            args.version = "1.6.8"
+            drift_after_preview = True
+            before_drift = manifest_path.read_bytes()
+            self.assertEqual(fleet_update.update(args), 1)
+            self.assertEqual(len(installs), after_installs)
+            self.assertEqual(manifest_path.read_bytes(), before_drift)
+            drift_after_preview = False
+            catalogs.update({key: "c" * 64 for key in catalogs})
+            self.assertEqual(fleet_update.update(args), 0)
             # A concurrent source edit is not overwritten after target activation.
             args.target = []
             versions["worker-b"] = "1.5.2"
@@ -152,7 +196,7 @@ class AdoptionJourney(unittest.TestCase):
                 calls.append((machine["id"], payload["mode"]))
                 if payload["mode"] == "apply":
                     raise KeyboardInterrupt
-                return {"id": machine["id"], "ok": True, "ready": False, "can_apply": True, "packages": [], "reference_package": {"changes": [], "collisions": []}}
+                return {"id": machine["id"], "ok": True, "ready": False, "can_apply": True, "preflight": [{"id": "secret-bindings", "installable": True, "release": {"component": "secret-bindings", "version": "1.6.6", "source_commit": "a" * 40, "catalog_sha256": "c" * 64}}], "packages": [], "reference_package": {"changes": [], "collisions": []}}
 
             self.bind(stack, registry, worker)
             original = manifest_path.read_bytes()

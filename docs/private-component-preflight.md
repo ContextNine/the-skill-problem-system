@@ -64,6 +64,18 @@ no worker error bodies, environment values or protected fingerprints. Files are 
 owner-only and nonsymlink; an OS advisory lock excludes competing exact adoptions on that primary.
 The mutation deny marker is written before entering apply.
 
+The journal also binds the authenticated release's component, exact version, full source commit and
+canonical catalog SHA-256. Every selected target must observe the same binding before activation. Preview
+compares these observations without writing a journal; apply persists the first trusted binding and
+requires it again on resume. A changed commit or catalog under the same version stops the operation.
+The catalog digest covers value-free release metadata, not protected values or their fingerprints.
+
+The coordinator supplies both pins to each target's fresh preflight, installer command and final
+verification. The launcher repeats signature checks and refuses a changed release before running code.
+Successful worker reports missing the release binding are invalid. A blocked target is not an excuse to
+discard the binding or replace it on retry. A catalog that drifts after preflight cannot silently select
+another archive. Matching semantic versions alone remain insufficient release-identity evidence.
+
 Worker responses carry an outcome-known boundary. A preflight failure before mutation is safe to resume;
 a missing/malformed response or lost transport cannot certify child termination. Raw transport/worker
 error bodies are reduced to fixed references rather than forwarded or stored.

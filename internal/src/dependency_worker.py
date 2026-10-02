@@ -65,7 +65,9 @@ PACKAGE_ROOT = Path(".agents")
 
 
 class DependencyError(RuntimeError):
-    pass
+    def __init__(self, message: str, *, outcome_known: bool = False):
+        super().__init__(message)
+        self.outcome_known = outcome_known
 
 
 PRIVATE_PREFLIGHT_STATES = {
@@ -975,7 +977,7 @@ def reconcile(payload: dict[str, Any]) -> dict[str, Any]:
     if mode == "apply":
         if not can_apply:
             blocked = [f"{item['id']} ({item['detail']})" for item in preflight if not item["installable"]]
-            raise DependencyError("dependency preflight failed: " + ", ".join(blocked))
+            raise DependencyError("dependency preflight failed: " + ", ".join(blocked), outcome_known=True)
         for package, state in zip(packages, before, strict=True):
             if not state["ready"]:
                 install_package(package, package["platforms"][platform])
@@ -1015,7 +1017,7 @@ def main() -> int:
         sys.stdout.write("\n")
         return 0 if report["ready"] or report["mode"] == "dry-run" else 2
     except (DependencyError, OSError, ValueError, json.JSONDecodeError) as exc:
-        json.dump({"ok": False, "error": str(exc)}, sys.stdout)
+        json.dump({"ok": False, "error": str(exc), "outcome_known": isinstance(exc, DependencyError) and exc.outcome_known}, sys.stdout)
         sys.stdout.write("\n")
         return 1
 

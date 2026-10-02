@@ -14,7 +14,7 @@ import shlex
 import subprocess
 import sys
 import tempfile
-from typing import Any
+from typing import Any, Callable
 
 
 PACKAGE_DIRECTORY = Path(__file__).resolve().parents[1]
@@ -28,10 +28,12 @@ for directory in (PACKAGE_DIRECTORY / "src", FLEET_SCRIPTS, COMMANDS_DIRECTORY):
         sys.path.insert(0, str(directory))
 
 import dependency_worker
+import fleet_adoption
 import fleet_update_worker
 import skill_source_config
 import skill_source_update
 import sync_agent_configuration as agent_configuration
+import sync_agents
 from package_layout import resolve_agents_root
 
 
@@ -326,15 +328,22 @@ def run_sync(
     parts: set[str],
     mode: str,
     dependency_manifest: dict[str, Any] | None = None,
+    *,
+    progress: Callable[[str, str, dict[str, Any]], None] | None = None,
 ) -> int:
     arguments = sync_arguments(args, parts, mode)
     if not arguments:
         return 0
     if dependency_manifest is None:
+        if progress is not None:
+            return sync_agents.sync(sync_agents.parse_args(arguments), dependency_progress=progress)
         return subprocess.run([sys.executable, str(PACKAGE_DIRECTORY / "src/sync_agents.py"), *arguments]).returncode
     with tempfile.TemporaryDirectory(prefix="fleet-dependency-manifest-") as directory:
         path = Path(directory) / "dependencies.json"
         path.write_text(json.dumps(dependency_manifest, indent=2) + "\n", encoding="utf-8")
+        if progress is not None:
+            sync_args = sync_agents.parse_args([*arguments, "--dependency-manifest", str(path)])
+            return sync_agents.sync(sync_args, dependency_progress=progress)
         return subprocess.run(
             [
                 sys.executable,
@@ -351,6 +360,10 @@ def update_exact_component(
     parts: set[str],
     manifest_path: Path,
     manifest: dict[str, Any],
+    *,
+    registry: dict[str, Any],
+    machines: list[dict[str, Any]],
+    source_id: str,
 ) -> int:
     if len(args.dependency) != 1:
         raise FleetUpdateError("--version requires exactly one --dependency")
@@ -359,12 +372,42 @@ def update_exact_component(
     print(f"Mode: {mode}")
     print(f"Dependency: {args.dependency[0]}")
     print(f"Exact version: {args.version}")
-    result = run_sync(args, parts, mode, candidate)
-    if result != 0 or mode != "apply":
+    request = {
+        "schema_version": 1, "primary": source_id, "dependency": args.dependency[0], "version": args.version,
+        "manifest_digest": fleet_adoption.digest(candidate), "topology_digest": fleet_adoption.digest(registry),
+        "implementation_digest": fleet_adoption.digest({str(Path(module.__file__).name): Path(module.__file__).read_text() for module in (dependency_worker, sync_agents, fleet_adoption, sys.modules[__name__])}),
+        "source_root_digest": fleet_adoption.digest(str(args.root)),
+        "targets": sorted(str(machine["id"]) for machine in machines),
+    }
+    print(f"Operation: {fleet_adoption.digest(request)}")
+    if mode != "apply":
+        def preview_scope(mode: str, event: str, report: dict[str, Any]) -> None:
+            if event == "scope":
+                fleet_adoption.validate_scope(request, report)
+        return run_sync(args, parts, mode, candidate, progress=preview_scope)
+    with fleet_adoption.adoption_lock(args.home, request) as adoption:
+        adoption.stage("preflight")
+        result = run_sync(args, parts, "dry-run", candidate, progress=adoption.target)
+        if result != 0:
+            adoption.stage("preflight-blocked")
+            return result
+        adoption.stage("applying")
+        result = run_sync(args, parts, "apply", candidate, progress=adoption.target)
+        if result != 0:
+            adoption.interrupted()
+            return result
+        # Recheck the authoritative input before recording, preserving concurrent changes.
+        current = read_json(manifest_path, "agent dependency registry")
+        if current != manifest and current != candidate:
+            adoption.stage("recording-conflict")
+            raise FleetUpdateError("adoption-source-changed; installed targets retained, desired state not overwritten")
+        adoption.stage("recording")
+        changed = write_manifest(manifest_path, candidate)
+        adoption.stage("verifying")
+        result = run_sync(args, parts, "verify", progress=adoption.target)
+        adoption.stage("complete" if result == 0 else "verification-failed")
+        print("Recorded exact fleet desired state." if changed else "Exact fleet desired state was already recorded.")
         return result
-    changed = write_manifest(manifest_path, candidate)
-    print("Recorded exact fleet desired state." if changed else "Exact fleet desired state was already recorded.")
-    return run_sync(args, parts, "verify")
 
 
 def run_vault_dependencies(root: Path, mode: str) -> int:
@@ -448,7 +491,7 @@ def update(args: argparse.Namespace) -> int:
     machines = [source] if args.local_only else targets if args.target else [source, *targets]
     skill_snapshot_machines = [source, *targets]
     if args.version is not None:
-        return update_exact_component(args, parts, manifest_path, manifest)
+        return update_exact_component(args, parts, manifest_path, manifest, registry=registry, machines=machines, source_id=source_id)
     resolved_t3 = exact_t3_version(args, parts)
     resolved = {"t3-code": resolved_t3} if resolved_t3 else {}
     mode = "verify" if args.verify else "dry-run" if args.dry_run else "apply"

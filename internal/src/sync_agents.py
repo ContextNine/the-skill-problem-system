@@ -16,7 +16,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from typing import Any
+from typing import Any, Callable
 
 
 PACKAGE_DIRECTORY = Path(__file__).resolve().parents[1]
@@ -35,6 +35,7 @@ import skill_snapshots
 import sync_agent_configuration as agent_configuration
 import sync_skills
 import dependency_worker
+import fleet_adoption
 import fleet_templates
 import global_agent_configuration
 import workspace_dependency_worker
@@ -216,9 +217,14 @@ def invoke_portable_worker(
     try:
         report = json.loads(executed.stdout.strip())
     except json.JSONDecodeError:
-        detail = (executed.stderr or executed.stdout or "portable worker returned no report").strip().splitlines()[-1]
-        return {"id": machine["id"], "ok": False, "error": detail[:1000]}
-    return {"id": machine["id"], **report}
+        return {"id": machine["id"], "ok": False, "error": "portable-worker-response-unavailable", "outcome_known": False}
+    if not isinstance(report, dict) or not isinstance(report.get("ok"), bool):
+        return {"id": machine["id"], "ok": False, "error": "portable-worker-response-invalid", "outcome_known": False}
+    outcome_known = report.get("outcome_known", report["ok"]) is True
+    if not report["ok"]:
+        # Raw worker errors can contain provider/subprocess output. Keep the reference closed.
+        report["error"] = "portable-worker-failed"
+    return {"id": machine["id"], **report, "outcome_known": outcome_known}
 
 
 def invoke_dependency_targets(
@@ -228,9 +234,13 @@ def invoke_dependency_targets(
     *,
     source_id: str,
     mode: str,
+    progress: Callable[[str, str, dict[str, Any]], None] | None = None,
 ) -> list[dict[str, Any]]:
-    return [
-        invoke_portable_worker(
+    reports = []
+    for machine in machines:
+        if progress:
+            progress(mode, "started", {"id": machine["id"]})
+        report = invoke_portable_worker(
             machine,
             dependency_worker,
             {
@@ -246,8 +256,12 @@ def invoke_dependency_targets(
             },
             local=str(machine["id"]) == source_id,
         )
-        for machine in machines
-    ]
+        if progress:
+            progress(mode, "finished", report)
+        reports.append(report)
+        if mode == "apply" and (report.get("ok") is not True or report.get("ready") is not True or report.get("outcome_known") is not True):
+            break
+    return reports
 
 
 def build_agent_reference_files(
@@ -724,7 +738,7 @@ def source_alias(
     )
 
 
-def sync(args: argparse.Namespace) -> int:
+def sync(args: argparse.Namespace, *, dependency_progress: Callable[[str, str, dict[str, Any]], None] | None = None) -> int:
     root = (args.root or agent_configuration.vault_root()).expanduser().resolve()
     agents = resolve_agents_root(root)
     home = (args.home or Path.home()).expanduser().resolve()
@@ -759,7 +773,9 @@ def sync(args: argparse.Namespace) -> int:
     source_matches = [machine for machine in registry["machines"] if machine.get("id") == source_id]
     if len(source_matches) != 1:
         raise AgentsSyncError(f"source machine {source_id!r} did not resolve exactly once")
-    selected_machines = [source_matches[0], *targets]
+    selected_machines = targets if args.target and parts == {"dependencies"} else [source_matches[0], *targets]
+    if dependency_progress:
+        dependency_progress("verify" if args.verify else "dry-run" if args.dry_run else "apply", "scope", {"topology_digest": fleet_adoption.digest(registry), "targets": sorted(str(machine["id"]) for machine in selected_machines)})
 
     dependency_preview: list[dict[str, Any]] = []
     dependency_manifest: dict[str, Any] | None = None
@@ -789,6 +805,7 @@ def sync(args: argparse.Namespace) -> int:
             reference_files,
             source_id=source_id,
             mode="verify" if args.verify else "dry-run",
+            progress=dependency_progress,
         )
 
     workspace_preview: dict[str, Any] | None = None
@@ -966,17 +983,23 @@ def sync(args: argparse.Namespace) -> int:
 
     dependency_apply: list[dict[str, Any]] = []
     if dependency_manifest is not None:
+        preview_by_id = {report["id"]: report for report in dependency_preview}
+        pending_machines = [machine for machine in selected_machines if preview_by_id[machine["id"]].get("ready") is not True]
+        # Workers first, primary last. Freshly ready targets need no activation/reference writes.
+        pending_machines.sort(key=lambda machine: str(machine["id"]) == source_id)
         dependency_apply = invoke_dependency_targets(
-            selected_machines,
+            pending_machines,
             dependency_manifest,
             reference_files,
             source_id=source_id,
             mode="apply",
+            progress=dependency_progress,
         )
-        if not all(report.get("ok") and report.get("ready") for report in dependency_apply):
+        dependency_apply.extend(report for report in dependency_preview if report.get("ready") is True)
+        if not all(report.get("ok") and report.get("ready") and report.get("outcome_known") is True for report in dependency_apply):
             print("Dependency apply failures:", file=sys.stderr)
             for report in dependency_apply:
-                if not report.get("ok") or not report.get("ready"):
+                if not report.get("ok") or not report.get("ready") or report.get("outcome_known") is not True:
                     print_dependency_report(str(report.get("id") or "unknown"), report, "packages")
             raise AgentsSyncError("direct dependency apply was incomplete")
 
@@ -1091,7 +1114,7 @@ def sync(args: argparse.Namespace) -> int:
     verify_args.verify = True
     verify_args.dry_run = False
     print("Verification:")
-    return sync(verify_args)
+    return sync(verify_args, dependency_progress=dependency_progress)
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

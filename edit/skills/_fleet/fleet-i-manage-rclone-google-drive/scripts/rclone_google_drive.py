@@ -27,6 +27,7 @@ import uuid
 
 SKILL_ID = "fleet-i-manage-rclone-google-drive"
 SAFE_ID = re.compile(r"[a-z0-9][a-z0-9._-]*")
+SAFE_SNAPSHOT_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
 SAFE_REMOTE = re.compile(r"[a-z0-9][a-z0-9_]*")
 SHA256 = re.compile(r"[0-9a-f]{64}")
 ENV_NAME = re.compile(r"[A-Z][A-Z0-9_]*")
@@ -772,11 +773,35 @@ def command_acceptance(rclone: Rclone) -> dict[str, Any]:
     return {"ready": True, "bytes": 64 * 1024, "sha256_match": True, "cleanup": True}
 
 
-def command_backup(rclone: Rclone, source: Path, snapshot_id: str) -> dict[str, Any]:
-    summary = validate_bundle(source, snapshot_id, rclone.machine_id)
+def bundle_observations(root: Path) -> dict[str, tuple[int, ...]]:
+    """Detect replacement or edits while a validated bundle is being transferred."""
+    observations = {}
+    try:
+        for entry in root.iterdir():
+            observed = entry.lstat()
+            if not stat.S_ISREG(observed.st_mode):
+                raise BackupError("ciphertext bundle changed to an unsafe filesystem object")
+            observations[entry.name] = (observed.st_dev, observed.st_ino, observed.st_size,
+                                        observed.st_mtime_ns, observed.st_ctime_ns)
+    except OSError as error:
+        raise BackupError("ciphertext bundle cannot be observed safely") from error
+    return observations
+
+
+def command_backup(
+    rclone: Rclone, source: Path, snapshot_id: str, source_machine_id: str
+) -> dict[str, Any]:
     desired = rclone.desired
+    if not SAFE_SNAPSHOT_ID.fullmatch(snapshot_id):
+        raise BackupError("snapshot id is unsafe")
+    require_machine(desired, rclone.machine_id)
+    require_machine(desired, source_machine_id)
+    observations = bundle_observations(source)
+    summary = validate_bundle(source, snapshot_id, source_machine_id)
+    if bundle_observations(source) != observations:
+        raise BackupError("ciphertext bundle changed during witness validation")
     target = remote_path(
-        desired, desired["paths"]["backup_prefix"], "snapshots", snapshot_id, rclone.machine_id
+        desired, desired["paths"]["backup_prefix"], "snapshots", snapshot_id, source_machine_id
     )
     rclone.run("copy", str(source), target, "--immutable")
     rclone.run("check", str(source), target, "--download", "--one-way")
@@ -793,7 +818,12 @@ def command_backup(rclone: Rclone, source: Path, snapshot_id: str) -> dict[str, 
     remote_bytes = sum(sizes)
     if len(remote_entries) != summary["file_count"] or remote_bytes != summary["total_bytes"]:
         raise BackupError("remote aggregate inventory does not match the ciphertext bundle")
-    return {**summary, "remote_file_count": len(remote_entries), "remote_bytes": remote_bytes, "verified": True}
+    after = bundle_observations(source)
+    if after != observations:
+        raise BackupError("ciphertext bundle changed during backup; verification is not accepted")
+    return {**summary, "remote_file_count": len(remote_entries), "remote_bytes": remote_bytes,
+            "uploader_machine_id": rclone.machine_id, "source_machine_id": source_machine_id,
+            "verified": True}
 
 
 def command_download(
@@ -846,6 +876,7 @@ def build_parser() -> argparse.ArgumentParser:
             command.add_argument("--target-script", required=True)
     backup = subparsers.add_parser("backup")
     backup.add_argument("--machine-id", required=True)
+    backup.add_argument("--source-machine-id", help="archive owner; defaults to the uploading machine")
     backup.add_argument("--snapshot-id", required=True)
     backup.add_argument("--source", type=Path, required=True)
     backup.add_argument("--approve", action="store_true")
@@ -900,7 +931,8 @@ def child_arguments(arguments: argparse.Namespace, desired_path: Path) -> list[s
             ]
         )
     if arguments.command == "backup":
-        result.extend(["--snapshot-id", arguments.snapshot_id, "--source", str(arguments.source.resolve())])
+        result.extend(["--source-machine-id", arguments.source_machine_id or arguments.machine_id,
+                       "--snapshot-id", arguments.snapshot_id, "--source", str(arguments.source.resolve())])
     if arguments.command == "download":
         result.extend(
             [
@@ -966,6 +998,10 @@ def main() -> int:
         desired_path = (arguments.desired or default_desired_path()).resolve()
         desired = validate_desired(load_json(desired_path, "Rclone Google Drive desired state"))
         require_machine(desired, arguments.machine_id)
+        if arguments.command in {"backup", "download"}:
+            if not SAFE_SNAPSHOT_ID.fullmatch(arguments.snapshot_id):
+                raise BackupError("snapshot id is unsafe")
+            require_machine(desired, arguments.source_machine_id or arguments.machine_id)
         if arguments.command == "plan":
             emit(command_plan(desired, arguments.machine_id, arguments.rclone))
             return 0
@@ -1021,13 +1057,9 @@ def main() -> int:
         elif arguments.command == "acceptance-test":
             emit(command_acceptance(rclone))
         elif arguments.command == "backup":
-            if not SAFE_ID.fullmatch(arguments.snapshot_id):
-                raise BackupError("snapshot id is unsafe")
-            emit(command_backup(rclone, arguments.source.resolve(), arguments.snapshot_id))
+            emit(command_backup(rclone, arguments.source.resolve(), arguments.snapshot_id,
+                                arguments.source_machine_id or arguments.machine_id))
         elif arguments.command == "download":
-            if not SAFE_ID.fullmatch(arguments.snapshot_id):
-                raise BackupError("snapshot id is unsafe")
-            require_machine(desired, arguments.source_machine_id)
             emit(
                 command_download(
                     rclone,

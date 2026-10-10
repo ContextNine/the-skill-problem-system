@@ -5,7 +5,7 @@ description: Configures, verifies, uploads, downloads, restore-checks, and retir
 
 # Fleet · Manage Rclone Google Drive
 
-Read [Authentication and Custody](references/authentication-and-custody.md) before setup or credential work. Read [Backup and Restore](references/backup-and-restore.md) before moving backup artifacts. Read [Verification and Retirement](references/verification-and-retirement.md) before live acceptance, recovery, or retirement.
+Read [Authentication and Custody](./references/authentication-and-custody.md) before setup or credential work. Read [Backup and Restore](./references/backup-and-restore.md) before moving backup artifacts. Read [Verification and Retirement](./references/verification-and-retirement.md) before live acceptance, recovery, or retirement.
 
 ## Workflow
 
@@ -36,6 +36,8 @@ python3 scripts/rclone_google_drive.py acceptance-test --machine-id <machine-id>
 ```bash
 python3 scripts/rclone_google_drive.py backup --machine-id <machine-id> --snapshot-id <snapshot-id> --source <bundle> --approve
 ```
+
+When ciphertext already lives on another allowed machine, use that machine's own credentials and add `--source-machine-id <archive-owner-id>`. The witness and Drive path retain the archive owner's identity. Do not copy bulk archives back to a source Mac or copy its Rclone config just to upload them. Both machine IDs must be allowed by desired state.
 
 7. Download into a new local directory and revalidate the witness before handing ciphertext to the CodeFolderSync restore harness:
 

@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import shutil
 import tempfile
 import unittest
 from unittest.mock import Mock, call, patch
@@ -583,12 +584,12 @@ token = synthetic-sensitive-token
 
 
 class BundleTests(unittest.TestCase):
-    def create_bundle(self, root: Path) -> None:
+    def create_bundle(self, root: Path, snapshot_id: str = "snapshot-1") -> None:
         artifact = root / "code.tar.zst.age"
         artifact.write_bytes(b"ciphertext fixture")
         witness = {
             "schema_version": 1,
-            "snapshot_id": "snapshot-1",
+            "snapshot_id": snapshot_id,
             "machine_id": "primary-mac",
             "artifacts": [
                 {
@@ -607,6 +608,63 @@ class BundleTests(unittest.TestCase):
             report = rclone_google_drive.validate_bundle(root, "snapshot-1", "primary-mac")
             self.assertEqual(report["artifact_count"], 1)
             self.assertEqual(report["file_count"], 2)
+
+    def test_uploads_another_allowed_machines_bundle_without_changing_its_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "bundle"
+            remote = root / "remote"
+            source.mkdir()
+            snapshot_id = "snapshot-20261010T120000Z"
+            self.create_bundle(source, snapshot_id)
+            arguments = rclone_google_drive.build_parser().parse_args([
+                "backup", "--machine-id", "worker-linux", "--source-machine-id", "primary-mac",
+                "--snapshot-id", snapshot_id, "--source", str(source), "--approve",
+            ])
+            forwarded = rclone_google_drive.child_arguments(arguments, root / "desired.json")
+            child = rclone_google_drive.build_parser().parse_args(forwarded)
+            rclone = Mock()
+            rclone.desired = desired()
+            rclone.machine_id = child.machine_id
+            self.assertTrue(rclone_google_drive.SAFE_SNAPSHOT_ID.fullmatch(child.snapshot_id))
+            expected = f"ctx9_codefoldersync_backups:CodeFolderSync Backups/snapshots/{snapshot_id}/primary-mac"
+
+            def transfer(operation, *args):
+                if operation == "copy":
+                    self.assertEqual(args, (str(source), expected, "--immutable"))
+                    shutil.copytree(source, remote, dirs_exist_ok=True)
+                elif operation == "check":
+                    self.assertEqual(args, (str(source), expected, "--download", "--one-way"))
+                    for entry in source.iterdir():
+                        self.assertEqual(rclone_google_drive.sha256_file(entry), rclone_google_drive.sha256_file(remote / entry.name))
+                elif operation == "lsjson":
+                    self.assertEqual(args, (expected, "--recursive", "--files-only"))
+                    return Mock(stdout=json.dumps([{"Size": entry.stat().st_size} for entry in remote.iterdir()]))
+                else:
+                    self.fail("Unexpected provider operation")
+                return Mock(stdout="")
+
+            rclone.run.side_effect = transfer
+            report = rclone_google_drive.command_backup(rclone, source, child.snapshot_id, child.source_machine_id)
+            self.assertTrue(report["verified"])
+            self.assertEqual(report["uploader_machine_id"], "worker-linux")
+            self.assertEqual(report["source_machine_id"], "primary-mac")
+            self.assertEqual(json.loads((remote / "witness.json").read_text())["machine_id"], "primary-mac")
+            with self.assertRaises(rclone_google_drive.BackupError):
+                rclone_google_drive.command_backup(rclone, source, snapshot_id, "unregistered-machine")
+            with self.assertRaises(rclone_google_drive.BackupError):
+                rclone_google_drive.command_backup(rclone, source, snapshot_id, "worker-linux")
+
+            def changing_transfer(operation, *args):
+                result = transfer(operation, *args)
+                if operation == "lsjson":
+                    artifact = source / "code.tar.zst.age"
+                    artifact.write_bytes(b"X" * artifact.stat().st_size)
+                return result
+
+            rclone.run.side_effect = changing_transfer
+            with self.assertRaises(rclone_google_drive.BackupError):
+                rclone_google_drive.command_backup(rclone, source, snapshot_id, "primary-mac")
 
     def test_rejects_unbound_plaintext(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

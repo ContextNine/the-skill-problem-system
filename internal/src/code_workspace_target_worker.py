@@ -18,6 +18,7 @@ from urllib.parse import urlsplit
 
 PRUNED_DIRECTORIES = {
     ".cache",
+    ".codefoldersync",
     ".ctx9",
     ".workspace-sync",
     ".next",
@@ -82,6 +83,37 @@ def error_text(process: subprocess.CompletedProcess[str]) -> str:
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def valid_sync_policy(value: object) -> bool:
+    """Inspect the public policy shape without opening selected file contents."""
+    if not isinstance(value, dict):
+        return False
+    if value.get("mode") == "default-branch":
+        branch = value.get("branch")
+        return (
+            isinstance(branch, str)
+            and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._/-]*", branch) is not None
+            and ".." not in branch
+            and not branch.endswith("/")
+        )
+    if value.get("mode") != "selected-files":
+        return False
+    includes = value.get("includes")
+    return (
+        type(value.get("plaintextEnv")) is bool
+        and isinstance(includes, list)
+        and bool(includes)
+        and all(
+            isinstance(pattern, str)
+            and bool(pattern)
+            and not pattern.startswith("/")
+            and "\\" not in pattern
+            and "\0" not in pattern
+            and not {".", ".."}.intersection(pattern.split("/"))
+            for pattern in includes
+        )
+    )
 
 
 def codefoldersync_ownership(code_root: Path) -> dict[str, object]:
@@ -186,6 +218,7 @@ def codefoldersync_ownership(code_root: Path) -> dict[str, object]:
         and bool(value["ignoreDigest"])
         and isinstance(value.get("signature"), str)
         and bool(value["signature"])
+        and valid_sync_policy(value.get("syncPolicy"))
     )
     if not valid:
         return {
@@ -209,6 +242,39 @@ def codefoldersync_ownership(code_root: Path) -> dict[str, object]:
     }
 
 
+def repository_ownership(code_root: Path, relative: str) -> dict[str, object]:
+    """Protect a repository under any containing normal sync namespace."""
+    destination, problem = safe_destination(code_root, relative)
+    if destination is None:
+        return {"owner": "blocked", "ready": False, "detail": problem}
+    selected: dict[str, object] = {"owner": "workspace-sync", "ready": True}
+    scope = destination
+    while True:
+        if scope.is_symlink():
+            return {"owner": "blocked", "ready": False, "detail": "workspace scope must be a physical directory"}
+        current = codefoldersync_ownership(scope)
+        if current["owner"] == "blocked":
+            return current
+        if current["owner"] == "codefoldersync":
+            selected = {**current, "scope": scope.relative_to(code_root).as_posix()}
+        if scope == code_root:
+            return selected
+        scope = scope.parent
+
+
+def selected_repository_ownership(
+    code_root: Path, repositories: list[dict[str, object]]
+) -> dict[str, dict[str, object]]:
+    owners = {}
+    for source in repositories:
+        relative = str(source.get("relative_path", ""))
+        owner = repository_ownership(code_root, relative)
+        if owner["owner"] == "workspace-sync" and source.get("codefoldersync_read_only") is True:
+            owner = {"owner": "codefoldersync", "ready": True, "detail": "source sync namespace requires a read-only target"}
+        owners[relative] = owner
+    return owners
+
+
 def report_only_results(target_root: Path, repositories: list[dict[str, object]]) -> tuple[list[dict[str, object]], list[str]]:
     """Inspect repository drift without fetching, moving, cloning, or writing state."""
     results: list[dict[str, object]] = []
@@ -219,7 +285,7 @@ def report_only_results(target_root: Path, repositories: list[dict[str, object]]
         if destination is None:
             results.append({"path": relative, "status": "blocked", "detail": reason})
             continue
-        result = doctor_repository(destination, source)
+        result = {**doctor_repository(destination, source), "read_only": True}
         results.append(result)
         configured_project, project_problem = project_path(destination, source)
         if project_problem is None and configured_project is not None and configured_project.is_dir():
@@ -563,6 +629,13 @@ def relocate_or_clone(
 
     candidate = candidates[0]
     source_relative = candidate.relative_to(target_root).as_posix()
+    candidate_owner = repository_ownership(target_root, source_relative)
+    if candidate_owner["owner"] != "workspace-sync":
+        return {
+            "path": relative,
+            "status": "blocked",
+            "detail": "matching checkout is protected by CodeFolderSync ownership or invalid control state",
+        }
     structure_problem = relocation_structure_problem(candidate)
     if structure_problem:
         return {"path": relative, "status": "blocked", "detail": f"{source_relative}: {structure_problem}"}
@@ -918,6 +991,10 @@ def main() -> int:
             raise ValueError("invalid target payload")
 
         ownership = codefoldersync_ownership(target_root)
+        scoped_ownership = selected_repository_ownership(target_root, repositories)
+        blocked = [owner for owner in scoped_ownership.values() if owner["owner"] == "blocked"]
+        if blocked:
+            ownership = blocked[0]
         if ownership["owner"] == "blocked":
             json.dump(
                 {
@@ -926,6 +1003,7 @@ def main() -> int:
                     "mode": "ownership-blocked",
                     "ready": False,
                     "ownership": ownership,
+                    "repository_ownership": scoped_ownership,
                     "prerequisites": prerequisites(),
                     "preflight": {"ok": False, "results": []},
                     "results": [
@@ -944,7 +1022,12 @@ def main() -> int:
             )
             sys.stdout.write("\n")
             return 0
-        if ownership["owner"] == "codefoldersync":
+        mutable_repositories = [
+            source for source in repositories
+            if scoped_ownership[str(source.get("relative_path", ""))]["owner"] == "workspace-sync"
+        ]
+        if ownership["owner"] == "codefoldersync" or (repositories and not mutable_repositories):
+            ownership = {**ownership, "owner": "codefoldersync"}
             results, project_paths = report_only_results(target_root, repositories)
             checks = prerequisites()
             json.dump(
@@ -954,6 +1037,7 @@ def main() -> int:
                     "mode": "codefoldersync-report-only",
                     "ready": checks["git"] != "missing" and checks["codex"] != "missing",
                     "ownership": ownership,
+                    "repository_ownership": scoped_ownership,
                     "prerequisites": checks,
                     "preflight": {
                         "ok": True,
@@ -971,7 +1055,7 @@ def main() -> int:
             return 0
 
         preflight = (
-            preflight_repositories(repositories)
+            preflight_repositories(mutable_repositories)
             if operation in {"bootstrap", "reconcile", "refresh", "migrate-github-remotes"}
             else {"ok": True, "results": []}
         )
@@ -1019,6 +1103,15 @@ def main() -> int:
                 destination, reason = safe_destination(target_root, relative)
                 if destination is None:
                     results.append({"path": relative, "status": "blocked", "detail": reason})
+                    continue
+                owner = repository_ownership(target_root, relative)
+                if owner["owner"] == "blocked":
+                    results.append({"path": relative, "status": "blocked", "detail": str(owner["detail"])})
+                    continue
+                if owner["owner"] == "codefoldersync" or source.get("codefoldersync_read_only") is True:
+                    result, projects = report_only_results(target_root, [source])
+                    results.extend(result)
+                    expected_projects.extend(projects)
                     continue
                 configured_project, project_problem = project_path(destination, source)
                 if project_problem or configured_project is None:
@@ -1071,6 +1164,7 @@ def main() -> int:
                 "ok": True,
                 "operation": operation,
                 "mode": "apply" if apply else "preflight" if preflight_only else "preview",
+                "repository_ownership": scoped_ownership,
                 "ready": ready,
                 "prerequisites": checks,
                 "preflight": preflight,

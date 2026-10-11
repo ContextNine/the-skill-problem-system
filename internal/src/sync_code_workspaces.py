@@ -1027,6 +1027,19 @@ def main() -> int:
         repositories, skipped = discover_specs(specs, source_root)
         if not repositories:
             raise RuntimeError("no repositories with usable canonical remotes were discovered")
+        scoped_ownership = workspace_worker.selected_repository_ownership(source_root, repositories)
+        blocked_scopes = [owner for owner in scoped_ownership.values() if owner["owner"] == "blocked"]
+        if blocked_scopes:
+            raise RuntimeError(str(blocked_scopes[0]["detail"]))
+        for repository in repositories:
+            repository["codefoldersync_read_only"] = (
+                scoped_ownership[str(repository["relative_path"])]["owner"] == "codefoldersync"
+            )
+        mutable_repositories = [repo for repo in repositories if not repo["codefoldersync_read_only"]]
+        if not mutable_repositories:
+            workspace_ownership = {**workspace_ownership, "owner": "codefoldersync"}
+        elif len(mutable_repositories) != len(repositories):
+            workspace_ownership = {**workspace_ownership, "owner": "mixed"}
         warnings = source_warnings(repositories)
         if args.command == "migrate-github-remotes":
             invalid_transport = [
@@ -1049,6 +1062,7 @@ def main() -> int:
             "skipped": skipped,
             "warnings": warnings,
             "workspace_ownership": workspace_ownership,
+            "repository_ownership": scoped_ownership,
         }
         if args.command == "discover":
             if args.json:
@@ -1062,12 +1076,13 @@ def main() -> int:
             raise RuntimeError(str(workspace_ownership["detail"]))
         requested_apply = bool(getattr(args, "apply", False))
         apply = requested_apply and workspace_ownership["owner"] != "codefoldersync"
+        configuration_apply = apply and workspace_ownership["owner"] == "workspace-sync"
         report["requested_apply"] = requested_apply
         if requested_apply and workspace_ownership["owner"] == "codefoldersync":
             warnings.append(
-                "CodeFolderSync V3 normal lifecycle owns this Code root; workspace apply was reduced to a read-only report"
+                "CodeFolderSync V3 normal lifecycle owns the selected repositories; workspace apply was reduced to a read-only report"
             )
-        relocations = [repo for repo in repositories if repo.get("source_relocated")]
+        relocations = [repo for repo in mutable_repositories if repo.get("source_relocated")]
         if relocations and not getattr(args, "adopt_source_layout", False):
             details = ", ".join(
                 f"{repo['entry_id']}:{repo['catalog_relative_path']}->{repo['relative_path']}" for repo in relocations
@@ -1086,7 +1101,7 @@ def main() -> int:
         ]
         report["catalog_changes"] = catalog_changes
         if args.command in {"bootstrap", "reconcile"} and apply and not args.allow_remote_only_source:
-            unpublished = [repo for repo in repositories if repo["dirty"] or (isinstance(repo["ahead"], int) and repo["ahead"] > 0)]
+            unpublished = [repo for repo in mutable_repositories if repo["dirty"] or (isinstance(repo["ahead"], int) and repo["ahead"] > 0)]
             if unpublished:
                 raise RuntimeError(
                     f"{len(unpublished)} source repository/repositories have dirty or locally-ahead state; "
@@ -1182,9 +1197,10 @@ def main() -> int:
         run_id = new_run_id() if apply else None
         selections = [(machine, repositories_for_machine(repositories, str(machine["id"]))) for machine in targets]
         if args.command == "migrate-github-remotes":
-            source_preflight = workspace_worker.preflight_repositories(repositories)
+            source_preflight = workspace_worker.preflight_repositories(mutable_repositories)
             source_remote_results = [
-                workspace_worker.reconcile_remote(
+                workspace_worker.report_only_results(source_root, [repository])[0][0]
+                if repository["codefoldersync_read_only"] else workspace_worker.reconcile_remote(
                     source_root / str(repository["relative_path"]), repository, False
                 )
                 for repository in repositories
@@ -1193,7 +1209,7 @@ def main() -> int:
             report["source_remote_results"] = source_remote_results
             if apply and (
                 not source_preflight["ok"]
-                or any(result.get("status") in BLOCKING_STATUSES for result in source_remote_results)
+                or any(result.get("status") in BLOCKING_STATUSES and not result.get("read_only") for result in source_remote_results)
             ):
                 report["mode"] = "preflight-failed"
                 report["targets"] = []
@@ -1265,7 +1281,11 @@ def main() -> int:
             )
             preflight_blocked = any(
                 not target.get("preflight", {}).get("ok", False)
-                or any(result.get("status") in BLOCKING_STATUSES for result in target.get("results", []))
+                or any(
+                    result.get("status") in BLOCKING_STATUSES
+                    and not (result.get("read_only") and result.get("status") == "attention")
+                    for result in target.get("results", [])
+                )
                 for target in preflight_reports
                 if target.get("ok")
             )
@@ -1278,16 +1298,24 @@ def main() -> int:
                 else:
                     print_target_report(report)
                 return 1 if preflight_fatal else 2
+            configuration_apply = configuration_apply and not any(
+                owner.get("owner") == "codefoldersync"
+                for target in preflight_reports
+                for owner in target.get("repository_ownership", {}).values()
+            )
+            if workspace_worker.selected_repository_ownership(source_root, repositories) != scoped_ownership:
+                raise RuntimeError("CodeFolderSync ownership changed during preflight; retry without mutation")
 
         if apply and args.command == "migrate-github-remotes":
             report["source_remote_results"] = [
-                workspace_worker.reconcile_remote(
+                workspace_worker.report_only_results(source_root, [repository])[0][0]
+                if repository["codefoldersync_read_only"] else workspace_worker.reconcile_remote(
                     source_root / str(repository["relative_path"]), repository, True
                 )
                 for repository in repositories
             ]
             if any(
-                result.get("status") in BLOCKING_STATUSES
+                result.get("status") in BLOCKING_STATUSES and not result.get("read_only")
                 for result in report["source_remote_results"]
             ):
                 report["mode"] = "apply-failed"
@@ -1301,7 +1329,7 @@ def main() -> int:
 
         if apply:
             report["source_runtime_state"] = {"root": str(migrate_runtime_state(source_root))}
-        if apply and agent_bundle is not None:
+        if configuration_apply and agent_bundle is not None:
             report["source_agent_configuration"] = agent_configuration.reconcile_source_alias(
                 Path.home(),
                 agent_bundle,
@@ -1312,7 +1340,7 @@ def main() -> int:
                 backup_suffix=agent_suffix,
                 components={"config", "instructions"},
             )
-        if apply and plugin_inventory is not None:
+        if configuration_apply and plugin_inventory is not None:
             report["source_plugins"] = plugin_reconciliation.reconcile(
                 {
                     "home": str(Path.home()),
@@ -1334,7 +1362,7 @@ def main() -> int:
                 return 1
         if apply and relocations:
             report["catalog_changes"] = adopt_source_layout(
-                catalog_path.expanduser().resolve(), source_root, repositories
+                catalog_path.expanduser().resolve(), source_root, mutable_repositories
             )
         target_reports: list[dict[str, object]] = []
         for machine, selected_repositories in selections:
@@ -1342,7 +1370,7 @@ def main() -> int:
                 agent_report = agent_configuration.invoke_target(
                     machine,
                     agent_bundle,
-                    apply=apply,
+                    apply=configuration_apply,
                     verify=args.command == "doctor",
                     backup_suffix=agent_suffix,
                 )
@@ -1368,7 +1396,7 @@ def main() -> int:
                         machine,
                         plugin_inventory,
                         selected_repositories,
-                        apply=apply,
+                        apply=configuration_apply,
                     )
                     if plugin_inventory is not None and agent_eligible[str(machine["id"])]
                     else {"ok": True, "ready": True, "applied": False, "skipped": True}
@@ -1403,7 +1431,7 @@ def main() -> int:
                         machine,
                         plugin_inventory,
                         selected_repositories,
-                        apply=apply,
+                        apply=configuration_apply,
                     )
                     if plugin_inventory is not None and agent_eligible[str(machine["id"])]
                     else {"ok": True, "ready": True, "applied": False, "skipped": True}
@@ -1420,7 +1448,7 @@ def main() -> int:
             if not plugin_report.get("ok"):
                 workspace_report["error"] = plugin_report.get("error", "plugin reconciliation failed")
             workspace_report["applied"] = bool(workspace_report.get("applied")) and (
-                bool(plugin_report.get("applied")) if apply and not plugin_report.get("skipped") else True
+                bool(plugin_report.get("applied")) if configuration_apply and not plugin_report.get("skipped") else True
             )
             workspace_report["ready"] = bool(workspace_report.get("ready")) and bool(
                 agent_report.get("ready", True)
@@ -1432,8 +1460,12 @@ def main() -> int:
             else "apply" if apply else "preview"
         )
         report["targets"] = target_reports
-        all_targets_applied = all(target.get("ok") and target.get("applied") for target in target_reports)
-        if apply and run_id and all_targets_applied:
+        any_target_applied = any(target.get("applied") for target in target_reports)
+        all_targets_applied = all(
+            target.get("ok") and (target.get("applied") or target.get("mode") == "codefoldersync-report-only")
+            for target in target_reports
+        )
+        if apply and run_id and all_targets_applied and any_target_applied:
             try:
                 report["source_history"] = record_source_run(
                     source_root,
@@ -1471,10 +1503,14 @@ def main() -> int:
             "ready", False
         ):
             incomplete = True
-        if apply and (not all_targets_applied or not report.get("source_history", {}).get("recorded", False)):
+        if apply and (
+            not all_targets_applied
+            or (any_target_applied and not report.get("source_history", {}).get("recorded", False))
+        ):
             incomplete = True
         if apply and any(
-            target.get("ok") and target.get("results") and not target.get("history", {}).get("recorded", False)
+            target.get("ok") and target.get("applied") and target.get("results")
+            and not (target.get("history") or {}).get("recorded", False)
             for target in target_reports
         ):
             incomplete = True

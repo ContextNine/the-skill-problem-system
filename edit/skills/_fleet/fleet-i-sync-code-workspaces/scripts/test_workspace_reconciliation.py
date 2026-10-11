@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import io
 import json
 import stat
@@ -74,16 +75,20 @@ class WorkspaceReconciliationTests(unittest.TestCase):
             "codex_project_root": ".",
         }
 
-    def write_codefoldersync_config(self, *, lifecycle: str = "normal") -> Path:
-        control = self.code_root / ".codefoldersync"
-        control.mkdir()
+    def write_codefoldersync_config(
+        self, *, lifecycle: str = "normal", root: Path | None = None, policy: dict[str, object] | None = None
+    ) -> Path:
+        root = root or self.code_root
+        control = root / ".codefoldersync"
+        control.mkdir(exist_ok=True)
         config = {
             "schemaVersion": 3,
             "protocolVersion": 3,
             "revision": 4,
             "folderId": "fixture-folder",
             "folderName": "fixture",
-            "root": str(self.code_root),
+            "root": str(root),
+            "syncPolicy": policy or {"mode": "selected-files", "includes": ["**"], "plaintextEnv": False},
             "stateDir": str(self.root / "codefoldersync-state"),
             "peerId": "fixture-peer",
             "peerName": "fixture-machine",
@@ -94,7 +99,7 @@ class WorkspaceReconciliationTests(unittest.TestCase):
                     "peerId": "fixture-peer",
                     "peerName": "fixture-machine",
                     "role": "authority",
-                    "root": str(self.code_root),
+                    "root": str(root),
                     "publicKey": "fixture-public-key",
                 }
             ],
@@ -150,6 +155,20 @@ class WorkspaceReconciliationTests(unittest.TestCase):
         state_root = self.code_root / ".workspace-sync"
         self.assertEqual(stat.S_IMODE(state_root.stat().st_mode), 0o700)
         self.assertEqual(stat.S_IMODE((state_root / "state.json").stat().st_mode), 0o600)
+
+        # A matching checkout cannot be moved out of a normal sync namespace.
+        self.write_codefoldersync_config(root=destination.parent)
+        before = {
+            path.relative_to(destination).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in destination.rglob("*") if path.is_file() and not path.is_symlink()
+        }
+        protected_move = self.reconcile("later/repository", apply=True, run_id="run-3")
+        self.assertEqual(protected_move["status"], "blocked")
+        after = {
+            path.relative_to(destination).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in destination.rglob("*") if path.is_file() and not path.is_symlink()
+        }
+        self.assertEqual(after, before)
 
     def test_dirty_relocation_requires_explicit_override(self) -> None:
         old = self.clone("old/repository")
@@ -485,6 +504,104 @@ class WorkspaceReconciliationTests(unittest.TestCase):
         self.assertEqual(head_after, head_before)
         self.assertFalse((self.code_root / ".workspace-sync").exists())
 
+    def test_scoped_sync_preserves_dirty_git_and_env_while_sibling_refreshes(self) -> None:
+        seed = self.root / "seed"
+        (seed / "value.txt").write_text("base\n")
+        run("git", "-C", str(seed), "add", "value.txt")
+        run("git", "-C", str(seed), "commit", "-m", "base")
+        run("git", "-C", str(seed), "push", "origin", "main")
+        sibling_bare = self.root / "sibling-origin.git"
+        run("git", "clone", "--bare", str(self.bare), str(sibling_bare))
+        sibling_seed = self.root / "sibling-seed"
+        run("git", "clone", str(sibling_bare), str(sibling_seed))
+        policies = [
+            {"mode": "default-branch", "branch": "main"},
+            {"mode": "selected-files", "includes": ["**/.env", "**/.env.*"], "plaintextEnv": True},
+        ]
+        for policy in policies:
+            with self.subTest(policy=policy["mode"]):
+                relative = f"{policy['mode']}/workspace/project"
+                protected = self.clone(relative)
+                run("git", "-C", str(protected), "switch", "-c", "local-work")
+                (protected / "value.txt").write_text("staged local work\n")
+                run("git", "-C", str(protected), "add", "value.txt")
+                (protected / "value.txt").write_text("unstaged local work\n")
+                (protected / ".env").write_text("SYNTHETIC_ONLY=local-fixture\n")
+                scope = protected if policy["mode"] == "default-branch" else protected.parent
+                config = self.write_codefoldersync_config(root=scope, policy=policy)
+                sibling_relative = f"{policy['mode']}/sibling"
+                sibling = self.code_root / sibling_relative
+                run("git", "clone", str(sibling_bare), str(sibling))
+                sibling_url = "https://example.com/acme/sibling.git"
+                run("git", "-C", str(sibling), "remote", "set-url", "origin", sibling_url)
+                sibling_source = {
+                    **self.source(sibling_relative),
+                    "remote_url": sibling_url,
+                    "remote_display": sibling_url,
+                    "remote_identity": "example.com/acme/sibling",
+                }
+                (sibling_seed / "value.txt").write_text(f"{policy['mode']} remote update\n")
+                run("git", "-C", str(sibling_seed), "add", "value.txt")
+                run("git", "-C", str(sibling_seed), "-c", "user.name=Test", "-c", "user.email=test@example.com",
+                    "commit", "-m", str(policy["mode"]))
+                run("git", "-C", str(sibling_seed), "push", "origin", "main")
+
+                def witness() -> dict[str, str]:
+                    return {
+                        path.relative_to(protected).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+                        for path in protected.rglob("*") if path.is_file() and not path.is_symlink()
+                    }
+
+                before = witness()
+                sibling_head = worker.output(worker.git(sibling, "rev-parse", "HEAD"))
+                payload = {
+                    "operation": "refresh", "apply": True, "target_root": str(self.code_root),
+                    "repositories": [self.source(relative), sibling_source], "machine_id": "target",
+                    "source_machine_id": "source", "run_id": f"scoped-{policy['mode']}",
+                }
+                real_run = worker.run
+                fetches = []
+
+                def local_transport(command, *, cwd=None, env=None):
+                    if command[:1] == ["git"] and "fetch" in command:
+                        fetches.append(command[2])
+                        command = ["git", "-C", command[2], "fetch", str(sibling_bare),
+                                   "refs/heads/main:refs/remotes/origin/main"]
+                    return real_run(command, cwd=cwd, env=env)
+
+                def invoke() -> dict[str, object]:
+                    output_buffer = io.StringIO()
+                    with (
+                        mock.patch.object(worker, "remote_ref", return_value=(True, True)),
+                        mock.patch.object(worker, "preflight_repositories", return_value={"ok": True, "results": []}) as preflight,
+                        mock.patch.object(worker, "run", side_effect=local_transport),
+                        mock.patch.object(worker, "prerequisites", return_value={"git": "git", "codex": "codex", "codex_auth": "authenticated"}),
+                        mock.patch.object(sys, "stdin", io.StringIO(json.dumps(payload))),
+                        mock.patch.object(sys, "stdout", output_buffer),
+                    ):
+                        self.assertEqual(worker.main(), 0)
+                    response = json.loads(output_buffer.getvalue())
+                    if response["mode"] != "ownership-blocked":
+                        self.assertEqual(preflight.call_args.args[0], [sibling_source])
+                    return response
+
+                valid = config.read_text()
+                invalid = json.loads(valid)
+                invalid.pop("syncPolicy")
+                config.write_text(json.dumps(invalid))
+                blocked = invoke()
+                self.assertEqual(blocked["mode"], "ownership-blocked")
+                self.assertEqual(worker.output(worker.git(sibling, "rev-parse", "HEAD")), sibling_head)
+                config.write_text(valid)
+                response = invoke()
+                self.assertTrue(response["applied"])
+                self.assertEqual(response["repository_ownership"][relative]["owner"], "codefoldersync")
+                self.assertEqual(witness(), before)
+                self.assertEqual(fetches, [str(sibling)])
+                self.assertEqual(worker.output(worker.git(sibling, "rev-parse", "HEAD")),
+                                 worker.output(worker.git(sibling_seed, "rev-parse", "HEAD")))
+                self.assertTrue(response["history"]["recorded"])
+
     def test_invalid_codefoldersync_marker_blocks_workspace_apply(self) -> None:
         self.assertEqual(worker.codefoldersync_ownership(self.code_root)["owner"], "workspace-sync")
         config_path = self.write_codefoldersync_config(lifecycle="adoption")
@@ -646,6 +763,96 @@ class WorkspaceReconciliationTests(unittest.TestCase):
             stdout=subprocess.PIPE,
         ).stdout.strip()
         self.assertEqual(head_after, head_before)
+
+        # A source-owned repository stays read-only on targets while an unrelated
+        # selected repository keeps its normal apply path.
+        root_config = self.code_root / ".codefoldersync/config.json"
+        root_projection = json.loads(root_config.read_text())
+        root_projection["lifecycle"] = "adoption"
+        root_config.write_text(json.dumps(root_projection))
+        repository.pop("codefoldersync_read_only")
+        sibling = self.clone("sibling")
+        sibling_url = "https://example.com/acme/sibling.git"
+        run("git", "-C", str(sibling), "remote", "set-url", "origin", sibling_url)
+        sibling_repository = {
+            **repository, "entry_id": "sibling", "relative_path": "sibling",
+            "catalog_relative_path": "sibling", "project_relative_path": "sibling",
+            "remote_url": sibling_url, "remote_display": sibling_url,
+            "remote_identity": "example.com/acme/sibling",
+        }
+        policies = [
+            {"mode": "default-branch", "branch": "main"},
+            {"mode": "selected-files", "includes": ["**/.env", "**/.env.*"], "plaintextEnv": True},
+        ]
+        for policy in policies:
+            with self.subTest(source_policy=policy["mode"]):
+                self.write_codefoldersync_config(root=destination, policy=policy)
+                scoped_target = {
+                    **target_preview, "mode": "apply", "applied": True,
+                    "history": {"recorded": True},
+                    "repository_ownership": {
+                        "repository": {"owner": "codefoldersync"},
+                        "sibling": {"owner": "workspace-sync"},
+                    },
+                    "results": [
+                        {"path": "repository", "status": "attention", "read_only": True},
+                        {"path": "sibling", "status": "ready"},
+                    ],
+                }
+                output_buffer = io.StringIO()
+                with (
+                    mock.patch.object(controller, "parse_args", return_value=args),
+                    mock.patch.object(controller, "vault_root", return_value=self.root),
+                    mock.patch.object(controller, "current_machine_id", return_value="primary"),
+                    mock.patch.object(controller, "load_catalog", return_value={}),
+                    mock.patch.object(controller, "select_specs", return_value=([{}], "test")),
+                    mock.patch.object(controller, "discover_specs", return_value=([dict(repository), dict(sibling_repository)], [])),
+                    mock.patch.object(controller, "source_warnings", return_value=[]),
+                    mock.patch.object(controller, "load_machines", return_value={"primary_machine_id": "primary", "machines": [{"id": "primary"}, target]}),
+                    mock.patch.object(controller, "resolve_targets", return_value=[target]),
+                    mock.patch.object(controller.agent_configuration, "load_source_bundle", return_value={}),
+                    mock.patch.object(controller.agent_configuration, "reconcile_source_alias", return_value=source_preview) as source_alias,
+                    mock.patch.object(controller.agent_configuration, "invoke_target", return_value=agent_preview) as agent_target,
+                    mock.patch.object(controller.plugin_reconciliation, "build_desired_inventory", return_value={"schema_version": 1, "source_cli_version": "test", "plugins": []}),
+                    mock.patch.object(controller.plugin_reconciliation, "reconcile", return_value=plugin_preview) as source_plugins,
+                    mock.patch.object(controller, "invoke_target", return_value=scoped_target) as workspace_target,
+                    mock.patch.object(controller, "invoke_plugin_target", return_value=plugin_preview) as plugin_target,
+                    mock.patch.object(sys, "stdout", output_buffer),
+                ):
+                    # Protected drift remains visible without blocking the
+                    # unprotected repository's apply.
+                    self.assertEqual(controller.main(), 2)
+                    mixed_output = output_buffer.getvalue()
+                    mixed_applied_calls = [call for call in workspace_target.call_args_list if call.args[3]]
+                    history_path = self.code_root / ".workspace-sync/history.jsonl"
+                    history_before = history_path.read_bytes()
+                    workspace_target.return_value = {
+                        **scoped_target, "mode": "codefoldersync-report-only", "applied": False,
+                        "history": None,
+                        "results": [
+                            {"path": "repository", "status": "ready", "read_only": True},
+                            {"path": "sibling", "status": "ready", "read_only": True},
+                        ],
+                    }
+                    output_buffer.seek(0)
+                    output_buffer.truncate()
+                    self.assertEqual(controller.main(), 0)
+                    read_only_response = json.loads(output_buffer.getvalue())
+                    self.assertEqual(history_path.read_bytes(), history_before)
+                    self.assertTrue(read_only_response["targets"][0]["ready"])
+                response = json.loads(mixed_output)
+                self.assertEqual(response["workspace_ownership"]["owner"], "mixed")
+                self.assertEqual(response["mode"], "apply")
+                applied_calls = mixed_applied_calls
+                self.assertEqual(len(applied_calls), 1)
+                by_path = {repo["relative_path"]: repo for repo in applied_calls[0].args[1]}
+                self.assertTrue(by_path["repository"]["codefoldersync_read_only"])
+                self.assertFalse(by_path["sibling"]["codefoldersync_read_only"])
+                self.assertTrue(all(not call.kwargs["apply"] for call in agent_target.call_args_list))
+                self.assertTrue(all(not call.kwargs["apply"] for call in plugin_target.call_args_list))
+                self.assertTrue(all(not call.kwargs["apply"] for call in source_alias.call_args_list))
+                self.assertTrue(all(not call.args[0]["apply"] for call in source_plugins.call_args_list))
+                self.assertTrue(response["source_history"]["recorded"])
 
     def test_target_remote_path_uses_registered_terminal_profile(self) -> None:
         machine = {"id": "worker", "terminal_profile": {"remote_path": "/custom/bin:/usr/bin:/bin"}}

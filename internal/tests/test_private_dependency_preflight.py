@@ -19,7 +19,9 @@ class PrivateDependencyJourney(unittest.TestCase):
         dependency = copy.deepcopy(next(item for item in json.loads(source.read_text())["dependencies"] if item["id"] == "secret-bindings"))
         dependency["requires"] = []
         for recipe in dependency["contract"]["recipes"].values():
+            recipe["provenance_provider"] = "github"
             recipe["provenance_project"] = "example/fixture"
+            recipe["provenance_workflow"] = ".github/workflows/publish-machine-release.yml@refs/heads/master"
         payload = {"mode": "dry-run", "manifest": {"schema_version": 2, "dependencies": [dependency]}}
         ready = {"id": "secret-bindings", "ready": True, "detail": "verified"}
         with tempfile.TemporaryDirectory() as directory:
@@ -31,7 +33,9 @@ class PrivateDependencyJourney(unittest.TestCase):
                 "#!/usr/bin/env python3\nimport json,os,sys\n"
                 "args=sys.argv[1:]\n"
                 "assert 'preflight' in args or 'install' in args\n"
+                "assert args[args.index('--provenance-provider')+1]=='github'\n"
                 "assert args[args.index('--provenance-project')+1]=='example/fixture'\n"
+                "assert args[args.index('--provenance-workflow')+1]=='.github/workflows/publish-machine-release.yml@refs/heads/master'\n"
                 "assert args[args.index('--expected-version')+1]=='1.5.2'\n"
                 "state=os.environ['FIXTURE_STATE']\n"
                 "if 'install' in args:\n"
@@ -59,6 +63,14 @@ class PrivateDependencyJourney(unittest.TestCase):
                                 worker.reconcile({**payload, "mode": "apply"})
                             self.assertFalse((root / ".agents").exists())
                 with mock.patch.object(worker, "environment", return_value={"PATH": str(bin_dir) + os.pathsep + os.defpath, "FIXTURE_STATE": "ready"}):
+                    incomplete = copy.deepcopy(payload)
+                    for recipe in incomplete["manifest"]["dependencies"][0]["contract"]["recipes"].values():
+                        del recipe["provenance_provider"]
+                        del recipe["provenance_workflow"]
+                    blocked = worker.reconcile(incomplete)
+                    self.assertFalse(blocked["can_apply"])
+                    self.assertEqual(blocked["preflight"][0]["detail"], "trust-policy-missing")
+                    self.assertFalse((root / ".agents").exists())
                     for expected in ({"source_commit": "b" * 40, "catalog_sha256": "c" * 64}, {"source_commit": "a" * 40, "catalog_sha256": "d" * 64}):
                         blocked = {**payload, "expected_releases": {"secret-bindings": expected}}
                         self.assertEqual(worker.reconcile(blocked)["preflight"][0]["detail"], "release-changed")

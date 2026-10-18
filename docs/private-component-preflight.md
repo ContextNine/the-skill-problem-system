@@ -12,11 +12,18 @@ Each private recipe needs:
 
 - An exact credential-free GitLab Generic Package `private_catalog_url`.
 - `credential_binding: ctx9-gitlab-group-read`.
-- `provenance_project`, the locally reviewed GitLab namespace/project allowed to sign that component.
+- `provenance_provider: github` or `gitlab`, explicitly selecting the permitted issuer.
+- `provenance_project`, the locally reviewed source repository allowed to sign that component.
+- For GitHub, `provenance_workflow`, the exact workflow/ref such as
+  `.github/workflows/publish-machine-release.yml@refs/heads/master`.
 - The owning contract's `verify.exact` version matching the catalog URL.
 
-The launcher pins the GitLab issuer and exact version-tag CI certificate identity from these settings,
-verifies the signed catalog/source/platform/digests, and returns a value-free report. Fleet validates the
+The launcher derives its exact issuer and certificate identity from these settings, never the downloaded
+catalog. GitLab selects its exact version-tag CI identity. GitHub selects its configured repository,
+workflow and branch ref, and requires the record's publisher commit to match the certificate's workflow SHA.
+GitLab package storage does not imply GitLab signing. A missing provider is a policy failure, not permission
+to use a default or try a second issuer. The launcher verifies the signed catalog/source/platform/digests,
+and returns a value-free report. Fleet validates the
 report's schema, component, version, full source commit and target platform. Installation receives the same
 policy and repeats trust verification before downloading/executing the archive installer. Archive-byte
 checksum acceptance happens there; preflight does not claim to have downloaded the archive.
@@ -30,6 +37,9 @@ Primary-owned source/configuration and desired-state recording remain unchanged.
 Git/sync, silently enroll a helper or rotate a credential to bypass a blocker. Updating the public Fleet
 source does not update installed private recipes. Migrate the primary's reviewed policy as part of release
 acceptance, without changing its chosen dependency version in this source-only implementation step.
+Retained GitLab releases need `provenance_provider: gitlab` before the upgraded Fleet/Launcher are adopted.
+Switch to GitHub only for the accepted new release, with its reviewed project/workflow and exact version.
+The public default's explicit GitLab policy does not update any private primary-owned recipe.
 
 Run the focused synthetic journey and complete package suite with Python 3.12:
 

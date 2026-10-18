@@ -395,6 +395,20 @@ def validate_manifest(
                     or any(part in {".", ".."} for part in provenance_project.split("/"))
                 ):
                     raise DependencyError(f"package {package_id} has an invalid provenance project")
+                provenance_provider = recipe.get("provenance_provider")
+                provenance_workflow = recipe.get("provenance_workflow")
+                if provenance_provider is not None and (
+                    not private_fields or provenance_provider not in {"github", "gitlab"}
+                ):
+                    raise DependencyError(f"package {package_id} has an invalid provenance provider")
+                if provenance_workflow is not None or provenance_provider == "github":
+                    if (provenance_provider != "github" or not isinstance(provenance_project, str)
+                        or not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", provenance_project)
+                        or not isinstance(provenance_workflow, str) or not re.fullmatch(
+                            r"\.github/workflows/[A-Za-z0-9_-]+\.ya?ml@refs/heads/[A-Za-z0-9_./-]+", provenance_workflow)
+                        or ".." in provenance_workflow or "//" in provenance_workflow
+                        or provenance_workflow.endswith(("/", ".", ".lock"))):
+                        raise DependencyError(f"package {package_id} has an invalid provenance workflow")
             if manager in {"node-archive", "github-archive"}:
                 version = recipe.get("version")
                 archives = recipe.get("archives")
@@ -850,7 +864,9 @@ def install_package(package: dict[str, Any], recipe: dict[str, Any], *, expected
 
 
 def private_component_command(executable: str, package: dict[str, Any], recipe: dict[str, Any], operation: str, *, expected_release: dict[str, str] | None = None) -> list[str]:
-    command = [executable, "--private-catalog-url", recipe["private_catalog_url"], "--credential-binding", recipe["credential_binding"], "--provenance-project", recipe["provenance_project"], "--expected-version", package["verify"]["exact"]]
+    command = [executable, "--private-catalog-url", recipe["private_catalog_url"], "--credential-binding", recipe["credential_binding"], "--provenance-provider", recipe["provenance_provider"], "--provenance-project", recipe["provenance_project"], "--expected-version", package["verify"]["exact"]]
+    if recipe["provenance_provider"] == "github":
+        command.extend(["--provenance-workflow", recipe["provenance_workflow"]])
     if expected_release is not None:
         command.extend(["--expected-source-commit", expected_release["source_commit"], "--expected-catalog-sha256", expected_release["catalog_sha256"]])
     return [*command, operation, recipe["package"], "--json"]
@@ -861,7 +877,9 @@ def private_component_preflight(package: dict[str, Any], recipe: dict[str, Any],
     executable = shutil.which("ctx9", path=environment()["PATH"])
     if executable is None:
         return False, "launcher-upgrade-required", None
-    if not recipe.get("provenance_project") or not package["verify"].get("exact"):
+    if (recipe.get("provenance_provider") not in {"github", "gitlab"}
+        or not recipe.get("provenance_project") or not package["verify"].get("exact")
+        or recipe["provenance_provider"] == "github" and not recipe.get("provenance_workflow")):
         return False, "trust-policy-missing", None
     try:
         process = subprocess.run(private_component_command(executable, package, recipe, "preflight", expected_release=expected_release), env=environment(), stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=180, check=False)

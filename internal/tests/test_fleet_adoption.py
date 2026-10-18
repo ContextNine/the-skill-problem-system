@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import fleet_adoption
 import fleet_update
 import sync_agents
+from private_release_fixture import private_dependency
 
 
 class AdoptionJourney(unittest.TestCase):
@@ -22,16 +23,14 @@ class AdoptionJourney(unittest.TestCase):
         agents = root / "agents"
         (agents / "edit").mkdir(parents=True)
         (agents / "internal/defaults").mkdir(parents=True)
-        source = Path(__file__).resolve().parents[1] / "defaults/dependencies.json"
-        dependency = copy.deepcopy(next(item for item in json.loads(source.read_text())["dependencies"] if item["id"] == "secret-bindings"))
-        dependency["requires"] = []
+        dependency = private_dependency()
         manifest = {"schema_version": 2, "dependencies": [dependency]}
         path = agents / "internal/defaults/dependencies.json"
         path.write_text(json.dumps(manifest, indent=2) + "\n")
         machines = [{"id": machine_id, "display_name": machine_id, "role": "primary" if machine_id == "primary" else "worker", "platform": "linux", "enabled": True, "vault": {}} for machine_id in ("primary", "worker-a", "worker-b")]
         registry = {"primary_machine_id": "primary", "machines": machines}
         with mock.patch.object(fleet_update.agent_configuration, "vault_root", return_value=agents):
-            args = fleet_update.parse_args(["update", "--dependency", "secret-bindings", "--version", "1.6.6", "--root", str(agents), "--home", str(root / "home")])
+            args = fleet_update.parse_args(["update", "--dependency", "fixture", "--version", "1.1.0", "--root", str(agents), "--home", str(root / "home")])
         return args, path, registry, machines
 
     def bind(self, stack: ExitStack, registry, worker):
@@ -51,7 +50,7 @@ class AdoptionJourney(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory, ExitStack() as stack:
             root = Path(directory)
             args, manifest_path, registry, machines = self.fixture(root)
-            versions = {item["id"]: "1.5.2" for item in machines}
+            versions = {item["id"]: "1.0.0" for item in machines}
             installs = []
             fail_once = True
             change_source = False
@@ -64,9 +63,9 @@ class AdoptionJourney(unittest.TestCase):
                 nonlocal fail_once
                 machine_id = machine["id"]
                 desired = payload["manifest"]["dependencies"][0]["contract"]["verify"]["exact"]
-                expected = payload["expected_releases"].get("secret-bindings")
+                expected = payload["expected_releases"].get("fixture")
                 if expected is not None and (expected["source_commit"] != sources[machine_id] or expected["catalog_sha256"] != catalogs[machine_id]):
-                    return {"id": machine_id, "ok": True, "ready": False, "can_apply": False, "outcome_known": True, "preflight": [{"id": "secret-bindings", "installable": False, "detail": "release-changed"}], "packages": [], "reference_package": {"changes": [], "collisions": []}}
+                    return {"id": machine_id, "ok": True, "ready": False, "can_apply": False, "outcome_known": True, "preflight": [{"id": "fixture", "installable": False, "detail": "release-changed"}], "packages": [], "reference_package": {"changes": [], "collisions": []}}
                 if payload["mode"] == "apply":
                     installs.append(machine_id)
                     if machine_id == "worker-b" and fail_once:
@@ -79,9 +78,9 @@ class AdoptionJourney(unittest.TestCase):
                         manifest_path.write_text(json.dumps(current))
                 ready = versions[machine_id] == desired
                 recorded = json.loads(manifest_path.read_text())["dependencies"][0]["contract"]["verify"]["exact"]
-                if fail_final_verify and payload["mode"] == "verify" and recorded == "1.6.7":
+                if fail_final_verify and payload["mode"] == "verify" and recorded == "1.1.1":
                     ready = False
-                report = {"id": machine_id, "ok": True, "ready": ready, "can_apply": True, "outcome_known": True, "preflight": [{"id": "secret-bindings", "installable": True, "release": {"component": "secret-bindings", "version": desired, "source_commit": sources[machine_id], "catalog_sha256": catalogs[machine_id]}}], "packages": [{"id": "secret-bindings", "ready": ready}], "reference_package": {"ready": True, "changes": [], "collisions": []}}
+                report = {"id": machine_id, "ok": True, "ready": ready, "can_apply": True, "outcome_known": True, "preflight": [{"id": "fixture", "installable": True, "release": {"component": "fixture", "version": desired, "source_commit": sources[machine_id], "catalog_sha256": catalogs[machine_id]}}], "packages": [{"id": "fixture", "ready": ready}], "reference_package": {"ready": True, "changes": [], "collisions": []}}
                 if drift_after_preview and payload["mode"] == "dry-run" and machine_id == "worker-b":
                     catalogs.update({key: "e" * 64 for key in catalogs})
                 return report
@@ -108,7 +107,7 @@ class AdoptionJourney(unittest.TestCase):
             with self.assertRaises(sync_agents.AgentsSyncError):
                 fleet_update.update(args)
             self.assertEqual(installs, ["worker-a", "worker-b"])
-            self.assertEqual(versions["primary"], "1.5.2")
+            self.assertEqual(versions["primary"], "1.0.0")
             self.assertEqual(manifest_path.read_bytes(), original)
             journal_root = args.home / ".agents/state/fleet-updates"
             active = fleet_adoption.read_state(journal_root / "active.json")
@@ -142,7 +141,7 @@ class AdoptionJourney(unittest.TestCase):
             self.assertEqual(len(installs), 4)
             # A target-scoped canary must not silently activate the primary or another worker.
             args.target = ["worker-a"]
-            versions["worker-a"] = "1.5.2"
+            versions["worker-a"] = "1.0.0"
             self.assertEqual(fleet_update.update(args), 0)
             self.assertEqual(installs[-1], "worker-a")
             self.assertEqual(len(installs), 5)
@@ -155,19 +154,19 @@ class AdoptionJourney(unittest.TestCase):
             self.assertEqual(len(installs), 5)
             # Activation and recording can succeed while the final live verification fails.
             args.target = []
-            args.version = "1.6.7"
+            args.version = "1.1.1"
             fail_final_verify = True
             self.assertEqual(fleet_update.update(args), 2)
             failed_record = fleet_adoption.read_state(journal_root / "active.json")
             self.assertEqual(failed_record["stage"], "verification-failed")
-            self.assertEqual(json.loads(manifest_path.read_text())["dependencies"][0]["contract"]["verify"]["exact"], "1.6.7")
+            self.assertEqual(json.loads(manifest_path.read_text())["dependencies"][0]["contract"]["verify"]["exact"], "1.1.1")
             after_installs = len(installs)
             fail_final_verify = False
             self.assertEqual(fleet_update.update(args), 0)
             self.assertEqual(len(installs), after_installs)
             self.assertEqual(fleet_adoption.read_state(journal_root / "active.json")["operation"], failed_record["operation"])
             # Catalog drift after an accepted preview is caught before any target activates.
-            args.version = "1.6.8"
+            args.version = "1.1.2"
             drift_after_preview = True
             before_drift = manifest_path.read_bytes()
             self.assertEqual(fleet_update.update(args), 1)
@@ -178,7 +177,7 @@ class AdoptionJourney(unittest.TestCase):
             self.assertEqual(fleet_update.update(args), 0)
             # A concurrent source edit is not overwritten after target activation.
             args.target = []
-            versions["worker-b"] = "1.5.2"
+            versions["worker-b"] = "1.0.0"
             change_source = True
             with self.assertRaises(fleet_update.FleetUpdateError):
                 fleet_update.update(args)
@@ -196,7 +195,7 @@ class AdoptionJourney(unittest.TestCase):
                 calls.append((machine["id"], payload["mode"]))
                 if payload["mode"] == "apply":
                     raise KeyboardInterrupt
-                return {"id": machine["id"], "ok": True, "ready": False, "can_apply": True, "preflight": [{"id": "secret-bindings", "installable": True, "release": {"component": "secret-bindings", "version": "1.6.6", "source_commit": "a" * 40, "catalog_sha256": "c" * 64}}], "packages": [], "reference_package": {"changes": [], "collisions": []}}
+                return {"id": machine["id"], "ok": True, "ready": False, "can_apply": True, "preflight": [{"id": "fixture", "installable": True, "release": {"component": "fixture", "version": "1.1.0", "source_commit": "a" * 40, "catalog_sha256": "c" * 64}}], "packages": [], "reference_package": {"changes": [], "collisions": []}}
 
             self.bind(stack, registry, worker)
             original = manifest_path.read_bytes()

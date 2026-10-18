@@ -26,6 +26,7 @@ SUPPORTED_MANAGERS = {
     "brew-cask",
     "ctx9-component",
     "github-archive",
+    "github-binary",
     "github-python-installer",
     "node-archive",
     "npm",
@@ -74,7 +75,7 @@ PRIVATE_PREFLIGHT_STATES = {
     "credential-missing", "credential-locked", "credential-unavailable", "credential-expired",
     "credential-rejected", "access-denied", "release-unavailable", "rate-limited",
     "transport-unavailable", "invalid-release", "platform-incompatible", "launcher-upgrade-required",
-    "trust-policy-missing", "verifier-unavailable", "trust-rejected", "release-changed",
+    "trust-policy-missing", "verifier-unavailable", "verifier-upgrade-required", "trust-rejected", "release-changed",
 }
 
 
@@ -409,7 +410,7 @@ def validate_manifest(
                         or ".." in provenance_workflow or "//" in provenance_workflow
                         or provenance_workflow.endswith(("/", ".", ".lock"))):
                         raise DependencyError(f"package {package_id} has an invalid provenance workflow")
-            if manager in {"node-archive", "github-archive"}:
+            if manager in {"node-archive", "github-archive", "github-binary"}:
                 version = recipe.get("version")
                 archives = recipe.get("archives")
                 if not isinstance(version, str) or not version or not isinstance(archives, dict) or not archives:
@@ -429,7 +430,7 @@ def validate_manifest(
                     )
                     if not official or not isinstance(checksum, str) or not re.fullmatch(r"[a-f0-9]{64}", checksum):
                         raise DependencyError(f"package {package_id} needs official checksummed archives")
-                if manager == "github-archive":
+                if manager in {"github-archive", "github-binary"}:
                     binaries_by_arch = recipe.get("binaries_by_arch")
                     if not isinstance(binaries_by_arch, dict) or set(binaries_by_arch) != set(archives):
                         raise DependencyError(f"package {package_id} needs binary mappings for every archive")
@@ -446,6 +447,14 @@ def validate_manifest(
                                 or ".." in path.parts
                             ):
                                 raise DependencyError(f"package {package_id} has an unsafe binary mapping")
+                        if manager == "github-binary" and (len(binaries) != 1 or any(
+                            len(PurePosixPath(str(relative)).parts) != 1 for relative in binaries.values()
+                        )):
+                            raise DependencyError(f"package {package_id} needs one flat binary per asset")
+                    if manager == "github-binary" and (not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version)
+                        or any(not re.fullmatch(r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/releases/download/v"
+                            + re.escape(version) + r"/[A-Za-z0-9_.-]+", archive["url"]) for archive in archives.values())):
+                        raise DependencyError(f"package {package_id} needs exact GitHub version assets")
             if manager == "github-python-installer":
                 version = recipe.get("version")
                 archive = recipe.get("archive")
@@ -569,6 +578,14 @@ def verify_package(package: dict[str, Any]) -> dict[str, Any]:
     command = shutil.which(str(verify["command"]), path=environment()["PATH"])
     if command is None:
         return {"id": package["id"], "ready": False, "detail": f"{verify['command']} is missing"}
+    recipe = package["platforms"].get(platform_name(), {})
+    if recipe.get("manager") == "github-binary":
+        selected = recipe["archives"].get(architecture_name())
+        binary = recipe["binaries_by_arch"].get(architecture_name(), {}).get(verify["command"])
+        target = Path.home() / ".local/share/agents/tools" / package["id"] / recipe["version"] / str(binary)
+        if (not selected or not binary or Path(command).resolve() != target.resolve() or not target.is_file()
+            or target.is_symlink() or hashlib.sha256(target.read_bytes()).hexdigest() != selected["sha256"]):
+            return {"id": package["id"], "ready": False, "detail": "pinned binary integrity is not accepted"}
     if verify.get("exists_only") is True:
         return {"id": package["id"], "ready": True, "command": command, "version": None, "detail": "verified"}
     process = run([command, *[str(arg) for arg in verify.get("args", [])]])
@@ -652,6 +669,7 @@ def install_node_archive(recipe: dict[str, Any]) -> None:
 
 
 def install_github_archive(package: dict[str, Any], recipe: dict[str, Any]) -> None:
+    binary_asset = recipe["manager"] == "github-binary"
     archive = recipe.get("archives", {}).get(architecture_name())
     if not isinstance(archive, dict):
         raise DependencyError(f"no {package['id']} archive for architecture {architecture_name()}")
@@ -661,6 +679,8 @@ def install_github_archive(package: dict[str, Any], recipe: dict[str, Any]) -> N
     if not url.startswith("https://github.com/") or "/releases/download/" not in url or not re.fullmatch(r"[a-f0-9]{64}", expected):
         raise DependencyError("GitHub archive needs a release URL and SHA-256")
     install_root = Path.home() / ".local/share/agents/tools" / str(package["id"]) / version
+    if install_root.is_symlink():
+        raise DependencyError(f"unsafe {package['id']} installation root")
     if not install_root.is_dir():
         install_root.parent.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(
@@ -668,17 +688,29 @@ def install_github_archive(package: dict[str, Any], recipe: dict[str, Any]) -> N
         ) as temporary_name:
             temporary = Path(temporary_name)
             archive_path = temporary / "archive.tar.gz"
-            with urlopen(url) as response, archive_path.open("wb") as handle:
-                shutil.copyfileobj(response, handle)
+            with urlopen(url, timeout=60) as response, archive_path.open("wb") as handle:
+                count = 0
+                while chunk := response.read(1024 * 1024):
+                    count += len(chunk)
+                    if binary_asset and count > 512 * 1024 * 1024:
+                        raise DependencyError(f"{package['id']} binary exceeds the size limit")
+                    handle.write(chunk)
             digest = hashlib.sha256(archive_path.read_bytes()).hexdigest()
             if digest != expected:
                 raise DependencyError(f"{package['id']} archive checksum mismatch")
             extract = temporary / "extract"
-            with tarfile.open(archive_path, "r:gz") as handle:
-                members = handle.getmembers()
-                if any(member.name.startswith("/") or ".." in Path(member.name).parts for member in members):
-                    raise DependencyError(f"unsafe {package['id']} archive")
-                handle.extractall(extract)
+            if binary_asset:
+                extract.mkdir()
+                relative = next(iter(recipe["binaries_by_arch"][architecture_name()].values()))
+                target = extract / relative
+                archive_path.replace(target)
+                target.chmod(0o755)
+            else:
+                with tarfile.open(archive_path, "r:gz") as handle:
+                    members = handle.getmembers()
+                    if any(member.name.startswith("/") or ".." in Path(member.name).parts for member in members):
+                        raise DependencyError(f"unsafe {package['id']} archive")
+                    handle.extractall(extract)
             extract.replace(install_root)
     binaries = recipe.get("binaries_by_arch", {}).get(architecture_name(), recipe.get("binaries"))
     if not isinstance(binaries, dict) or not binaries:
@@ -693,14 +725,18 @@ def install_github_archive(package: dict[str, Any], recipe: dict[str, Any]) -> N
         link = bin_directory / str(command)
         if not target.is_file():
             raise DependencyError(f"{package['id']} archive is missing {relative}")
+        if binary_asset and (target.is_symlink() or hashlib.sha256(target.read_bytes()).hexdigest() != expected):
+            raise DependencyError(f"{package['id']} retained binary checksum mismatch")
         if link.is_symlink() or link.exists():
             if link.is_symlink() and link.resolve() == target.resolve():
                 continue
             managed_root = (Path.home() / ".local/share/agents/tools" / str(package["id"])).resolve()
             if not link.is_symlink() or managed_root not in link.resolve().parents:
                 raise DependencyError(f"refusing to replace unmanaged command: {link}")
-            link.unlink()
-        link.symlink_to(target)
+        with tempfile.TemporaryDirectory(prefix=".agent-command-", dir=bin_directory) as temporary_name:
+            replacement = Path(temporary_name) / str(command)
+            replacement.symlink_to(target)
+            replacement.replace(link)
 
 
 def install_github_python_installer(package: dict[str, Any], recipe: dict[str, Any]) -> None:
@@ -761,7 +797,7 @@ def install_package(package: dict[str, Any], recipe: dict[str, Any], *, expected
     if manager == "node-archive":
         install_node_archive(recipe)
         return
-    if manager == "github-archive":
+    if manager in {"github-archive", "github-binary"}:
         install_github_archive(package, recipe)
         return
     if manager == "github-python-installer":
@@ -907,7 +943,7 @@ def private_component_preflight(package: dict[str, Any], recipe: dict[str, Any],
 
 def install_preflight(package: dict[str, Any], recipe: dict[str, Any], eligible_ids: set[str]) -> tuple[bool, str]:
     manager = recipe["manager"]
-    if manager in {"node-archive", "github-archive"}:
+    if manager in {"node-archive", "github-archive", "github-binary"}:
         archive = recipe.get("archives", {}).get(architecture_name())
         return (isinstance(archive, dict), f"official archive for {architecture_name()}")
     if manager == "github-python-installer":

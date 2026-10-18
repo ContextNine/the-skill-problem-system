@@ -11,19 +11,14 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import dependency_worker as worker
+from private_release_fixture import private_dependency
 
 
 class PrivateDependencyJourney(unittest.TestCase):
     def test_ready_installs_still_check_exact_authority_without_mutation(self) -> None:
-        source = Path(__file__).resolve().parents[1] / "defaults/dependencies.json"
-        dependency = copy.deepcopy(next(item for item in json.loads(source.read_text())["dependencies"] if item["id"] == "secret-bindings"))
-        dependency["requires"] = []
-        for recipe in dependency["contract"]["recipes"].values():
-            recipe["provenance_provider"] = "github"
-            recipe["provenance_project"] = "example/fixture"
-            recipe["provenance_workflow"] = ".github/workflows/publish-machine-release.yml@refs/heads/master"
+        dependency = private_dependency()
         payload = {"mode": "dry-run", "manifest": {"schema_version": 2, "dependencies": [dependency]}}
-        ready = {"id": "secret-bindings", "ready": True, "detail": "verified"}
+        ready = {"id": "fixture", "ready": True, "detail": "verified"}
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             bin_dir = root / "bin"
@@ -36,14 +31,14 @@ class PrivateDependencyJourney(unittest.TestCase):
                 "assert args[args.index('--provenance-provider')+1]=='github'\n"
                 "assert args[args.index('--provenance-project')+1]=='example/fixture'\n"
                 "assert args[args.index('--provenance-workflow')+1]=='.github/workflows/publish-machine-release.yml@refs/heads/master'\n"
-                "assert args[args.index('--expected-version')+1]=='1.5.2'\n"
+                "assert args[args.index('--expected-version')+1]=='1.0.0'\n"
                 "state=os.environ['FIXTURE_STATE']\n"
                 "if 'install' in args:\n"
                 " assert args[args.index('--expected-source-commit')+1]=='a'*40\n"
                 " assert args[args.index('--expected-catalog-sha256')+1]=='c'*64\n"
                 " print(json.dumps({'ready':False,'state':'release-changed'}));sys.exit(1)\n"
                 "if state=='malformed':\n print('sensitive provider output');sys.exit(1)\n"
-                "report={'schema_version':1,'ready':state=='ready','state':state,'trust_verified':state=='ready','values_returned':False,'component':'secret-bindings','version':'1.5.2','source_commit':'a'*40,'catalog_sha256':'c'*64,'platform':'linux','architecture':'x86_64'}\n"
+                "report={'schema_version':1,'ready':state=='ready','state':state,'trust_verified':state=='ready','values_returned':False,'component':'fixture','version':'1.0.0','source_commit':'a'*40,'catalog_sha256':'c'*64,'platform':'linux','architecture':'x86_64'}\n"
                 "if state=='wrong-version': report.update(ready=True,state='ready',trust_verified=True,version='9.9.9')\n"
                 "print(json.dumps(report));sys.exit(0 if report['ready'] else 1)\n"
             )
@@ -72,7 +67,7 @@ class PrivateDependencyJourney(unittest.TestCase):
                     self.assertEqual(blocked["preflight"][0]["detail"], "trust-policy-missing")
                     self.assertFalse((root / ".agents").exists())
                     for expected in ({"source_commit": "b" * 40, "catalog_sha256": "c" * 64}, {"source_commit": "a" * 40, "catalog_sha256": "d" * 64}):
-                        blocked = {**payload, "expected_releases": {"secret-bindings": expected}}
+                        blocked = {**payload, "expected_releases": {"fixture": expected}}
                         self.assertEqual(worker.reconcile(blocked)["preflight"][0]["detail"], "release-changed")
                         with self.assertRaises(worker.DependencyError):
                             worker.reconcile({**blocked, "mode": "apply"})

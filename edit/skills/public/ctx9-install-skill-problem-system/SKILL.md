@@ -6,9 +6,11 @@ license: MIT
 
 # CTX9 · Install The Skill Problem System
 
+Bundled file paths are relative to this skill directory. Resolve them before running commands from a project or installation directory.
+
 Create a clean, user-owned skill repository from the public release.
 
-Read [Install](references/install.md) before changing installation behavior, [Configuration](references/configuration.md) before changing editable or installed paths, and [Distribution](references/distribution.md) before changing packaging or public release behavior.
+Read `./references/install.md` before changing installation behavior, `./references/configuration.md` before changing editable or installed paths, and `./references/distribution.md` before changing packaging or public release behavior.
 
 ## Workflow
 
@@ -17,7 +19,7 @@ Read [Install](references/install.md) before changing installation behavior, [Co
 3. Record the installed release tag and commit. For standalone placement, use the bundled guard to detach only the verified public clone and initialize a fresh repository on `master`:
 
 ```bash
-python3 /path/to/skill/scripts/prepare_repository.py '/absolute/destination'
+python3 ./scripts/prepare_repository.py '/absolute/destination'
 ```
 
 4. For Vault-owned placement, clone the public release into a temporary folder outside the Vault. Keep the released clone only as an installation input. Run `./install.sh --vault-source '/absolute/Vault/path'` from that clone. It copies the editable source into `<vault>/_system/agents/` without nested Git metadata.

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Implement proposed plan in new branch and draft PR"
+  short_description: "Implement a plan on a fresh branch and publish a draft PR"
+  default_prompt: "Use $code-implement-proposed-plan-in-new-branch-and-draft-pr to implement the latest proposed plan from origin/main, commit and push the changes, and open a draft PR."
+policy:
+  allow_implicit_invocation: false

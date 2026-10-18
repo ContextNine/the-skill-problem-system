@@ -324,6 +324,10 @@ def load_instance(root: Path | None = None) -> dict[str, Any]:
     workspaces_raw = read_json(instance / "fleet/workspaces.json", "workspace registry")
     machines = validate_machines(machines_raw)
     workspaces = validate_workspaces(workspaces_raw, machines)
+    preview_path = instance / "fleet/preview.json"
+    preview = read_json(preview_path, "preview configuration") if preview_path.is_file() else {"schema_version": 1, "enabled": False}
+    if preview.get("schema_version") != 1 or not isinstance(preview.get("enabled"), bool):
+        raise ConfigurationError("preview configuration needs schema_version 1 and enabled")
     sources = read_json(instance / "skills/skill-sources.json", "skill sources")
     if (
         sources.get("schema_version") != 4
@@ -344,7 +348,7 @@ def load_instance(root: Path | None = None) -> dict[str, Any]:
     return {
         "root": instance,
         "profile": profile,
-        "fleet": {"machines": machines, "workspaces": workspaces},
+        "fleet": {"machines": machines, "workspaces": workspaces, "preview": preview},
         "skills": {"sources": sources},
         "integrations": {"langfuse": langfuse},
         "dependencies": {"selections": read_json(instance / "dependencies/selections.json", "dependency selections")},

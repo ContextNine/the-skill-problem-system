@@ -21,7 +21,7 @@ import working_repo_skills
 
 
 INSTALL_MARKER = ".fleet-install.json"
-PACKAGE_VERSION = "0.2.16"
+PACKAGE_VERSION = "0.2.18"
 ICLOUD_DUPLICATE_RE = re.compile(r"^.+ \d+(?:\.[^.]+)?$")
 
 
@@ -105,7 +105,8 @@ def distribution_paths(source: Path) -> list[Path]:
     missing = [str(path) for path in required if not path.is_dir()]
     if missing:
         raise InstallError("agent package distribution is incomplete: " + ", ".join(missing))
-    return required
+    assets = source / "internal/assets"
+    return [*required, assets] if assets.is_dir() else required
 
 
 def source_skill_roots(root: Path) -> list[Path]:
@@ -138,7 +139,7 @@ def public_skill_roots(source: Path) -> list[tuple[str, Path]]:
     owned = [
         skill
         for group in sorted(root.iterdir())
-        if group.is_dir() and not group.is_symlink() and group.name.startswith("_")
+        if group.is_dir() and not group.is_symlink() and group.name in {"areas", "collections"}
         for skill in source_skill_roots(group)
     ]
     projected = working_repo_skills.plan(agents_root, require_sources=False)
@@ -160,6 +161,7 @@ def stage_public_skills(
     stage: Path,
     *,
     template_values: dict[str, object] | None = None,
+    config_root: Path | None = None,
 ) -> None:
     names: set[str] = set()
     for name, skill in public_skill_roots(source):
@@ -174,7 +176,7 @@ def stage_public_skills(
             raise InstallError(f"skill {name} needs machine facts for fleet templates")
         try:
             fleet_templates.render_markdown_tree(
-                target, template_values,
+                target, fleet_templates.skill_template_values(template_values, name, config_root),
                 template_values["fleet"]["machine"]["template_variants"],
             )
         except fleet_templates.FleetTemplateError as exc:
@@ -183,7 +185,7 @@ def stage_public_skills(
 
 def stage_workspace_sync_helpers(source: Path, stage: Path) -> None:
     """Bundle private-source helpers that public exports already place in src/."""
-    helper_source = source / "edit/skills/_fleet/fleet-i-sync-code-workspaces/scripts"
+    helper_source = source / "edit/skills/areas/fleet/fleet-i-sync-code-workspaces/scripts"
     for name in WORKSPACE_SYNC_HELPERS:
         target = stage / "src" / name
         if target.is_file():
@@ -199,6 +201,7 @@ def render_global(
     machine_id: str | None = None,
     *,
     source_home: Path,
+    agent: str = "codex",
 ) -> str:
     instance = load_instance(config_root)
     machines = instance["fleet"]["machines"]
@@ -213,6 +216,7 @@ def render_global(
         raw_registry,
         machine,
         source_home=source_home,
+        agent=agent,
     )
 
 
@@ -314,6 +318,9 @@ def install(
 ) -> dict[str, Any]:
     source = source.expanduser().resolve()
     home = home.expanduser().resolve()
+    import skill_catalog
+
+    skill_catalog.read_metadata(source / skill_catalog.METADATA_RELATIVE)
     current_command_root = installed_command_root(home) if runtime_upgrade else None
     sync_root = (
         command_root.expanduser().resolve()
@@ -363,14 +370,15 @@ def install(
         if claude_alias:
             ensure_managed_symlink(
                 home / ".claude/CLAUDE.md",
-                "../.agents/instructions/AGENTS.md",
+                "../.agents/instructions/CLAUDE.md",
                 apply=False,
             )
     actions: list[dict[str, str]] = []
     settings_source = source / "edit/settings"
     if not settings_source.is_dir():
         settings_source = source / "internal/defaults/settings"
-    selected_id = machine_id
+    identity = state_target / "machine-id"
+    selected_id = machine_id or (identity.read_text().strip() if identity.is_file() else None)
     if initialize_source and apply:
         if settings_source != source / "edit/settings":
             raise InstallError("editable source settings are missing")
@@ -418,7 +426,7 @@ def install(
             source_home=home,
         )
         if not is_private_source(source):
-            stage_public_skills(source, staged_root, template_values=template_values)
+            stage_public_skills(source, staged_root, template_values=template_values, config_root=config_target)
         stage_workspace_sync_helpers(source, staged_root)
         (staged_root / INSTALL_MARKER).write_text(
             json.dumps({"schema_version": 1, "installed_at": utc_stamp()}, indent=2) + "\n",
@@ -484,13 +492,17 @@ def install(
         )
         owned.append(str(codex_alias))
         if claude_alias:
+            rendered_claude = render_global(source, config_target, selected_id, source_home=home, agent="claude")
+            claude_target = home / ".agents/instructions/CLAUDE.md"
+            actions.append({"path": str(claude_target), "status": ensure_managed_text(claude_target, rendered_claude, apply=apply)})
+            owned.append(str(claude_target))
             alias = home / ".claude/CLAUDE.md"
             actions.append(
                 {
                     "path": str(alias),
                     "status": ensure_managed_symlink(
                         alias,
-                        "../.agents/instructions/AGENTS.md",
+                        "../.agents/instructions/CLAUDE.md",
                         apply=apply,
                     ),
                 }
@@ -503,6 +515,21 @@ def install(
             alias = home / ".agents/skills" / skill.name
             actions.append({"path": str(alias), "status": ensure_managed_symlink(alias, str(skill), apply=apply)})
             owned.append(str(alias))
+        if apply:
+            import skill_snapshots
+
+            catalog_source = owner if runtime_upgrade and owner and owner.is_dir() else source
+            rows = skill_catalog.source_catalog(catalog_source, home=home)
+            installed_names = {path.name for path in (package_target / "skills").iterdir()
+                               if (path / "SKILL.md").is_file()}
+            skill_snapshots.write_catalog(home, {name: row for name, row in rows.items()
+                                                if name in installed_names})
+            skill_snapshots.write_state(home, {
+                name: {"kind": "link", "source": str(package_target / "skills" / name)}
+                for name in installed_names
+            })
+            owned.append(str(home / skill_catalog.CATALOG_RELATIVE))
+            owned.append(str(home / skill_snapshots.STATE_RELATIVE))
     manifest = state_target / "installed.json"
     source_root = previous.get("source_root") if runtime_upgrade else str(source)
     value = {"schema_version": 1, "package_version": PACKAGE_VERSION, "source_root": source_root, "owned_paths": sorted(set(owned))}

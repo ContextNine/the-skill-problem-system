@@ -1,0 +1,5 @@
+interface:
+  short_description: "Create motion B-roll timed to a video transcript"
+  default_prompt: "Use $video-i-motion-broll to create motion graphics, cutaways, and overlays timed to this video and transcript."
+policy:
+  allow_implicit_invocation: true

@@ -11,7 +11,7 @@ SCRIPT_DIRECTORY = Path(__file__).resolve().parent
 AGENT_SCRIPTS_DIRECTORY = (
     SCRIPT_DIRECTORY
     if (SCRIPT_DIRECTORY / "global_agent_configuration.py").is_file()
-    else Path(__file__).resolve().parents[5] / "internal/src"
+    else Path(__file__).resolve().parents[6] / "internal/src"
 )
 if str(AGENT_SCRIPTS_DIRECTORY) not in sys.path:
     sys.path.insert(0, str(AGENT_SCRIPTS_DIRECTORY))

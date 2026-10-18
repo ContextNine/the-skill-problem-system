@@ -1,0 +1,6 @@
+interface:
+  display_name: "3. Blog: Write and refresh"
+  short_description: "Draft or refresh blogs in their authoritative site format."
+  default_prompt: "Use $blog-i-03-write-and-refresh to write or refresh this article in the site's existing format."
+policy:
+  allow_implicit_invocation: true

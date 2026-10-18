@@ -21,6 +21,7 @@ if str(SCRIPT_DIRECTORY) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIRECTORY))
 
 import sync_agent_configuration as agent_configuration
+from package_layout import resolve_agents_root
 import plugin_reconciliation
 import code_workspace_target_worker as workspace_worker
 
@@ -210,16 +211,6 @@ def record_source_run(
     return {"recorded": True, "root": str(state_root), "run_id": run_id}
 
 
-def vault_root() -> Path:
-    resolved = run(["vault", "root"])
-    if resolved.returncode == 0 and output(resolved):
-        return Path(output(resolved)).resolve()
-    fallback = run(["git", "rev-parse", "--show-toplevel"])
-    if fallback.returncode == 0 and output(fallback):
-        return Path(output(fallback)).resolve()
-    raise RuntimeError("cannot resolve the vault root")
-
-
 def load_json(path: Path, label: str) -> dict[str, object]:
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
@@ -230,20 +221,6 @@ def load_json(path: Path, label: str) -> dict[str, object]:
     if not isinstance(data, dict):
         raise RuntimeError(f"{label} must contain a JSON object")
     return data
-
-
-def current_machine_id(root: Path) -> str:
-    identity = run(["git", "-C", str(root), "config", "--get", "vault.machine-id"])
-    if identity.returncode == 0 and output(identity):
-        return output(identity)
-    marker = Path.home() / ".config/vault/machine-id"
-    try:
-        value = marker.read_text(encoding="utf-8").strip()
-    except OSError:
-        value = ""
-    if not value:
-        raise RuntimeError("current machine has no Vault identity; use vault machine identify")
-    return value
 
 
 def remote_details(url: str) -> tuple[str | None, str, str | None]:
@@ -950,6 +927,7 @@ def print_target_report(report: dict[str, object]) -> None:
 
 
 def add_selection_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--machine-registry", type=Path, help="machines.json override")
     parser.add_argument("--profile", help="catalog profile; defaults to default_profile")
     parser.add_argument("--entry", action="append", default=[], help="catalog entry ID; repeatable")
     parser.add_argument("--path", action="append", default=[], type=Path, help="repository or recursively scanned path; repeatable")
@@ -965,7 +943,6 @@ def add_selection_arguments(parser: argparse.ArgumentParser) -> None:
 
 def add_target_arguments(parser: argparse.ArgumentParser, *, mutable: bool) -> None:
     parser.add_argument("--target", action="append", default=[], help="machine ID or display name; repeatable")
-    parser.add_argument("--machine-registry", type=Path, help="machines.json override")
     parser.add_argument(
         "--provision-disabled",
         action="store_true",
@@ -976,7 +953,7 @@ def add_target_arguments(parser: argparse.ArgumentParser, *, mutable: bool) -> N
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(prog="fleet workspaces", description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
     discover = subparsers.add_parser("discover", help="resolve catalog or recursive paths without contacting targets")
     add_selection_arguments(discover)
@@ -1010,9 +987,9 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     try:
-        root = vault_root()
-        source_id = current_machine_id(root)
-        machine_path = args.machine_registry or root / "_system/agents/edit/settings/fleet/machines.json"
+        root = agent_configuration.vault_root()
+        source_id = agent_configuration.current_machine_id(root)
+        machine_path = args.machine_registry or resolve_agents_root(root) / "edit/settings/fleet/machines.json"
         machine_registry = load_machines(machine_path.expanduser().resolve())
         source_matches = [machine for machine in machine_registry["machines"] if isinstance(machine, dict) and machine.get("id") == source_id]
         if len(source_matches) != 1:
@@ -1020,26 +997,12 @@ def main() -> int:
         source_root = (args.source_root or machine_code_root(source_matches[0])).expanduser().resolve()
         if not source_root.is_dir():
             raise RuntimeError(f"source Code root is not a directory: {source_root}")
-        workspace_ownership = workspace_worker.codefoldersync_ownership(source_root)
-        catalog_path = args.catalog or root / "_system/agents/edit/settings/fleet/workspaces.json"
+        catalog_path = args.catalog or resolve_agents_root(root) / "edit/settings/fleet/workspaces.json"
         catalog = load_catalog(catalog_path.expanduser().resolve())
         specs, selection = select_specs(catalog, args, source_root)
         repositories, skipped = discover_specs(specs, source_root)
         if not repositories:
             raise RuntimeError("no repositories with usable canonical remotes were discovered")
-        scoped_ownership = workspace_worker.selected_repository_ownership(source_root, repositories)
-        blocked_scopes = [owner for owner in scoped_ownership.values() if owner["owner"] == "blocked"]
-        if blocked_scopes:
-            raise RuntimeError(str(blocked_scopes[0]["detail"]))
-        for repository in repositories:
-            repository["codefoldersync_read_only"] = (
-                scoped_ownership[str(repository["relative_path"])]["owner"] == "codefoldersync"
-            )
-        mutable_repositories = [repo for repo in repositories if not repo["codefoldersync_read_only"]]
-        if not mutable_repositories:
-            workspace_ownership = {**workspace_ownership, "owner": "codefoldersync"}
-        elif len(mutable_repositories) != len(repositories):
-            workspace_ownership = {**workspace_ownership, "owner": "mixed"}
         warnings = source_warnings(repositories)
         if args.command == "migrate-github-remotes":
             invalid_transport = [
@@ -1061,8 +1024,6 @@ def main() -> int:
             "repositories": [public_repository(repo) for repo in repositories],
             "skipped": skipped,
             "warnings": warnings,
-            "workspace_ownership": workspace_ownership,
-            "repository_ownership": scoped_ownership,
         }
         if args.command == "discover":
             if args.json:
@@ -1072,17 +1033,8 @@ def main() -> int:
                 print_discovery(report)
             return 2 if any(item["required"] for item in skipped) else 0
 
-        if workspace_ownership["owner"] == "blocked":
-            raise RuntimeError(str(workspace_ownership["detail"]))
-        requested_apply = bool(getattr(args, "apply", False))
-        apply = requested_apply and workspace_ownership["owner"] != "codefoldersync"
-        configuration_apply = apply and workspace_ownership["owner"] == "workspace-sync"
-        report["requested_apply"] = requested_apply
-        if requested_apply and workspace_ownership["owner"] == "codefoldersync":
-            warnings.append(
-                "CodeFolderSync V3 normal lifecycle owns the selected repositories; workspace apply was reduced to a read-only report"
-            )
-        relocations = [repo for repo in mutable_repositories if repo.get("source_relocated")]
+        apply = bool(getattr(args, "apply", False))
+        relocations = [repo for repo in repositories if repo.get("source_relocated")]
         if relocations and not getattr(args, "adopt_source_layout", False):
             details = ", ".join(
                 f"{repo['entry_id']}:{repo['catalog_relative_path']}->{repo['relative_path']}" for repo in relocations
@@ -1101,7 +1053,7 @@ def main() -> int:
         ]
         report["catalog_changes"] = catalog_changes
         if args.command in {"bootstrap", "reconcile"} and apply and not args.allow_remote_only_source:
-            unpublished = [repo for repo in mutable_repositories if repo["dirty"] or (isinstance(repo["ahead"], int) and repo["ahead"] > 0)]
+            unpublished = [repo for repo in repositories if repo["dirty"] or (isinstance(repo["ahead"], int) and repo["ahead"] > 0)]
             if unpublished:
                 raise RuntimeError(
                     f"{len(unpublished)} source repository/repositories have dirty or locally-ahead state; "
@@ -1197,10 +1149,9 @@ def main() -> int:
         run_id = new_run_id() if apply else None
         selections = [(machine, repositories_for_machine(repositories, str(machine["id"]))) for machine in targets]
         if args.command == "migrate-github-remotes":
-            source_preflight = workspace_worker.preflight_repositories(mutable_repositories)
+            source_preflight = workspace_worker.preflight_repositories(repositories)
             source_remote_results = [
-                workspace_worker.report_only_results(source_root, [repository])[0][0]
-                if repository["codefoldersync_read_only"] else workspace_worker.reconcile_remote(
+                workspace_worker.reconcile_remote(
                     source_root / str(repository["relative_path"]), repository, False
                 )
                 for repository in repositories
@@ -1209,7 +1160,7 @@ def main() -> int:
             report["source_remote_results"] = source_remote_results
             if apply and (
                 not source_preflight["ok"]
-                or any(result.get("status") in BLOCKING_STATUSES and not result.get("read_only") for result in source_remote_results)
+                or any(result.get("status") in BLOCKING_STATUSES for result in source_remote_results)
             ):
                 report["mode"] = "preflight-failed"
                 report["targets"] = []
@@ -1281,11 +1232,7 @@ def main() -> int:
             )
             preflight_blocked = any(
                 not target.get("preflight", {}).get("ok", False)
-                or any(
-                    result.get("status") in BLOCKING_STATUSES
-                    and not (result.get("read_only") and result.get("status") == "attention")
-                    for result in target.get("results", [])
-                )
+                or any(result.get("status") in BLOCKING_STATUSES for result in target.get("results", []))
                 for target in preflight_reports
                 if target.get("ok")
             )
@@ -1298,24 +1245,16 @@ def main() -> int:
                 else:
                     print_target_report(report)
                 return 1 if preflight_fatal else 2
-            configuration_apply = configuration_apply and not any(
-                owner.get("owner") == "codefoldersync"
-                for target in preflight_reports
-                for owner in target.get("repository_ownership", {}).values()
-            )
-            if workspace_worker.selected_repository_ownership(source_root, repositories) != scoped_ownership:
-                raise RuntimeError("CodeFolderSync ownership changed during preflight; retry without mutation")
 
         if apply and args.command == "migrate-github-remotes":
             report["source_remote_results"] = [
-                workspace_worker.report_only_results(source_root, [repository])[0][0]
-                if repository["codefoldersync_read_only"] else workspace_worker.reconcile_remote(
+                workspace_worker.reconcile_remote(
                     source_root / str(repository["relative_path"]), repository, True
                 )
                 for repository in repositories
             ]
             if any(
-                result.get("status") in BLOCKING_STATUSES and not result.get("read_only")
+                result.get("status") in BLOCKING_STATUSES
                 for result in report["source_remote_results"]
             ):
                 report["mode"] = "apply-failed"
@@ -1329,7 +1268,7 @@ def main() -> int:
 
         if apply:
             report["source_runtime_state"] = {"root": str(migrate_runtime_state(source_root))}
-        if configuration_apply and agent_bundle is not None:
+        if apply and agent_bundle is not None:
             report["source_agent_configuration"] = agent_configuration.reconcile_source_alias(
                 Path.home(),
                 agent_bundle,
@@ -1340,7 +1279,7 @@ def main() -> int:
                 backup_suffix=agent_suffix,
                 components={"config", "instructions"},
             )
-        if configuration_apply and plugin_inventory is not None:
+        if apply and plugin_inventory is not None:
             report["source_plugins"] = plugin_reconciliation.reconcile(
                 {
                     "home": str(Path.home()),
@@ -1362,7 +1301,7 @@ def main() -> int:
                 return 1
         if apply and relocations:
             report["catalog_changes"] = adopt_source_layout(
-                catalog_path.expanduser().resolve(), source_root, mutable_repositories
+                catalog_path.expanduser().resolve(), source_root, repositories
             )
         target_reports: list[dict[str, object]] = []
         for machine, selected_repositories in selections:
@@ -1370,7 +1309,7 @@ def main() -> int:
                 agent_report = agent_configuration.invoke_target(
                     machine,
                     agent_bundle,
-                    apply=configuration_apply,
+                    apply=apply,
                     verify=args.command == "doctor",
                     backup_suffix=agent_suffix,
                 )
@@ -1396,7 +1335,7 @@ def main() -> int:
                         machine,
                         plugin_inventory,
                         selected_repositories,
-                        apply=configuration_apply,
+                        apply=apply,
                     )
                     if plugin_inventory is not None and agent_eligible[str(machine["id"])]
                     else {"ok": True, "ready": True, "applied": False, "skipped": True}
@@ -1431,7 +1370,7 @@ def main() -> int:
                         machine,
                         plugin_inventory,
                         selected_repositories,
-                        apply=configuration_apply,
+                        apply=apply,
                     )
                     if plugin_inventory is not None and agent_eligible[str(machine["id"])]
                     else {"ok": True, "ready": True, "applied": False, "skipped": True}
@@ -1448,24 +1387,16 @@ def main() -> int:
             if not plugin_report.get("ok"):
                 workspace_report["error"] = plugin_report.get("error", "plugin reconciliation failed")
             workspace_report["applied"] = bool(workspace_report.get("applied")) and (
-                bool(plugin_report.get("applied")) if configuration_apply and not plugin_report.get("skipped") else True
+                bool(plugin_report.get("applied")) if apply and not plugin_report.get("skipped") else True
             )
             workspace_report["ready"] = bool(workspace_report.get("ready")) and bool(
                 agent_report.get("ready", True)
             ) and bool(plugin_report.get("ready", True))
             target_reports.append(workspace_report)
-        report["mode"] = (
-            "codefoldersync-report-only"
-            if requested_apply and workspace_ownership["owner"] == "codefoldersync"
-            else "apply" if apply else "preview"
-        )
+        report["mode"] = "apply" if apply else "preview"
         report["targets"] = target_reports
-        any_target_applied = any(target.get("applied") for target in target_reports)
-        all_targets_applied = all(
-            target.get("ok") and (target.get("applied") or target.get("mode") == "codefoldersync-report-only")
-            for target in target_reports
-        )
-        if apply and run_id and all_targets_applied and any_target_applied:
+        all_targets_applied = all(target.get("ok") and target.get("applied") for target in target_reports)
+        if apply and run_id and all_targets_applied:
             try:
                 report["source_history"] = record_source_run(
                     source_root,
@@ -1503,14 +1434,10 @@ def main() -> int:
             "ready", False
         ):
             incomplete = True
-        if apply and (
-            not all_targets_applied
-            or (any_target_applied and not report.get("source_history", {}).get("recorded", False))
-        ):
+        if apply and (not all_targets_applied or not report.get("source_history", {}).get("recorded", False)):
             incomplete = True
         if apply and any(
-            target.get("ok") and target.get("applied") and target.get("results")
-            and not (target.get("history") or {}).get("recorded", False)
+            target.get("ok") and target.get("results") and not target.get("history", {}).get("recorded", False)
             for target in target_reports
         ):
             incomplete = True

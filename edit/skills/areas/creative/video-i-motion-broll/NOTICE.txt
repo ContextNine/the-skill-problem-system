@@ -1,0 +1,7 @@
+Adapted from Barty-Bart/motion-graphics, skills/motion-broll.
+Source: https://github.com/Barty-Bart/motion-graphics
+Source commit: e8d610adcf946367430c8b43a97aad8059befaad
+Copyright (c) 2026 Bart. MIT License, see LICENSE.
+Geist fonts: SIL Open Font License, see engine/fonts/OFL-Geist.txt.
+Icon paths adapted from Lucide, ISC License.
+This copy is maintained as a Vault-owned skill.

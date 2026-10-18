@@ -1,0 +1,6 @@
+interface:
+  short_description: "Clean up merged local Git branches across the fleet"
+  default_prompt: "Use $fleet-i-cleanup-merged-branches to remove proven-merged local branches in the requested repository or across enabled fleet machines, preserving unfinished work."
+
+policy:
+  allow_implicit_invocation: true

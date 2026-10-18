@@ -1,0 +1,6 @@
+interface:
+  display_name: "Personal chief of staff"
+  short_description: "Plan and review personal time in daily and weekly notes"
+  default_prompt: "Use $personal-chief-of-staff for me now."
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,7 @@
+interface:
+  short_description: "Audit Langfuse AI quality for a configured repository"
+  default_prompt: "Use $k3s-ai-triage to audit AI quality for the requested repository and produce evidence-backed recommendations."
+
+policy:
+  allow_implicit_invocation: false
+

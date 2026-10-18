@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "skills": {
+    "code-better-ui": {
+      "rating": 4
+    },
+    "code-emil-design-eng": {
+      "rating": 4
+    }
+  }
+}

@@ -2,6 +2,133 @@
   "schema_version": 2,
   "dependencies": [
     {
+      "id": "gitlab-cli",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "skill-runtime"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "k3s-triage-and-hotfix",
+        "k3s-cluster-wizard"
+      ],
+      "lifecycle_doc": "dependencies/package-managers.md",
+      "requires": [],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "optional",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "brew",
+            "package": "glab"
+          },
+          "linux": {
+            "manager": "apt",
+            "package": "glab"
+          }
+        },
+        "verify": {
+          "command": "glab",
+          "args": [
+            "--version"
+          ]
+        }
+      }
+    },
+    {
+      "id": "maintenance-tsx",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "skill-runtime"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "k3s-ai-triage",
+        "k3s-ai-trace-review",
+        "k3s-triage-and-hotfix"
+      ],
+      "lifecycle_doc": "dependencies/package-managers.md",
+      "requires": [
+        "node24"
+      ],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "npm",
+            "package": "tsx@4.20.6"
+          },
+          "linux": {
+            "manager": "npm",
+            "package": "tsx@4.20.6"
+          }
+        },
+        "verify": {
+          "command": "tsx",
+          "args": [
+            "--version"
+          ],
+          "exact": "4.20.6"
+        }
+      }
+    },
+    {
+      "id": "maintenance-zod",
+      "kind": "package",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "skill-runtime"
+      ],
+      "eligibility": "enabled-agent-machines",
+      "required_by": [
+        "k3s-ai-triage",
+        "k3s-ai-trace-review",
+        "k3s-triage-and-hotfix"
+      ],
+      "lifecycle_doc": "dependencies/package-managers.md",
+      "requires": [
+        "node24",
+        "python"
+      ],
+      "contract": {
+        "adapter": "package",
+        "install_policy": "required",
+        "update_policy": "declared-recipe",
+        "recipes": {
+          "macos": {
+            "manager": "npm",
+            "package": "zod@4.3.6"
+          },
+          "linux": {
+            "manager": "npm",
+            "package": "zod@4.3.6"
+          }
+        },
+        "verify": {
+          "command": "python3",
+          "args": [
+            "-c",
+            "import json,pathlib; print(json.loads((pathlib.Path.home()/'.local/lib/node_modules/zod/package.json').read_text())['version'])"
+          ],
+          "exact": "4.3.6"
+        }
+      }
+    },
+    {
       "id": "git",
       "kind": "package",
       "platforms": [
@@ -13,7 +140,13 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "fleet-sync"
+        "fleet-sync",
+        "k3s-cluster-wizard",
+        "k3s-triage-and-hotfix",
+        "k3s-hotfix-deploy",
+        "code-implement-proposed-plan-in-new-branch-and-draft-pr",
+        "fleet-i-cleanup-merged-branches",
+        "design-anatomy"
       ],
       "lifecycle_doc": "dependencies/package-managers.md",
       "requires": [],
@@ -51,7 +184,13 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "fleet-sync"
+        "fleet-sync",
+        "k3s-cluster-wizard",
+        "k3s-triage-and-hotfix",
+        "k3s-hotfix-deploy",
+        "code-implement-proposed-plan-in-new-branch-and-draft-pr",
+        "fleet-i-cleanup-merged-branches",
+        "design-anatomy"
       ],
       "lifecycle_doc": "dependencies/package-managers.md",
       "requires": [],
@@ -90,7 +229,13 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "fleet-sync"
+        "fleet-sync",
+        "k3s-ai-trace-review",
+        "k3s-ai-triage",
+        "k3s-cluster-wizard",
+        "k3s-hotfix-deploy",
+        "k3s-triage-and-hotfix",
+        "k3s-infrastructure-manage-plunk"
       ],
       "lifecycle_doc": "dependencies/package-managers.md",
       "requires": [],
@@ -128,7 +273,10 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "fleet-sync"
+        "fleet-sync",
+        "video-i-motion-broll",
+        "fleet-i-cleanup-merged-branches",
+        "fleet-i-restart-codex"
       ],
       "lifecycle_doc": "dependencies/package-managers.md",
       "requires": [],
@@ -205,7 +353,8 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "fleet-sync"
+        "fleet-sync",
+        "k3s-infrastructure-manage-plunk"
       ],
       "lifecycle_doc": "dependencies/package-managers.md",
       "requires": [],
@@ -244,7 +393,8 @@
       "eligibility": "enabled-agent-machines",
       "required_by": [
         "publisher-file-upload",
-        "impression-resize-or-create-media-for-linkedin"
+        "impression-resize-or-create-media-for-linkedin",
+        "video-i-motion-broll"
       ],
       "lifecycle_doc": "dependencies/package-managers.md",
       "requires": [],
@@ -282,7 +432,7 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "creative-i-render-markdown-pdf"
+        "docs-i-render-markdown-pdf"
       ],
       "lifecycle_doc": "dependencies/package-managers.md",
       "requires": [],
@@ -358,7 +508,10 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "fleet-sync"
+        "fleet-sync",
+        "video-i-motion-broll",
+        "k3s-infrastructure-manage-plunk",
+        "design-anatomy"
       ],
       "lifecycle_doc": "dependencies/package-managers.md",
       "requires": [],
@@ -409,7 +562,8 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "fleet-sync"
+        "fleet-sync",
+        "k3s-infrastructure-manage-plunk"
       ],
       "lifecycle_doc": "dependencies/package-managers.md",
       "requires": [
@@ -559,7 +713,7 @@
       "eligibility": "enabled-agent-machines",
       "required_by": [
         "fleet-sync",
-        "creative-i-render-markdown-pdf"
+        "docs-i-render-markdown-pdf"
       ],
       "lifecycle_doc": "dependencies/package-managers.md",
       "requires": [],
@@ -661,7 +815,11 @@
       "required_by": [
         "fleet-i-onboard-machine",
         "fleet-i-update-dependencies",
-        "fleet-sync"
+        "fleet-sync",
+        "k3s-ai-trace-review",
+        "k3s-ai-triage",
+        "k3s-hotfix-deploy",
+        "k3s-triage-and-hotfix"
       ],
       "lifecycle_doc": "dependencies/ctx9.md",
       "requires": [
@@ -851,6 +1009,8 @@
         "incident-controller-remediate-production-incidents",
         "publisher-file-upload",
         "publisher-md-html-publisher",
+        "k3s-cluster-wizard",
+        "k3s-triage-and-hotfix",
         "fleet-i-onboard-machine",
         "fleet-sync"
       ],
@@ -896,7 +1056,8 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "fleet-sync"
+        "fleet-sync",
+        "personal-chief-of-staff"
       ],
       "lifecycle_doc": "dependencies/package-managers.md",
       "requires": [
@@ -1020,7 +1181,8 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "todoist-cli"
+        "todoist-cli",
+        "personal-chief-of-staff"
       ],
       "lifecycle_doc": "dependencies/package-managers.md",
       "requires": [
@@ -1278,7 +1440,11 @@
       "eligibility": "enabled-agent-machines",
       "required_by": [
         "fleet-i-update-coding-tools",
-        "fleet-i-onboard-machine"
+        "fleet-i-onboard-machine",
+        "k3s-cluster-wizard",
+        "k3s-triage-and-hotfix",
+        "fleet-i-manipulate-threads-and-projects",
+        "fleet-i-restart-codex"
       ],
       "lifecycle_doc": "dependencies/codex-cli.md",
       "requires": [],
@@ -1400,7 +1566,8 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "fleet-i-onboard-machine"
+        "fleet-i-onboard-machine",
+        "design-anatomy"
       ],
       "lifecycle_doc": "dependencies/google-chrome.md",
       "requires": [],
@@ -1713,7 +1880,9 @@
       ],
       "eligibility": "enabled-agent-machines",
       "required_by": [
-        "fleet-i-onboard-machine"
+        "fleet-i-onboard-machine",
+        "fleet-i-public-dev-preview",
+        "fleet-i-cleanup-merged-branches"
       ],
       "lifecycle_doc": "dependencies/machine-access-prerequisites.md",
       "requires": [],
@@ -1849,7 +2018,7 @@
       }
     },
     {
-      "id": "secret-bindings",
+      "id": "notenv",
       "kind": "package",
       "platforms": [
         "macos",
@@ -1862,9 +2031,11 @@
       "required_by": [
         "fleet-i-onboard-machine",
         "fleet-sync",
+        "k3s-ai-trace-review",
+        "k3s-ai-triage",
         "k3s-infrastructure-manage-utm-tracking-links"
       ],
-      "lifecycle_doc": "dependencies/secret-bindings.md",
+      "lifecycle_doc": "dependencies/notenv.md",
       "requires": [
         "ctx9-launcher"
       ],
@@ -1875,28 +2046,28 @@
         "recipes": {
           "macos": {
             "manager": "ctx9-component",
-            "package": "secret-bindings",
-            "private_catalog_url": "https://gitlab.com/api/v4/projects/85404252/packages/generic/secret-bindings-machine/1.5.2/components.json",
+            "package": "notenv",
+            "private_catalog_url": "https://gitlab.com/api/v4/projects/85404252/packages/generic/notenv-machine/2.0.1/components.json",
             "credential_binding": "ctx9-gitlab-group-read",
             "provenance_provider": "gitlab",
-            "provenance_project": "ctx9/secret-bindings"
+            "provenance_project": "ctx9/notenv"
           },
           "linux": {
             "manager": "ctx9-component",
-            "package": "secret-bindings",
-            "private_catalog_url": "https://gitlab.com/api/v4/projects/85404252/packages/generic/secret-bindings-machine/1.5.2/components.json",
+            "package": "notenv",
+            "private_catalog_url": "https://gitlab.com/api/v4/projects/85404252/packages/generic/notenv-machine/2.0.1/components.json",
             "credential_binding": "ctx9-gitlab-group-read",
             "provenance_provider": "gitlab",
-            "provenance_project": "ctx9/secret-bindings"
+            "provenance_project": "ctx9/notenv"
           }
         },
         "verify": {
-          "command": "secret-bindings",
+          "command": "notenv",
           "args": [
             "--version",
             "--json"
           ],
-          "exact": "1.5.2"
+          "exact": "2.0.1"
         }
       }
     },
@@ -2003,7 +2174,9 @@
       "eligibility": "capability-selected",
       "required_by": [
         "k3s-infrastructure-kubernetes",
-        "fleet-i-onboard-machine"
+        "fleet-i-onboard-machine",
+        "k3s-cluster-wizard",
+        "k3s-triage-and-hotfix"
       ],
       "lifecycle_doc": "dependencies/optional-developer-tools.md",
       "requires": [],
@@ -2126,6 +2299,38 @@
           "claude-openrouter",
           "claude-featherless"
         ]
+      }
+    },
+    {
+      "id": "motion-broll-project-runtime",
+      "kind": "optional-service",
+      "platforms": [
+        "macos",
+        "linux"
+      ],
+      "groups": [
+        "skill-runtime"
+      ],
+      "eligibility": "capability-selected",
+      "required_by": [
+        "video-i-motion-broll"
+      ],
+      "lifecycle_doc": "dependencies/motion-broll.md",
+      "requires": [
+        "python",
+        "node24",
+        "ffmpeg"
+      ],
+      "contract": {
+        "adapter": "skill-managed",
+        "install_policy": "selected",
+        "verify": {
+          "command": "python3",
+          "args": [
+            "-c",
+            "import pathlib,subprocess; p=pathlib.Path('motion').resolve(); subprocess.run([str(p/'.venv/bin/python'),'-c','import numpy'],check=True); subprocess.run(['node','-e',\"const fs=require('fs');const {chromium}=require('playwright');if(!fs.existsSync(chromium.executablePath()))process.exit(1)\"],cwd=p,check=True)"
+          ]
+        }
       }
     }
   ]

@@ -1,0 +1,7 @@
+interface:
+  short_description: "Audit and maintain the K3s cluster"
+  default_prompt: "Use $k3s-cluster-wizard to audit cluster health and repair actionable findings within its autonomous limits."
+
+policy:
+  allow_implicit_invocation: false
+

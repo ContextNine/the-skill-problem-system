@@ -1,0 +1,6 @@
+interface:
+  short_description: "Export and inspect configured Langfuse traces"
+  default_prompt: "Use $k3s-ai-trace-review to export and inspect the requested AI trace evidence."
+
+policy:
+  allow_implicit_invocation: false

@@ -390,7 +390,7 @@ def selected_machine_access(machine: dict[str, Any]) -> dict[str, str | None]:
 
 
 def recorded_novnc_url(source_home: Path, machine: dict[str, Any]) -> str | None:
-    runtime = source_home / ".cache/vault-machine"
+    runtime = source_home / ".cache/fleet-machine"
     path = runtime / f"{machine.get('id')}-vnc.json"
     control = runtime / f"{machine.get('id')}-vnc.sock"
     try:
@@ -402,7 +402,7 @@ def recorded_novnc_url(source_home: Path, machine: dict[str, Any]) -> str | None
         return None
     try:
         check = subprocess.run(
-            ["ssh", "-S", str(control), "-O", "check", alias],
+            ["ssh", "-F", "/dev/null", "-S", str(control), "-O", "check", alias],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             timeout=3,
@@ -453,13 +453,16 @@ def machine_template_values(
 
 def render_global_agents(
     agents_root: Path, config: Path, registry: dict[str, Any],
-    machine: dict[str, Any], *, source_home: Path,
+    machine: dict[str, Any], *, source_home: Path, agent: str = "codex",
 ) -> str:
     from fleet_templates import FleetTemplateError, render_file
 
     bundle = agents_root / "edit/agent-instructions"
     source = bundle / "AGENT-INSTRUCTIONS.md"
+    if agent not in {"codex", "claude"}:
+        raise AgentConfigurationError(f"unsupported instruction agent: {agent}")
     context = machine_template_values(registry, machine, source_home=source_home)
+    context["fleet"]["agent"] = agent
     variants = machine.get("template_variants")
     if not isinstance(variants, list):
         raise AgentConfigurationError(f"machine {machine.get('id')} has no template_variants")
@@ -476,6 +479,7 @@ def render_agents(
     machine: dict[str, Any],
     *,
     source_home: Path,
+    agent: str = "codex",
 ) -> str:
     from package_layout import resolve_agents_root
 
@@ -486,10 +490,11 @@ def render_agents(
         registry,
         machine,
         source_home=source_home,
+        agent=agent,
     )
 
 
-def home_agent_files(rendered_agents: str) -> list[dict[str, object]]:
+def home_agent_files(rendered_agents: str, rendered_claude: str) -> list[dict[str, object]]:
     return [
         {
             "path": ".agents/instructions/AGENTS.md",
@@ -503,9 +508,15 @@ def home_agent_files(rendered_agents: str) -> list[dict[str, object]]:
             "target": "../.agents/instructions/AGENTS.md",
         },
         {
+            "path": ".agents/instructions/CLAUDE.md",
+            "kind": "file",
+            "mode": 0o644,
+            "content": base64.b64encode(rendered_claude.encode()).decode(),
+        },
+        {
             "path": ".claude/CLAUDE.md",
             "kind": "symlink",
-            "target": "../.agents/instructions/AGENTS.md",
+            "target": "../.agents/instructions/CLAUDE.md",
         },
     ]
 
@@ -536,9 +547,10 @@ def sync_local(
     machine_id = current_machine_id(root, home)
     machine = machine_by_id(registry, machine_id)
     rendered = render_agents(root, registry, machine, source_home=home)
+    rendered_claude = render_agents(root, registry, machine, source_home=home, agent="claude")
     home_report = reconcile_home(
         home,
-        home_agent_files(rendered),
+        home_agent_files(rendered, rendered_claude),
         apply=apply,
         verify=False,
         backup_suffix=backup_suffix,

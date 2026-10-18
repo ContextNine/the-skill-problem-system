@@ -1,0 +1,7 @@
+interface:
+  short_description: "Group K3s errors and repair verified regressions"
+  default_prompt: "Use $k3s-triage-and-hotfix to collect the latest error window and repair any repository-owned regression."
+
+policy:
+  allow_implicit_invocation: false
+

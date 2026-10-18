@@ -21,7 +21,7 @@ from typing import Any, Callable
 
 PACKAGE_DIRECTORY = Path(__file__).resolve().parents[1]
 AGENTS_DIRECTORY = PACKAGE_DIRECTORY.parent
-SOURCE_FLEET_SCRIPTS = AGENTS_DIRECTORY / "edit/skills/_fleet/fleet-i-sync-code-workspaces/scripts"
+SOURCE_FLEET_SCRIPTS = AGENTS_DIRECTORY / "edit/skills/areas/fleet/fleet-i-sync-code-workspaces/scripts"
 FLEET_SCRIPTS = (
     SOURCE_FLEET_SCRIPTS
     if (SOURCE_FLEET_SCRIPTS / "sync_code_workspaces.py").is_file()
@@ -34,6 +34,7 @@ for directory in (PACKAGE_DIRECTORY / "src", FLEET_SCRIPTS):
 import skill_snapshots
 import sync_agent_configuration as agent_configuration
 import sync_skills
+import skill_catalog
 import dependency_worker
 import fleet_adoption
 import fleet_templates
@@ -62,7 +63,7 @@ def validate_dependency_lifecycle_routes(root: Path, manifest: dict[str, Any]) -
     dependencies = manifest.get("dependencies")
     if not isinstance(dependencies, list):
         raise AgentsSyncError("agent dependency registry needs a dependencies list")
-    base = resolve_agents_root(root) / "edit/skills/_fleet/fleet-i-update-dependencies/references"
+    base = resolve_agents_root(root) / "edit/skills/areas/fleet/fleet-i-update-dependencies/references"
     for dependency in dependencies:
         if not isinstance(dependency, dict) or not isinstance(dependency.get("id"), str):
             raise AgentsSyncError("every agent dependency needs an id")
@@ -272,8 +273,8 @@ def build_agent_reference_files(
 ) -> dict[str, dict[str, str]]:
     agents = resolve_agents_root(root)
     dependency_path = agents / "internal/defaults/dependencies.json"
-    dependency_skill = agents / "edit/skills/_fleet/fleet-i-update-dependencies"
-    onboarding_skill = agents / "edit/skills/_fleet/fleet-i-onboard-machine"
+    dependency_skill = agents / "edit/skills/areas/fleet/fleet-i-update-dependencies"
+    onboarding_skill = agents / "edit/skills/areas/fleet/fleet-i-onboard-machine"
     sources = {
         dependency_path: "internal/defaults/dependencies.json",
         agents / "edit/settings/dependencies/selections.json": "settings/dependencies/selections.json",
@@ -543,8 +544,13 @@ def build_skill_snapshot_bundle(
                 source,
                 preview_root / "portable",
                 template_values=template_values,
+                config_root=resolve_agents_root(root) / "edit/settings",
             )
-        return skill_snapshots.build_bundle(sources, links=links, overlays=overlays)
+        catalog = skill_catalog.rows_from_skills(
+            root, skills,
+            skill_catalog.read_metadata(resolve_agents_root(root) / skill_catalog.METADATA_RELATIVE),
+        )
+        return skill_snapshots.build_bundle(sources, links=links, overlays=overlays, catalog=catalog)
 
 
 def snapshot_skill_source(
@@ -553,6 +559,7 @@ def snapshot_skill_source(
     preview_root: Path,
     *,
     template_values: dict[str, object] | None = None,
+    config_root: Path | None = None,
 ) -> Path:
     """Render inline Fleet expressions in a machine-specific skill copy."""
     has_templates = fleet_templates.bundle_has_templates(source)
@@ -565,7 +572,7 @@ def snapshot_skill_source(
             raise AgentsSyncError(f"skill {skill.name} needs target machine facts for fleet templates")
         try:
             fleet_templates.render_markdown_tree(
-                preview_target, template_values,
+                preview_target, fleet_templates.skill_template_values(template_values, skill.name, config_root),
                 template_values["fleet"]["machine"]["template_variants"],
             )
         except fleet_templates.FleetTemplateError as exc:
@@ -653,6 +660,8 @@ def print_skill_report(label: str, report: dict[str, object]) -> None:
     count = len(changes) if isinstance(changes, list) else 0
     status = "match" if report.get("ready") and not count else f"{count} change(s)"
     print(f"  {label}: {report.get('skill_count', 0)} skills, {status}")
+    for name, source in sorted(report.get("deferred", {}).items()):
+        print(f"    - deferred {name}: repository source unavailable ({source}); existing installation preserved")
 
 
 def print_config_report(label: str, report: dict[str, object]) -> None:

@@ -52,6 +52,7 @@ class ProjectedSkill:
     canonical_path: Path
     declared_path: str | None
     materialization: str
+    collection: str = ""
 
 
 @dataclass(frozen=True)
@@ -210,9 +211,12 @@ def explicit_skills(repo_path: Path, sources: list[str]) -> list[tuple[str, Path
 
 def gh_sources(root: Path, data: dict[str, Any]) -> list[dict[str, Any]]:
     gh_root = root / GH_ROOT
-    if not gh_root.is_dir():
-        raise ProjectionError(f"GitHub skill root missing: {gh_root}")
     policies = github_policies(data)
+    if not gh_root.is_dir():
+        if not policies:
+            return []
+        raise ProjectionError(f"GitHub skill root missing: {gh_root}")
+    published_source = not (root / "internal/release/agent-package-export.json").is_file()
     directories = {
         child.name: child for child in gh_root.iterdir() if child.is_dir() and not child.is_symlink()
     }
@@ -238,9 +242,11 @@ def gh_sources(root: Path, data: dict[str, Any]) -> list[dict[str, Any]]:
                 if not re.search(rf"(?m)^\s*{key}:\s*\S+\s*$", source_text)
             ]
             if missing_metadata:
-                raise ProjectionError(
-                    f"GH skill lacks install metadata {missing_metadata}: {child}"
-                )
+                # Public export publishes final bundles without gh updater metadata.
+                if not published_source or len(missing_metadata) != 4:
+                    raise ProjectionError(
+                        f"GH skill lacks install metadata {missing_metadata}: {child}"
+                    )
             installed.append((child.name, child))
         if not installed:
             raise ProjectionError(f"GitHub repository has no installed skills: {repo_root}")
@@ -386,6 +392,7 @@ def plan(root: Path, *, home: Path | None = None, require_sources: bool = False)
                     canonical,
                     declared_path,
                     materialization,
+                    source["id"],
                 )
             )
 

@@ -1,5 +1,3 @@
-# Private component preflight
-
 Private `ctx9-component` recipes use the installed launcher to check the exact authenticated catalog and
 signed release on every selected target. This check runs even when the installed version already matches.
 The old helper-file-exists check was not evidence of credential or catalog readiness.

@@ -21,7 +21,7 @@ import working_repo_skills
 
 
 INSTALL_MARKER = ".fleet-install.json"
-PACKAGE_VERSION = "0.2.18"
+PACKAGE_VERSION = "0.2.19"
 ICLOUD_DUPLICATE_RE = re.compile(r"^.+ \d+(?:\.[^.]+)?$")
 
 

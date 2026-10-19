@@ -39,6 +39,22 @@ Retained GitLab releases need `provenance_provider: gitlab` before the upgraded 
 Switch to GitHub only for the accepted new release, with its reviewed project/workflow and exact version.
 The public default's explicit GitLab policy does not update any private primary-owned recipe.
 
+Select an issuer change atomically with one exact version adoption:
+
+```bash
+fleet update --dependency notenv --version 3.0.0 \
+  --provenance-provider github --provenance-project ContextNine/notenv \
+  --provenance-workflow .github/workflows/publish-machine-release.yml@refs/heads/master \
+  --dry-run
+```
+
+Repeat the same command without `--dry-run` only after release and installed
+acceptance. The complete explicit provider/project/workflow selection is part
+of the immutable candidate and operation digest. Preview changes no desired
+state. Apply records the new issuer together with the version only after target
+acceptance. Missing/invalid policy fails rather than inferring an issuer from
+the catalog or temporarily changing the policy for the retained old release.
+
 Run the focused synthetic journey and complete package suite with Python 3.12:
 
 ```bash

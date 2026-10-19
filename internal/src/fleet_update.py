@@ -108,6 +108,8 @@ def exact_component_manifest(
     manifest: dict[str, Any],
     dependency_id: str,
     version: str,
+    *,
+    provenance: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version):
         raise FleetUpdateError(f"invalid exact semantic version: {version!r}")
@@ -140,6 +142,12 @@ def exact_component_manifest(
         if replacements != 1:
             raise FleetUpdateError(f"{dependency_id} has an unsupported private catalog URL")
         recipe["private_catalog_url"] = next_url
+        if provenance is not None:
+            recipe["provenance_provider"] = provenance["provider"]
+            recipe["provenance_project"] = provenance["project"]
+            recipe.pop("provenance_workflow", None)
+            if "workflow" in provenance:
+                recipe["provenance_workflow"] = provenance["workflow"]
     verify["exact"] = version
     dependency_worker.validate_manifest(candidate)
     return candidate
@@ -368,7 +376,16 @@ def update_exact_component(
 ) -> int:
     if len(args.dependency) != 1:
         raise FleetUpdateError("--version requires exactly one --dependency")
-    candidate = exact_component_manifest(manifest, args.dependency[0], args.version)
+    provenance = None
+    if any((args.provenance_provider, args.provenance_project, args.provenance_workflow)):
+        if not args.provenance_provider or not args.provenance_project:
+            raise FleetUpdateError("select both --provenance-provider and --provenance-project")
+        if (args.provenance_provider == "github") != bool(args.provenance_workflow):
+            raise FleetUpdateError("GitHub provenance requires --provenance-workflow; GitLab does not use it")
+        provenance = {"provider": args.provenance_provider, "project": args.provenance_project}
+        if args.provenance_workflow:
+            provenance["workflow"] = args.provenance_workflow
+    candidate = exact_component_manifest(manifest, args.dependency[0], args.version, provenance=provenance)
     dependency = next(item for item in candidate["dependencies"] if item["id"] == args.dependency[0])
     components = {recipe["package"] for recipe in dependency["contract"]["recipes"].values()}
     if len(components) != 1:
@@ -503,6 +520,8 @@ def update(args: argparse.Namespace) -> int:
     skill_snapshot_machines = [source, *targets]
     if args.version is not None:
         return update_exact_component(args, parts, manifest_path, manifest, registry=registry, machines=machines, source_id=source_id)
+    if any((args.provenance_provider, args.provenance_project, args.provenance_workflow)):
+        raise FleetUpdateError("provenance selection requires --version and exactly one --dependency")
     resolved_t3 = exact_t3_version(args, parts)
     resolved = {"t3-code": resolved_t3} if resolved_t3 else {}
     mode = "verify" if args.verify else "dry-run" if args.dry_run else "apply"
@@ -598,6 +617,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--version",
         help="adopt one exact immutable version; requires exactly one --dependency",
     )
+    parser.add_argument("--provenance-provider", choices=("github", "gitlab"), help="explicit signing provider for this exact component adoption")
+    parser.add_argument("--provenance-project", help="reviewed signing repository for this exact component adoption")
+    parser.add_argument("--provenance-workflow", help="exact GitHub workflow/ref for this exact component adoption")
     parser.add_argument("--coding-tools", dest="coding_tools", action="store_true", help="update installed Codex, T3, Claude Code, OpenCode, and related coding tools")
     parser.add_argument("--skills", action="store_true", help="update approved skill sources and distribute snapshots")
     parser.add_argument(

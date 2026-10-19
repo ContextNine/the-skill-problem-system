@@ -16,7 +16,7 @@ import skill_catalog
 from skill_snapshots import SnapshotError
 
 
-VERSION = "0.2.18"
+VERSION = "0.2.19"
 SCRIPT_DIRECTORY = Path(__file__).resolve().parent
 FLEET_COMMANDS = {
     "maintenance": SCRIPT_DIRECTORY / "maintenance_status.py",

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Startup listings and backlinks"
+  short_description: "Submit product listings and resume saved startup campaigns."
+  default_prompt: "Use $marketing-i-startup-listings to continue the selected startup's saved directory campaign through computer use."
+policy:
+  allow_implicit_invocation: true

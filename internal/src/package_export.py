@@ -10,6 +10,7 @@ import os
 import re
 import shutil
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
@@ -17,6 +18,7 @@ from urllib.parse import quote
 from package_layout import AGENTS_ROOT, EXPORT_ROOT, VAULT_ROOT
 import working_repo_skills
 import fleet_templates
+import skill_catalog
 
 
 MANIFEST_NAME = ".ctx9-agent-export-manifest.json"
@@ -64,6 +66,12 @@ class ExportError(RuntimeError):
     pass
 
 
+@dataclass(frozen=True)
+class PrivacyRules:
+    exclusions: tuple[str, ...]
+    partial_hiding: tuple[Path, ...]
+
+
 def read_manifest(path: Path | None = None) -> dict[str, Any]:
     target = path or EXPORT_ROOT / "agent-package-export.json"
     try:
@@ -100,19 +108,69 @@ def matches_exclusion(relative: Path, patterns: tuple[str, ...]) -> str | None:
     return next((pattern for pattern in patterns if fnmatch.fnmatchcase(rendered, pattern)), None)
 
 
-def read_exclusions(path: Path = EXCLUSIONS_PATH) -> tuple[str, ...]:
+def matching_partial_hiding(relative: Path, roots: tuple[Path, ...]) -> Path | None:
+    return next((root for root in roots if relative == root or root in relative.parents), None)
+
+
+def redacted_path(relative: Path) -> Path:
+    return relative.with_name(f"{relative.name}-REDACTED")
+
+
+def read_privacy_rules(path: Path | None = None) -> PrivacyRules:
+    target = path or EXCLUSIONS_PATH
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
+        value = json.loads(target.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise ExportError(f"public skill export exclusions are invalid: {exc}") from exc
-    raw = value.get("exclude") if isinstance(value, dict) and value.get("schema_version") == 1 else None
-    if not isinstance(raw, list) or not all(isinstance(item, str) and item for item in raw):
-        raise ExportError("public skill export exclusions need schema_version 1 and a string list")
-    for pattern in raw:
+        raise ExportError(f"public skill export privacy rules are invalid: {exc}") from exc
+    if not isinstance(value, dict) or value.get("schema_version") != 2:
+        raise ExportError("public skill export privacy rules need schema_version 2")
+    raw_exclusions = value.get("exclude")
+    raw_partial = value.get("partial_hiding")
+    if not isinstance(raw_exclusions, list) or not all(
+        isinstance(item, str) and item for item in raw_exclusions
+    ):
+        raise ExportError("public skill export exclude needs a string list")
+    if not isinstance(raw_partial, list) or not all(
+        isinstance(item, str) and item for item in raw_partial
+    ):
+        raise ExportError("public skill export partial_hiding needs a string list")
+    for pattern in raw_exclusions:
         candidate = Path(pattern)
         if pattern.startswith("!") or candidate.is_absolute() or ".." in candidate.parts:
             raise ExportError(f"public skill export exclusion is unsafe: {pattern!r}")
-    return tuple(raw)
+    partial_hiding: list[Path] = []
+    exclusions = tuple(raw_exclusions)
+    for raw in raw_partial:
+        candidate = Path(raw)
+        if (
+            candidate.is_absolute()
+            or ".." in candidate.parts
+            or candidate.parts[:1] != ("skills",)
+            or len(candidate.parts) < 2
+            or any(character in raw for character in "*?[")
+        ):
+            raise ExportError(f"public skill export partial hiding path is unsafe: {raw!r}")
+        source = AGENTS_ROOT / "edit" / candidate
+        if not source.is_dir() or source.is_symlink():
+            raise ExportError(f"public skill export partial hiding folder is missing: {raw!r}")
+        conflicting_exclusion = matches_exclusion(candidate, exclusions) or matches_exclusion(
+            candidate / "SKILL.md", exclusions
+        )
+        if conflicting_exclusion:
+            raise ExportError(
+                f"public skill export path cannot be excluded and partially hidden: {raw!r}"
+            )
+        marker = AGENTS_ROOT / "edit" / redacted_path(candidate)
+        if marker.exists() or marker.is_symlink():
+            raise ExportError(f"public skill export redacted folder collides with source: {marker}")
+        partial_hiding.append(candidate)
+    for index, left in enumerate(partial_hiding):
+        for right in partial_hiding[index + 1 :]:
+            if left in right.parents or right in left.parents:
+                raise ExportError(
+                    f"public skill export partial hiding paths overlap: {left} and {right}"
+                )
+    return PrivacyRules(exclusions, tuple(partial_hiding))
 
 
 def copy_tree(
@@ -122,6 +180,8 @@ def copy_tree(
     edit_prefix: Path | None = None,
     exclusions: tuple[str, ...] = (),
     exclusion_log: list[dict[str, str]] | None = None,
+    partial_hiding: tuple[Path, ...] = (),
+    partial_log: list[dict[str, str]] | None = None,
 ) -> None:
     if not source.is_dir() or source.is_symlink():
         raise ExportError(f"public source tree is missing or is a symlink: {source}")
@@ -132,6 +192,21 @@ def copy_tree(
         if any(part in FORBIDDEN_PARTS for part in relative.parts) or path.suffix in FORBIDDEN_SUFFIXES:
             continue
         edit_relative = edit_prefix / relative if edit_prefix is not None else None
+        partial_rule = (
+            matching_partial_hiding(edit_relative, partial_hiding)
+            if edit_relative is not None
+            else None
+        )
+        if partial_rule:
+            if partial_log is not None and path.is_file():
+                partial_log.append(
+                    {
+                        "path": edit_relative.as_posix(),
+                        "rule": partial_rule.as_posix(),
+                        "redacted_path": redacted_path(partial_rule).as_posix(),
+                    }
+                )
+            continue
         rule = matches_exclusion(edit_relative, exclusions) if edit_relative is not None else None
         if rule:
             if exclusion_log is not None and path.is_file():
@@ -144,14 +219,39 @@ def copy_tree(
             copy_file(path, destination)
 
 
+def materialize_partial_hiding(stage: Path, roots: tuple[Path, ...]) -> list[dict[str, str]]:
+    result: list[dict[str, str]] = []
+    for root in roots:
+        marker = redacted_path(root)
+        target = stage / "edit" / marker
+        target.mkdir(parents=True, exist_ok=True)
+        (target / ".gitkeep").write_bytes(b"")
+        result.append({"path": root.as_posix(), "redacted_path": marker.as_posix()})
+    return result
+
+
 def prune_excluded_tree(
     target: Path,
     edit_prefix: Path,
     exclusions: tuple[str, ...],
     exclusion_log: list[dict[str, str]],
+    partial_hiding: tuple[Path, ...] = (),
+    partial_log: list[dict[str, str]] | None = None,
 ) -> None:
     for path in sorted(target.rglob("*"), reverse=True):
         relative = edit_prefix / path.relative_to(target)
+        partial_rule = matching_partial_hiding(relative, partial_hiding)
+        if partial_rule and path.is_file():
+            if partial_log is not None:
+                partial_log.append(
+                    {
+                        "path": relative.as_posix(),
+                        "rule": partial_rule.as_posix(),
+                        "redacted_path": redacted_path(partial_rule).as_posix(),
+                    }
+                )
+            path.unlink()
+            continue
         rule = matches_exclusion(relative, exclusions)
         if rule and path.is_file():
             exclusion_log.append({"path": relative.as_posix(), "rule": rule})
@@ -295,10 +395,11 @@ def validate_retained_skill_exclusions(
         relative = Path(item["path"])
         if relative.parts[:1] != ("skills",) or len(relative.parts) < 4:
             continue
-        skill_root = stage / "edit" / Path(*relative.parts[:3])
-        if not (skill_root / "SKILL.md").is_file():
+        removed = stage / "edit" / relative
+        skill_root = _owning_skill(removed, stage)
+        if skill_root is None:
             continue
-        omitted = Path(*relative.parts[3:])
+        omitted = removed.relative_to(skill_root)
         aliases = {omitted.as_posix()}
         if omitted.suffix == ".md":
             aliases.add(omitted.with_suffix("").as_posix())
@@ -386,6 +487,8 @@ def discover_skills(
     manifest: dict[str, Any],
     exclusions: tuple[str, ...],
     exclusion_log: list[dict[str, str]],
+    partial_hiding: tuple[Path, ...],
+    partial_log: list[dict[str, str]],
 ) -> list[dict[str, Any]]:
     inventory: list[dict[str, Any]] = []
     names: dict[str, Path] = {}
@@ -394,7 +497,7 @@ def discover_skills(
         child for child in sorted(skills_root.iterdir())
         if child.is_dir()
         and not child.is_symlink()
-        and child.name.startswith("_")
+        and child.name in {"areas", "collections"}
     ]
     for root in roots:
         if not root.is_dir():
@@ -407,14 +510,32 @@ def discover_skills(
             if rule:
                 exclusion_log.append({"path": edit_relative.as_posix(), "rule": rule})
                 continue
-            if skill_file.is_symlink() or any(path.is_symlink() for path in skill_dir.rglob("*")):
-                raise ExportError(f"active skill contains a symlink: {skill_dir}")
             name = frontmatter_name(skill_file)
             if not name or not SKILL_NAME_RE.fullmatch(name) or skill_dir.name != name:
                 raise ExportError(f"invalid skill name or directory: {skill_dir} ({name!r})")
             if name in names and relative.parts[0] != "github":
                 raise ExportError(f"duplicate active skill name {name}: {names[name]} and {skill_dir}")
             names[name] = skill_dir
+            partial_rule = matching_partial_hiding(edit_relative, partial_hiding)
+            if partial_rule:
+                inventory.append(
+                    {
+                        "name": name,
+                        "source": f"edit/skills/{relative.as_posix()}",
+                        "status": "partially-hidden",
+                        "reason": "partial hiding",
+                    }
+                )
+                partial_log.append(
+                    {
+                        "path": edit_relative.as_posix(),
+                        "rule": partial_rule.as_posix(),
+                        "redacted_path": redacted_path(partial_rule).as_posix(),
+                    }
+                )
+                continue
+            if skill_file.is_symlink() or any(path.is_symlink() for path in skill_dir.rglob("*")):
+                raise ExportError(f"active skill contains a symlink: {skill_dir}")
             include, reason, source_repo, license_id = skill_decision(skill_dir, manifest)
             item = {
                 "name": name,
@@ -435,6 +556,8 @@ def discover_skills(
                     edit_prefix=edit_relative,
                     exclusions=exclusions,
                     exclusion_log=exclusion_log,
+                    partial_hiding=partial_hiding,
+                    partial_log=partial_log,
                 )
                 strip_install_metadata(target / "SKILL.md")
 
@@ -463,6 +586,24 @@ def discover_skills(
                 f"duplicate active skill name {skill.name}: {names[skill.name]} and {skill.canonical_path}"
             )
         names[skill.name] = skill.canonical_path
+        partial_rule = matching_partial_hiding(edit_relative, partial_hiding)
+        if partial_rule:
+            inventory.append(
+                {
+                    "name": skill.name,
+                    "source": f"edit/skills/{relative.as_posix()}",
+                    "status": "partially-hidden",
+                    "reason": "partial hiding",
+                }
+            )
+            partial_log.append(
+                {
+                    "path": edit_relative.as_posix(),
+                    "rule": partial_rule.as_posix(),
+                    "redacted_path": redacted_path(partial_rule).as_posix(),
+                }
+            )
+            continue
         include, reason, source_repo, license_id = skill_decision(skill.canonical_path, manifest)
         item = {
             "name": skill.name,
@@ -489,7 +630,14 @@ def discover_skills(
                     or ICLOUD_DUPLICATE_RE.fullmatch(name)
                 },
             )
-            prune_excluded_tree(target, edit_relative, exclusions, exclusion_log)
+            prune_excluded_tree(
+                target,
+                edit_relative,
+                exclusions,
+                exclusion_log,
+                partial_hiding,
+                partial_log,
+            )
             metadata = target / "agents/openai.yaml"
             metadata.parent.mkdir(parents=True, exist_ok=True)
             metadata.write_text(
@@ -504,6 +652,7 @@ def inventory_payload(inventory: list[dict[str, Any]]) -> dict[str, Any]:
         "schema_version": 1,
         "included": sum(item["status"] == "included" for item in inventory),
         "excluded": sum(item["status"] == "excluded" for item in inventory),
+        "partially_hidden": sum(item["status"] == "partially-hidden" for item in inventory),
         "omitted_collections": {
             "catalog": "generated symlink-only view",
             "dormant": "intentionally inactive skill sources",
@@ -563,9 +712,18 @@ def write_notices(stage: Path, inventory: list[dict[str, Any]], manifest: dict[s
 def materialize(
     stage: Path,
     manifest: dict[str, Any],
-) -> tuple[list[str], list[dict[str, Any]], list[dict[str, str]]]:
-    exclusions = read_exclusions()
+    *,
+    privacy_path: Path | None = None,
+) -> tuple[
+    list[str],
+    list[dict[str, Any]],
+    list[dict[str, str]],
+    list[dict[str, str]],
+]:
+    privacy = read_privacy_rules(privacy_path)
+    exclusions = privacy.exclusions
     exclusion_log: list[dict[str, str]] = []
+    partial_log: list[dict[str, str]] = []
     for raw in manifest.get("trees", []):
         target_relative = safe_relative(raw.get("target"), "tree target")
         edit_prefix = Path(*target_relative.parts[1:]) if target_relative.parts[:1] == ("edit",) else None
@@ -575,10 +733,26 @@ def materialize(
             edit_prefix=edit_prefix,
             exclusions=exclusions,
             exclusion_log=exclusion_log,
+            partial_hiding=privacy.partial_hiding,
+            partial_log=partial_log,
         )
     for raw in manifest.get("files", []):
         target_relative = safe_relative(raw.get("target"), "file target")
         edit_relative = Path(*target_relative.parts[1:]) if target_relative.parts[:1] == ("edit",) else None
+        partial_rule = (
+            matching_partial_hiding(edit_relative, privacy.partial_hiding)
+            if edit_relative is not None
+            else None
+        )
+        if partial_rule:
+            partial_log.append(
+                {
+                    "path": edit_relative.as_posix(),
+                    "rule": partial_rule.as_posix(),
+                    "redacted_path": redacted_path(partial_rule).as_posix(),
+                }
+            )
+            continue
         rule = matches_exclusion(edit_relative, exclusions) if edit_relative is not None else None
         if rule:
             exclusion_log.append({"path": edit_relative.as_posix(), "rule": rule})
@@ -588,8 +762,21 @@ def materialize(
             stage / target_relative,
         )
     copy_file(stage / "AGENTS.md", stage / "CLAUDE.md")
-    inventory = discover_skills(stage, manifest, exclusions, exclusion_log)
-    validate_retained_skill_exclusions(stage, exclusion_log)
+    inventory = discover_skills(
+        stage,
+        manifest,
+        exclusions,
+        exclusion_log,
+        privacy.partial_hiding,
+        partial_log,
+    )
+    metadata_path = stage / skill_catalog.METADATA_RELATIVE
+    metadata_relative = Path("settings/skills/skill-metadata.json")
+    if (not matches_exclusion(metadata_relative, exclusions)
+            and not matching_partial_hiding(metadata_relative, privacy.partial_hiding)):
+        skill_catalog.atomic_json(metadata_path, skill_catalog.exported_metadata(AGENTS_ROOT, inventory))
+    partial_hiding = materialize_partial_hiding(stage, privacy.partial_hiding)
+    validate_retained_skill_exclusions(stage, [*exclusion_log, *partial_log])
     validate_exported_templates(stage)
     rewrite_public_markdown_links(stage)
     validate_no_public_wikilinks(stage)
@@ -605,7 +792,7 @@ def materialize(
         {"path": path, "rule": rule}
         for path, rule in sorted({(item["path"], item["rule"]) for item in exclusion_log})
     ]
-    return [*owned, MANIFEST_NAME], inventory, unique_exclusions
+    return [*owned, MANIFEST_NAME], inventory, unique_exclusions, partial_hiding
 
 
 def scan(stage: Path) -> None:
@@ -642,6 +829,7 @@ def prevent_silent_skill_removal(
     stage: Path,
     manifest: dict[str, Any],
     exclusions: list[dict[str, str]],
+    partially_hidden_names: set[str] | None = None,
 ) -> None:
     if not destination.is_dir():
         return
@@ -671,7 +859,14 @@ def prevent_silent_skill_removal(
         for part in [Path(item["path"]).name]
         if SKILL_NAME_RE.fullmatch(part)
     }
-    silent = sorted(previous_names - next_names - renamed - removed - excluded_names)
+    silent = sorted(
+        previous_names
+        - next_names
+        - renamed
+        - removed
+        - excluded_names
+        - (partially_hidden_names or set())
+    )
     if silent:
         raise ExportError("previously public skills disappeared from the export: " + ", ".join(silent))
 
@@ -752,7 +947,35 @@ def annotate_excluded_removals(
             change["exclusion_rule"] = rule
 
 
-def export(destination: Path, *, apply: bool, manifest_path: Path | None = None) -> dict[str, Any]:
+def annotate_partial_hiding_removals(
+    changes: list[dict[str, str]],
+    partial_hiding: list[dict[str, str]],
+) -> None:
+    roots = [(Path(item["path"]), item["path"]) for item in partial_hiding]
+    for change in changes:
+        public_path = Path(change["path"])
+        if change["status"] != "removed" or public_path.parts[:1] != ("edit",):
+            continue
+        editable_path = Path(*public_path.parts[1:])
+        rule = next(
+            (
+                rendered
+                for candidate, rendered in roots
+                if editable_path == candidate or candidate in editable_path.parents
+            ),
+            None,
+        )
+        if rule:
+            change["partial_hiding_rule"] = rule
+
+
+def export(
+    destination: Path,
+    *,
+    apply: bool,
+    manifest_path: Path | None = None,
+    privacy_path: Path | None = None,
+) -> dict[str, Any]:
     destination = destination.expanduser().resolve()
     source = AGENTS_ROOT.resolve()
     if destination == source or source in destination.parents or destination in source.parents:
@@ -760,11 +983,26 @@ def export(destination: Path, *, apply: bool, manifest_path: Path | None = None)
     manifest = read_manifest(manifest_path)
     with tempfile.TemporaryDirectory(prefix="ctx9-agent-export-") as temporary:
         stage = Path(temporary)
-        owned, inventory, exclusions = materialize(stage, manifest)
+        owned, inventory, exclusions, partial_hiding = materialize(
+            stage,
+            manifest,
+            privacy_path=privacy_path,
+        )
         scan(stage)
-        prevent_silent_skill_removal(destination, stage, manifest, exclusions)
+        prevent_silent_skill_removal(
+            destination,
+            stage,
+            manifest,
+            exclusions,
+            {
+                str(item["name"])
+                for item in inventory
+                if item["status"] == "partially-hidden"
+            },
+        )
         changes = export_changes(destination, stage)
         annotate_excluded_removals(changes, exclusions)
+        annotate_partial_hiding_removals(changes, partial_hiding)
         if apply:
             destination.mkdir(parents=True, exist_ok=True)
             replace_owned(destination, stage)
@@ -779,9 +1017,11 @@ def export(destination: Path, *, apply: bool, manifest_path: Path | None = None)
         "files": len(owned),
         "included_skills": counts["included"],
         "excluded_skills": counts["excluded"],
+        "partially_hidden_skills": counts["partially_hidden"],
         "skill_inventory": inventory,
         "changes": changes,
         "exclusions": exclusions,
+        "partial_hiding": partial_hiding,
     }
 
 

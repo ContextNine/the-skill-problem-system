@@ -14,8 +14,10 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from package_layout import ConfigurationError, expand_registered_path, validate_machines, validate_workspaces
-from package_installer import InstallError, install, is_private_source, uninstall, verify
+from package_installer import InstallError, install, is_private_source, stage_public_skills, uninstall, verify
 from fleet_templates import FleetTemplateError, render_file, render_markdown_tree
+from sync_agents import AgentsSyncError, snapshot_skill_source
+from sync_skills import Skill
 
 
 class PackageConfigurationTests(unittest.TestCase):
@@ -167,6 +169,69 @@ class PackageConfigurationTests(unittest.TestCase):
 
 
 class FleetTemplateTests(unittest.TestCase):
+    def test_projection_matches_sync_and_public_install_without_changing_source(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "package"
+            skill = source / "edit/skills/areas/documents/example-skill"
+            skill.mkdir(parents=True)
+            authored = (
+                "---\nname: example-skill\ndescription: Example.\n---\n# Example\n"
+                "{% if fleet.skill.config %}{{ fleet.skill.config.calendar_id }}"
+                "{% else %}Setup required{% endif %}\n"
+            )
+            (skill / "SKILL.md").write_text(authored, encoding="utf-8")
+            other = skill.with_name("other-skill")
+            other.mkdir()
+            (other / "SKILL.md").write_text(authored.replace("example-skill", "other-skill"), encoding="utf-8")
+            config = root / "settings"
+            projection = config / "skills/config/example-skill/private/projection.json"
+            projection.parent.mkdir(parents=True)
+            context = {"fleet": {"machine": {"template_variants": []}}}
+            record = Skill("example-skill", skill, "vault", "manual", skill)
+            for index, value in enumerate(("calendar-one", "calendar-two {{ fleet.machine.id }}")):
+                projection.write_text(json.dumps({"schema_version": 1, "values": {"calendar_id": value}}), encoding="utf-8")
+                rendered = snapshot_skill_source(record, skill, root / f"sync-{index}",
+                                                 template_values=context, config_root=config)
+                stage = root / f"install-{index}"
+                stage_public_skills(source, stage, template_values=context, config_root=config)
+                self.assertEqual((rendered / "SKILL.md").read_text(),
+                                 (stage / "skills/example-skill/SKILL.md").read_text())
+                self.assertIn(value, (rendered / "SKILL.md").read_text())
+                self.assertIn("Setup required", (stage / "skills/other-skill/SKILL.md").read_text())
+            self.assertEqual((skill / "SKILL.md").read_text(), authored)
+            self.assertNotIn("skill", context["fleet"])
+            stage_public_skills(source, root / "unconfigured", template_values=context)
+            self.assertIn("Setup required", (root / "unconfigured/skills/example-skill/SKILL.md").read_text())
+
+    def test_projection_failures_stop_sync_and_install(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            skill = root / "package/edit/skills/areas/integrations/example-skill"
+            skill.mkdir(parents=True)
+            (skill / "SKILL.md").write_text(
+                "---\nname: example-skill\ndescription: Example.\n---\n# Example\n"
+                "{{ fleet.skill.config.calendar_id }}\n", encoding="utf-8")
+            config = root / "settings"
+            projection = config / "skills/config/example-skill/private/projection.json"
+            projection.parent.mkdir(parents=True)
+            context = {"fleet": {"machine": {"template_variants": []}}}
+            record = Skill("example-skill", skill, "vault", "manual", skill)
+            for index, content in enumerate(("{", '{"schema_version": 2, "values": {}}',
+                                             '{"schema_version": 1, "values": {}}')):
+                projection.write_text(content, encoding="utf-8")
+                with self.subTest(content=content):
+                    with self.assertRaises(AgentsSyncError):
+                        snapshot_skill_source(record, skill, root / f"sync-{index}",
+                                              template_values=context, config_root=config)
+                    with self.assertRaises(InstallError):
+                        stage_public_skills(root / "package", root / f"install-{index}",
+                                            template_values=context, config_root=config)
+            projection.unlink()
+            projection.symlink_to(root / "not-a-config-file")
+            with self.assertRaisesRegex(AgentsSyncError, "symlinks"):
+                snapshot_skill_source(record, skill, root / "symlink", template_values=context, config_root=config)
+
     def test_skill_and_supporting_files_render_deterministically_and_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             bundle = Path(temporary)
@@ -276,12 +341,21 @@ class StandaloneInstallTests(unittest.TestCase):
                 home,
                 apply=True,
                 global_instructions=True,
-                claude_alias=False,
+                claude_alias=True,
                 discovery_aliases=False,
             )
             self.assertTrue(target.is_symlink())
             instructions = (home / ".agents/instructions/AGENTS.md").read_text(encoding="utf-8")
             self.assertNotIn("fleet.managed", instructions)
+            claude = home / ".claude/CLAUDE.md"
+            self.assertEqual(claude.resolve(), (home / ".agents/instructions/CLAUDE.md").resolve())
+            self.assertTrue(verify(home)["ok"])
+            second = install(
+                package, home, apply=True, global_instructions=True,
+                claude_alias=True, discovery_aliases=False,
+            )
+            instruction_actions = [action for action in second["actions"] if action["path"].endswith(("AGENTS.md", "CLAUDE.md"))]
+            self.assertTrue(all(action["status"] == "match" for action in instruction_actions))
 
     def test_existing_fleet_worker_keeps_the_primary_owned_registry(self) -> None:
         package = Path(__file__).resolve().parents[2]

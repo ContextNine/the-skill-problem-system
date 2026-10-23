@@ -14,7 +14,9 @@ Connected machines:
 For GUI inspection from {{ fleet.primary.display_name }}, return the Screen Sharing link [{{ fleet.machine.vnc.url }}]({{ fleet.machine.vnc.url }}).
 {% endif %}
 {% if fleet.machine.vnc.kind == "ssh-novnc" %}
-For GUI inspection, ensure {{ fleet.primary.display_name }} has established and confirmed the SSH noVNC tunnel with `vault machine vnc {{ fleet.machine.id }}`, then return its actual clickable loopback URL.
+Use noVNC only for unauthenticated GUI inspection.
+
+For GUI inspection, ensure {{ fleet.primary.display_name }} has established and confirmed the SSH noVNC tunnel with `fleet machine vnc {{ fleet.machine.id }}`, then return its actual clickable loopback URL.
 {% if fleet.runtime.novnc_url %}
 The last recorded tunnel URL is [{{ fleet.runtime.novnc_url }}]({{ fleet.runtime.novnc_url }}); confirm it before use.
 {% else %}

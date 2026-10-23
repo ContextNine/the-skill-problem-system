@@ -1,0 +1,6 @@
+interface:
+  display_name: "2. Blog: Research and brief"
+  short_description: "Verify blog evidence and prepare a useful writing brief."
+  default_prompt: "Use $blog-i-02-research-and-brief to research this blog topic and prepare a source-backed brief."
+policy:
+  allow_implicit_invocation: true

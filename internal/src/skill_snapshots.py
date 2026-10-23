@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import base64
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import hashlib
 import io
 import json
@@ -20,8 +20,10 @@ from typing import Any
 
 
 SCHEMA_VERSION = 2
+CATALOG_SCHEMA_VERSION = 2
 STATE_RELATIVE = Path(".agents/.vault-agent-skill-snapshot.json")
 SKILLS_RELATIVE = Path(".agents/skills")
+CATALOG_RELATIVE = Path(".agents/state/skill-catalog.json")
 SKILL_NAME = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 IGNORED_NAMES = {".DS_Store", "__pycache__", ".ctx9-skill-materialization.json"}
 MAX_FILES = 100_000
@@ -40,6 +42,7 @@ class SnapshotBundle:
     logical_bytes: int
     links: dict[str, str]
     overlays: dict[str, dict[str, object]]
+    catalog: dict[str, dict[str, object]] = field(default_factory=dict)
 
 
 def lexists(path: Path) -> bool:
@@ -117,6 +120,7 @@ def build_bundle(
     *,
     links: dict[str, str] | None = None,
     overlays: dict[str, dict[str, object]] | None = None,
+    catalog: dict[str, dict[str, object]] | None = None,
 ) -> SnapshotBundle:
     sources = validate_sources(sources)
     links = dict(sorted((links or {}).items()))
@@ -148,7 +152,64 @@ def build_bundle(
                         archive.addfile(info, handle)
                 else:
                     archive.addfile(info)
-    return SnapshotBundle(manifest, buffer.getvalue(), file_count, logical_bytes, links, overlays)
+    rows = validate_catalog(catalog or {})
+    if set(rows) - names:
+        raise SnapshotError("catalog contains skills outside the distribution")
+    return SnapshotBundle(manifest, buffer.getvalue(), file_count, logical_bytes, links, overlays, rows)
+
+
+def validate_catalog(value: object) -> dict[str, dict[str, object]]:
+    if not isinstance(value, dict):
+        raise SnapshotError("skill catalog must be an object")
+    for name, row in value.items():
+        if (not isinstance(name, str) or not SKILL_NAME.fullmatch(name)
+                or not isinstance(row, dict)
+                or set(row) != {"name", "area", "collection", "rating", "source", "mode"}
+                or row["name"] != name
+                or (row["area"] is None) == (row["collection"] is None)
+                or any(value is not None and (not isinstance(value, str) or
+                       not re.fullmatch(r"[a-z0-9]+(?:[-_][a-z0-9]+)*", value))
+                       for value in (row["area"], row["collection"]))
+                or row["source"] not in ("vault", "gh", "repo")
+                or row["mode"] not in ("auto", "manual")
+                or (row["rating"] is not None and
+                    (type(row["rating"]) is not int or not 0 <= row["rating"] <= 5))):
+            raise SnapshotError(f"invalid skill catalog row: {name}")
+    return value
+
+
+def load_catalog(home: Path) -> dict[str, dict[str, object]]:
+    path = home / CATALOG_RELATIVE
+    if not path.exists():
+        return {}
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if (not isinstance(value, dict) or set(value) != {"schema_version", "skills"}
+            or type(value["schema_version"]) is not int or value["schema_version"] != CATALOG_SCHEMA_VERSION):
+        raise SnapshotError(f"invalid installed skill catalog: {path}")
+    return validate_catalog(value.get("skills"))
+
+
+def installed_catalog(home: Path, incoming: dict, desired: dict, deferred: dict) -> dict:
+    previous = load_catalog(home)
+    managed = load_state(home)["skills"]
+    return {
+        **{name: row for name, row in incoming.items() if name in desired and name not in deferred},
+        **{name: previous[name] for name in deferred if name in managed and name in previous},
+    }
+
+
+def write_catalog(home: Path, rows: dict) -> None:
+    path = home / CATALOG_RELATIVE
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary = tempfile.mkstemp(prefix=".skill-catalog-", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            json.dump({"schema_version": CATALOG_SCHEMA_VERSION, "skills": rows}, handle, indent=2, sort_keys=True)
+            handle.write("\n")
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
 
 
 def validate_declared_source(name: str, value: object) -> str:
@@ -255,6 +316,16 @@ def policy_text(path: Path, allowed: bool) -> str:
     return text + suffix + f"policy:\n  allow_implicit_invocation: {value}\n"
 
 
+def deferred_repo_skills(home: Path, desired: dict[str, dict[str, object]]) -> dict[str, str]:
+    """A target checkout may lag behind the primary without blocking other skills."""
+    return {
+        name: str(config["source"])
+        for name, config in desired.items()
+        if config["kind"] in {"link", "overlay"}
+        and not (resolved_declared_source(home, str(config["source"])) / "SKILL.md").is_file()
+    }
+
+
 def inspect_snapshot(
     home: Path,
     manifest: dict[str, str],
@@ -262,11 +333,13 @@ def inspect_snapshot(
     links: dict[str, str],
     overlays: dict[str, dict[str, object]],
     legacy_catalog: Path | None,
+    catalog: dict[str, dict[str, object]] | None = None,
 ) -> dict[str, object]:
     state = load_state(home)
     prior = {str(name): value for name, value in state["skills"].items()}
     managed = set(prior)
     desired = desired_state(manifest, links, overlays)
+    deferred = deferred_repo_skills(home, desired)
     canonical_root = home / SKILLS_RELATIVE
     changes: list[dict[str, str]] = []
     collisions: list[str] = []
@@ -277,6 +350,8 @@ def inspect_snapshot(
             collisions.append(str(canonical_root))
 
     for name, config in sorted(desired.items()):
+        if name in deferred:
+            continue
         target = canonical_root / name
         if not lexists(target):
             changes.append({"status": "missing", "path": str(target), "detail": f"skill {config['kind']} would be installed"})
@@ -296,8 +371,6 @@ def inspect_snapshot(
                 continue
         elif kind == "link":
             source = resolved_declared_source(home, str(config["source"]))
-            if not (source / "SKILL.md").is_file():
-                raise SnapshotError(f"linked repository skill is unavailable: {config['source']}")
             if target.is_symlink() and resolved_link(target) == source.resolve(strict=False):
                 if prior.get(name) != config:
                     changes.append({"status": "adopt", "path": str(target), "detail": "matching repository link would be recorded as managed"})
@@ -307,8 +380,6 @@ def inspect_snapshot(
                 continue
         elif kind == "overlay":
             source = resolved_declared_source(home, str(config["source"]))
-            if not (source / "SKILL.md").is_file():
-                raise SnapshotError(f"overlaid repository skill is unavailable: {config['source']}")
             marker = target / ".ctx9-skill-materialization.json"
             expected = overlay_marker(str(config["source"]), bool(config["allowed"]))
             if target.is_dir() and not target.is_symlink() and marker.is_file() and marker.read_text(encoding="utf-8") == expected:
@@ -344,7 +415,7 @@ def inspect_snapshot(
             existing = {entry.name: entry for entry in directory.iterdir()} if directory.is_dir() else {}
             if not directory.exists():
                 changes.append({"status": "missing", "path": str(directory), "detail": "discovery directory would be created"})
-        for name in sorted(desired):
+        for name in sorted(set(desired) - set(deferred)):
             path = directory / name
             canonical = canonical_root / name
             entry = existing.get(name)
@@ -367,11 +438,17 @@ def inspect_snapshot(
 
     if collisions:
         raise SnapshotError("unmanaged skill collisions block sync: " + ", ".join(sorted(set(collisions))))
+    if catalog is not None:
+        expected = installed_catalog(home, catalog, desired, deferred)
+        if load_catalog(home) != expected:
+            changes.append({"status": "different", "path": str(home / CATALOG_RELATIVE),
+                            "detail": "installed skill ratings and categories would be updated"})
     return {
         "ok": True,
         "ready": not changes,
         "changes": changes,
-        "skill_count": len(desired),
+        "skill_count": len(desired) - len(deferred),
+        "deferred": deferred,
     }
 
 
@@ -497,22 +574,23 @@ def install_alias(path: Path, canonical: Path) -> None:
     os.replace(temporary, path)
 
 
-def install_repo_link(target: Path, source: Path) -> None:
+def install_repo_link(target: Path, source: Path) -> bool:
     if not (source / "SKILL.md").is_file():
-        raise SnapshotError(f"linked repository skill is unavailable: {source}")
+        return False
     if target.is_symlink() and resolved_link(target) == source.resolve(strict=False):
-        return
+        return True
     remove_path(target)
     target.parent.mkdir(parents=True, exist_ok=True)
     temporary = target.parent / f".{target.name}.sync-link-{os.getpid()}"
     remove_path(temporary)
     temporary.symlink_to(desired_alias(temporary, source), target_is_directory=True)
     os.replace(temporary, target)
+    return True
 
 
-def install_repo_overlay(target: Path, source: Path, declared: str, allowed: bool, suffix: str) -> None:
+def install_repo_overlay(target: Path, source: Path, declared: str, allowed: bool, suffix: str) -> bool:
     if not (source / "SKILL.md").is_file():
-        raise SnapshotError(f"overlaid repository skill is unavailable: {source}")
+        return False
     staging = Path(tempfile.mkdtemp(prefix=f".{target.name}.overlay-", dir=target.parent))
     incoming = staging / "skill"
     incoming.mkdir()
@@ -544,6 +622,7 @@ def install_repo_overlay(target: Path, source: Path, declared: str, allowed: boo
         replace_directory(target, incoming, suffix)
     finally:
         remove_path(staging)
+    return True
 
 
 def apply_snapshot(
@@ -555,13 +634,15 @@ def apply_snapshot(
     overlays: dict[str, dict[str, object]],
     legacy_catalog: Path | None,
     suffix: str,
+    catalog: dict[str, dict[str, object]] | None = None,
 ) -> dict[str, object]:
     preview = inspect_snapshot(
-        home, manifest, links=links, overlays=overlays, legacy_catalog=legacy_catalog
+        home, manifest, links=links, overlays=overlays, legacy_catalog=legacy_catalog, catalog=catalog
     )
     state = load_state(home)
     managed = {str(name) for name in state["skills"]}
     desired = desired_state(manifest, links, overlays)
+    deferred = deferred_repo_skills(home, desired)
     canonical_root = home / SKILLS_RELATIVE
     if canonical_root.is_symlink():
         canonical_root.unlink()
@@ -577,16 +658,22 @@ def apply_snapshot(
                 continue
             replace_directory(target, extracted / name, suffix)
         for name, declared in sorted(links.items()):
-            install_repo_link(canonical_root / name, resolved_declared_source(home, declared))
+            if name in deferred:
+                continue
+            if not install_repo_link(canonical_root / name, resolved_declared_source(home, declared)):
+                deferred[name] = declared
         for name, config in sorted(overlays.items()):
+            if name in deferred:
+                continue
             declared = str(config["source"])
-            install_repo_overlay(
+            if not install_repo_overlay(
                 canonical_root / name,
                 resolved_declared_source(home, declared),
                 declared,
                 bool(config["allowed"]),
                 suffix,
-            )
+            ):
+                deferred[name] = declared
         for name in sorted(managed - set(desired)):
             remove_path(canonical_root / name)
 
@@ -594,7 +681,7 @@ def apply_snapshot(
             if directory.is_symlink():
                 directory.unlink()
             ensure_directory(directory)
-            for name in sorted(desired):
+            for name in sorted(set(desired) - set(deferred)):
                 install_alias(directory / name, canonical_root / name)
             for name in sorted(managed - set(desired)):
                 remove_path(directory / name)
@@ -602,7 +689,12 @@ def apply_snapshot(
         legacy_codex = home / ".codex/skills"
         if legacy_catalog and legacy_codex.is_symlink() and resolved_link(legacy_codex) == legacy_catalog.resolve(strict=False):
             legacy_codex.unlink()
-        write_state(home, desired)
+        # Deferred entries retain prior ownership; never record a skipped install as applied.
+        installed = {name: config for name, config in desired.items() if name not in deferred}
+        installed.update({name: state["skills"][name] for name in deferred if name in managed})
+        rows = installed_catalog(home, catalog or {}, desired, deferred)
+        write_state(home, installed)
+        write_catalog(home, rows)
     finally:
         shutil.rmtree(staging, ignore_errors=True)
     return {
@@ -610,7 +702,8 @@ def apply_snapshot(
         "ready": True,
         "applied": True,
         "changes": preview["changes"],
-        "skill_count": len(desired),
+        "skill_count": len(desired) - len(deferred),
+        "deferred": deferred,
     }
 
 
@@ -637,11 +730,14 @@ def reconcile_payload(payload: dict[str, object]) -> dict[str, object]:
             "allowed": config["allowed"],
         }
     desired_state(manifest, links, overlays)
+    catalog = validate_catalog(payload.get("catalog", {}))
+    if set(catalog) - set(desired_state(manifest, links, overlays)):
+        raise SnapshotError("catalog contains skills outside the distribution")
     legacy_raw = payload.get("legacy_catalog")
     legacy_catalog = Path(str(legacy_raw)).expanduser().resolve() if legacy_raw else None
     apply = bool(payload.get("apply"))
     preview = inspect_snapshot(
-        home, manifest, links=links, overlays=overlays, legacy_catalog=legacy_catalog
+        home, manifest, links=links, overlays=overlays, legacy_catalog=legacy_catalog, catalog=catalog
     )
     if apply:
         archive = payload.get("archive")
@@ -655,6 +751,7 @@ def reconcile_payload(payload: dict[str, object]) -> dict[str, object]:
             overlays=overlays,
             legacy_catalog=legacy_catalog,
             suffix=str(payload.get("backup_suffix") or "unknown"),
+            catalog=catalog,
         )
     return {**preview, "applied": False, "mode": "verify" if payload.get("verify") else "preview"}
 
@@ -673,6 +770,7 @@ def payload_for(
         "manifest": bundle.manifest,
         "links": bundle.links,
         "overlays": bundle.overlays,
+        "catalog": bundle.catalog,
         "archive": base64.b64encode(bundle.archive).decode() if apply else None,
         "apply": apply,
         "verify": verify,
@@ -697,6 +795,7 @@ def reconcile_local(
         links=bundle.links,
         overlays=bundle.overlays,
         legacy_catalog=legacy_catalog,
+        catalog=bundle.catalog,
     )
     if apply:
         return apply_snapshot(
@@ -707,6 +806,7 @@ def reconcile_local(
             overlays=bundle.overlays,
             legacy_catalog=legacy_catalog,
             suffix=backup_suffix,
+            catalog=bundle.catalog,
         )
     return {**preview, "applied": False, "mode": "verify" if verify else "preview"}
 

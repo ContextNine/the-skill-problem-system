@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path, PurePosixPath
 from typing import Any, Mapping
@@ -18,6 +19,29 @@ EQUALITY = re.compile(r'''(fleet\.[a-zA-Z_0-9.]+)\s*==\s*["']([^"']+)["']''')
 
 class FleetTemplateError(ValueError):
     pass
+
+
+def skill_template_values(context: Mapping[str, Any], name: str,
+                          config_root: Path | None = None) -> dict[str, Any]:
+    """Scope explicitly approved, non-secret projection values to one skill."""
+    if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", name):
+        raise FleetTemplateError(f"invalid skill name for projection: {name!r}")
+    values: dict[str, Any] = {}
+    if config_root is not None:
+        source = config_root / "skills/config" / name / "private/projection.json"
+        if any(path.is_symlink() for path in (source, *source.parents)
+               if path != config_root and config_root in path.parents):
+            raise FleetTemplateError(f"skill projection cannot use symlinks: {source}")
+        if source.exists():
+            try:
+                document = json.loads(source.read_text(encoding="utf-8"))
+            except (OSError, ValueError) as exc:
+                raise FleetTemplateError(f"invalid skill projection JSON: {source}") from exc
+            if (not isinstance(document, dict) or document.get("schema_version") != 1
+                    or not isinstance(document.get("values"), dict)):
+                raise FleetTemplateError(f"skill projection needs schema_version 1 and a values object: {source}")
+            values = document["values"]
+    return {**context, "fleet": {**context["fleet"], "skill": {"name": name, "config": values}}}
 
 
 def has_fleet_syntax(content: str) -> bool:

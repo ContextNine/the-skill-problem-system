@@ -12,13 +12,22 @@ import sys
 from package_installer import InstallError, install, installed_source, uninstall, verify
 from package_export import ExportError, export as export_package, read_manifest, release_preflight
 from package_layout import AGENTS_ROOT, ConfigurationError, active_instance_root, load_instance, resolve_dotted
+import skill_catalog
+from skill_snapshots import SnapshotError
 
 
-VERSION = "0.2.16"
+VERSION = "0.2.19"
 SCRIPT_DIRECTORY = Path(__file__).resolve().parent
 FLEET_COMMANDS = {
+    "maintenance": SCRIPT_DIRECTORY / "maintenance_status.py",
     "sync": SCRIPT_DIRECTORY / "sync_agents.py",
     "update": SCRIPT_DIRECTORY / "fleet_update.py",
+    "preview": SCRIPT_DIRECTORY / "fleet_preview.py",
+}
+FLEET_OPERATIONS = {
+    "machine": "register machines, inspect routes, SSH, VNC, and macOS startup",
+    "workspaces": "discover, reconcile, or diagnose registered Code repositories",
+    "terminal": "preview, apply, or verify fleet terminal configuration",
 }
 
 
@@ -37,9 +46,28 @@ def parser() -> argparse.ArgumentParser:
     get.add_argument("--config-root", type=Path)
     validate = config_commands.add_parser("validate")
     validate.add_argument("--config-root", type=Path)
+    skills = commands.add_parser("skills", help="browse skill areas and collections and edit ratings")
+    skill_commands = skills.add_subparsers(dest="skills_command", required=True)
+    listing = skill_commands.add_parser("list")
+    listing.add_argument("--area", action="append", default=[])
+    listing.add_argument("--collection", action="append", default=[])
+    listing.add_argument("--group-by", choices=("group", "source", "none"), default="group")
+    for flag in ("rating", "min-rating", "max-rating"):
+        listing.add_argument(f"--{flag}", type=int, choices=range(6))
+    listing.add_argument("--unrated", action="store_true")
+    listing.add_argument("--sort", choices=("preferred", "name", "rating", "source"), default="preferred")
+    listing.add_argument("--descending", action="store_true")
+    listing.add_argument("--json", action="store_true")
+    mutation = skill_commands.add_parser("rate")
+    mutation.add_argument("name")
+    value = mutation.add_mutually_exclusive_group(required=True)
+    value.add_argument("value", nargs="?", type=int, choices=range(6))
+    value.add_argument("--clear", action="store_true")
     for name in FLEET_COMMANDS:
         command = commands.add_parser(name, add_help=False)
         command.add_argument("args", nargs=argparse.REMAINDER)
+    for name, description in FLEET_OPERATIONS.items():
+        commands.add_parser(name, help=description, add_help=False)
     install_parser = commands.add_parser("install")
     install_parser.add_argument("--source", type=Path, default=AGENTS_ROOT)
     install_parser.add_argument("--home", type=Path, default=Path.home())
@@ -75,10 +103,35 @@ def parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     raw = list(sys.argv[1:] if argv is None else argv)
+    if raw and raw[0] in FLEET_OPERATIONS:
+        try:
+            if raw[0] == "machine":
+                import fleet_machine
+                return fleet_machine.main(raw[1:])
+            import fleet_operations
+            return fleet_operations.main(raw)
+        except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as exc:
+            print(f"fleet: {exc}", file=sys.stderr)
+            return 2
     if raw and raw[0] in FLEET_COMMANDS:
         return subprocess.run([sys.executable, str(FLEET_COMMANDS[raw[0]]), *raw]).returncode
     args = parser().parse_args(raw)
     try:
+        if args.command == "skills":
+            if args.skills_command == "list":
+                rows = skill_catalog.select(
+                    skill_catalog.catalog(Path.home()), areas=args.area, collections=args.collection,
+                    rating=args.rating, minimum=args.min_rating, maximum=args.max_rating,
+                    unrated=args.unrated, sort=args.sort, descending=args.descending, group_by=args.group_by,
+                )
+                if args.json:
+                    print(json.dumps({"schema_version": 2, "skills": rows}, indent=2))
+                elif rows:
+                    skill_catalog.print_listing(rows, args.group_by)
+            else:
+                result = skill_catalog.update(Path.home(), args.name, args.value, clear=args.clear)
+                print(json.dumps(result, indent=2))
+            return 0
         if args.command == "source":
             owner = installed_source(Path.home())
             if owner is None:
@@ -92,7 +145,15 @@ def main(argv: list[str] | None = None) -> int:
                 return 0
             instance = load_instance(config_root)
             if args.config_command == "validate":
-                print(json.dumps({"ok": True, "config_root": str(config_root)}, indent=2))
+                candidate = config_root.parent.parent
+                owner = candidate if (candidate / "edit/skills").is_dir() else skill_catalog.source_root(Path.home())
+                metadata_path = (owner / skill_catalog.METADATA_RELATIVE
+                                 if owner and args.config_root is None
+                                 else config_root / "skills/skill-metadata.json")
+                records = skill_catalog.read_metadata(metadata_path)
+                stale = sorted(set(records) - set(skill_catalog.source_catalog(owner))) if owner else []
+                print(json.dumps({"ok": True, "config_root": str(config_root),
+                                  "stale_skill_metadata": stale}, indent=2))
                 return 0
             value = resolve_dotted(instance, args.key)
             print(json.dumps(value, indent=2) if isinstance(value, (dict, list)) else str(value))
@@ -129,7 +190,7 @@ def main(argv: list[str] | None = None) -> int:
             raise InstallError(f"unsupported command: {args.command}")
         print(json.dumps(report, indent=2))
         return 0 if report.get("ok") else 1
-    except (ConfigurationError, ExportError, InstallError, OSError, ValueError) as exc:
+    except (ConfigurationError, ExportError, InstallError, SnapshotError, OSError, ValueError) as exc:
         print(f"fleet: {exc}", file=sys.stderr)
         return 1
 

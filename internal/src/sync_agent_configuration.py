@@ -24,7 +24,7 @@ def resolve_agent_scripts_directory() -> Path:
     if (SCRIPT_DIRECTORY / "global_agent_configuration.py").is_file():
         return SCRIPT_DIRECTORY
 
-    vault_source = SCRIPT_DIRECTORY.parents[4] / "internal/src"
+    vault_source = SCRIPT_DIRECTORY.parents[5] / "internal/src"
     if (vault_source / "global_agent_configuration.py").is_file():
         return vault_source
 
@@ -87,32 +87,17 @@ def error_text(process: subprocess.CompletedProcess[str]) -> str:
 
 
 def vault_root() -> Path:
-    resolved = run(["vault", "root"])
+    resolved = run(["fleet", "source", "path"])
     if resolved.returncode == 0 and output(resolved):
         return Path(output(resolved)).resolve()
-    fallback = run(["git", "rev-parse", "--show-toplevel"])
-    if fallback.returncode == 0 and output(fallback):
-        return Path(output(fallback)).resolve()
-    raise RuntimeError("cannot resolve the Vault root")
-
+    raise RuntimeError("cannot resolve the editable Fleet source")
 
 def current_machine_id(root: Path) -> str:
-    identity = run(["git", "-C", str(root), "config", "--get", "vault.machine-id"])
-    if identity.returncode == 0 and output(identity):
-        return output(identity)
-    markers = [Path.home() / ".agents/state/machine-id", Path.home() / ".config/vault/machine-id"]
-    value = next(
-        (
-            marker.read_text(encoding="utf-8").strip()
-            for marker in markers
-            if marker.is_file() and marker.read_text(encoding="utf-8").strip()
-        ),
-        "",
-    )
+    marker = Path.home() / ".agents/state/machine-id"
+    value = marker.read_text(encoding="utf-8").strip() if marker.is_file() else ""
     if not value:
-        raise RuntimeError("current machine has no Vault identity")
+        raise RuntimeError("current machine has no Fleet identity; use fleet machine identify")
     return value
-
 
 def load_registry(path: Path) -> dict[str, Any]:
     try:
@@ -327,9 +312,17 @@ def load_source_bundle(
         for machine in registry["machines"]
         if isinstance(machine, dict) and machine.get("id")
     }
+    claude_by_machine = {
+        str(machine["id"]): global_agent_configuration.render_agents(
+            root, registry, machine, source_home=source_home, agent="claude",
+        )
+        for machine in registry["machines"]
+        if isinstance(machine, dict) and machine.get("id")
+    }
     return {
         "source_home": str(source_home),
         "agents_by_machine": agents_by_machine,
+        "claude_by_machine": claude_by_machine,
         "codex_config": codex_text,
         "claude_settings": json.dumps(claude_value, indent=2, ensure_ascii=False) + "\n",
         "langfuse_config": load_langfuse_config(root),
@@ -420,20 +413,15 @@ def rendered_files(
     rendered_agents = agents_by_machine.get(str(machine["id"])) if isinstance(agents_by_machine, dict) else None
     if not isinstance(rendered_agents, str):
         raise RuntimeError(f"global agents were not rendered for {machine['id']}")
-    files: list[dict[str, object]] = [
-        {
-            "path": ".agents/instructions/AGENTS.md",
-            "component": "instructions",
-            "kind": "file",
-            "mode": 0o644,
-            "content": base64.b64encode(rendered_agents.encode()).decode(),
-        },
-        {
-            "path": ".codex/AGENTS.md",
-            "component": "instructions",
-            "kind": "symlink",
-            "target": "../.agents/instructions/AGENTS.md",
-        },
+    claude_by_machine = bundle.get("claude_by_machine")
+    rendered_claude = claude_by_machine.get(str(machine["id"])) if isinstance(claude_by_machine, dict) else None
+    if not isinstance(rendered_claude, str):
+        raise RuntimeError(f"Claude instructions were not rendered for {machine['id']}")
+    files = [
+        {**item, "component": "instructions"}
+        for item in global_agent_configuration.home_agent_files(rendered_agents, rendered_claude)
+    ]
+    files.extend([
         {
             "path": ".codex/config.toml",
             "component": "config",
@@ -443,19 +431,13 @@ def rendered_files(
             "preserve_tables": ["plugins", "marketplaces"],
         },
         {
-            "path": ".claude/CLAUDE.md",
-            "component": "instructions",
-            "kind": "symlink",
-            "target": "../.agents/instructions/AGENTS.md",
-        },
-        {
             "path": ".claude/settings.json",
             "component": "config",
             "kind": "file",
             "mode": 0o600,
             "content": base64.b64encode(claude_settings.encode()).decode(),
         },
-    ]
+    ])
     instance_files = bundle.get("instance_files")
     if not isinstance(instance_files, list) or not all(isinstance(item, dict) for item in instance_files):
         raise RuntimeError("agent instance configuration bundle is invalid")
@@ -485,7 +467,11 @@ def reconcile_source_alias(
         raise RuntimeError(f"global agents were not rendered for {source_id}")
     files: list[dict[str, object]] = []
     if "instructions" in components:
-        files.extend(global_agent_configuration.home_agent_files(rendered_agents))
+        claude_by_machine = bundle.get("claude_by_machine")
+        rendered_claude = claude_by_machine.get(source_id) if isinstance(claude_by_machine, dict) else None
+        if not isinstance(rendered_claude, str):
+            raise RuntimeError(f"Claude instructions were not rendered for {source_id}")
+        files.extend(global_agent_configuration.home_agent_files(rendered_agents, rendered_claude))
     if "config" in components:
         instance_files = bundle.get("instance_files")
         if not isinstance(instance_files, list) or not all(isinstance(item, dict) for item in instance_files):

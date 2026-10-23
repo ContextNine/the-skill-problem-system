@@ -22,7 +22,7 @@ import working_repo_skills
 from package_layout import resolve_agents_root
 
 
-GROUP_RE = re.compile(r"^_[a-z0-9]+(?:-[a-z0-9]+)*$")
+GROUP_RE = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
 SKILL_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 NAME_RE = re.compile(r"(?m)^name:\s*['\"]?([^'\"\n]+)['\"]?\s*$")
 POLICY_RE = re.compile(
@@ -30,21 +30,6 @@ POLICY_RE = re.compile(
 )
 IGNORED = {".DS_Store", ".gitkeep", "README.md"}
 RESERVED_ROOTS = {"catalog", "dormant", "github", "overlays", "public", "snapshots"}
-CATEGORY_TOKENS = {
-    "_agents": ("agents", "Agents"),
-    "_blogs": ("blog", "Blogs"),
-    "_code": ("code", "Code"),
-    "_creative": ("creative", "Creative"),
-    "_documents": ("documents", "Documents"),
-    "_finance": ("finance", "Finance"),
-    "_gws": ("gws", "GWS"),
-    "_fleet": ("fleet", "Fleet"),
-    "_integrations": ("integrations", "Integrations"),
-    "_marketing": ("marketing", "Marketing"),
-    "_spreadsheets": ("spreadsheets", "Spreadsheets"),
-    "_vault": ("vault", "Vault"),
-    "_video": ("video", "Video"),
-}
 
 
 class SyncError(RuntimeError):
@@ -60,6 +45,8 @@ class Skill:
     canonical_path: Path
     declared_path: str | None = None
     materialization: str = "direct"
+    area: str | None = None
+    collection: str | None = None
 
 
 @dataclass(frozen=True)
@@ -120,57 +107,50 @@ def read_policy(skill: Path) -> bool:
     return match.group(1) == "true"
 
 
-def category_token(category: str) -> tuple[str, str] | None:
-    if category in CATEGORY_TOKENS:
-        return CATEGORY_TOKENS[category]
-    if category.startswith("_") and category.endswith("-skills-pack"):
-        token = category[1 : -len("-skills-pack")]
-        if SKILL_RE.fullmatch(token):
-            return token, token.replace("-", " ").title()
-    return None
+def is_redacted_placeholder(path: Path) -> bool:
+    if path.is_symlink() or not path.is_dir() or not path.name.endswith("-REDACTED"):
+        return False
+    entries = list(path.iterdir())
+    return (
+        len(entries) == 1
+        and entries[0].name == ".gitkeep"
+        and entries[0].is_file()
+        and entries[0].stat().st_size == 0
+    )
 
 
-def validate_vault_skill(skill_file: Path, name: str, category: str) -> str:
-    category_details = category_token(category)
-    if category_details is None:
-        allowed = ", ".join(CATEGORY_TOKENS)
-        raise SyncError(
-            f"Unknown skill category {category!r}; expected one of {allowed} or _<token>-skills-pack"
-        )
-    token, title = category_details
-    implicit = name == f"{token}-i" or name.startswith(f"{token}-i-")
-    manual = name.startswith(f"{token}-") and not implicit
-    if not (implicit or manual):
-        raise SyncError(
-            f"Skill name must use category prefix {token!r}: {skill_file.parent} declares {name!r}"
-        )
+def validate_vault_skill(skill_file: Path, name: str) -> str:
+    implicit = name.endswith("-i") or "-i-" in name
     allowed = read_policy(skill_file.parent)
     if allowed != implicit:
         raise SyncError(
             f"Vault skill -i- marker and invocation policy disagree: {skill_file.parent}"
         )
     h1 = read_first_h1(skill_file)
-    if name == "vault-i":
-        if h1 != "# Vault":
-            raise SyncError(f"Root Vault skill H1 must be '# Vault': {skill_file}")
-    else:
-        expected = f"# {title} · "
-        if h1 is None or not h1.startswith(expected) or not h1.removeprefix(expected).strip():
-            raise SyncError(f"Skill H1 must start with {expected!r}: {skill_file}")
+    if h1 is None or not h1.removeprefix("# ").strip():
+        raise SyncError(f"Vault skill needs a non-empty H1: {skill_file}")
     return "auto" if implicit else "manual"
 
 
 def scan_vault_sources(skills_root: Path) -> list[Skill]:
     found: list[Skill] = []
-    for group in sorted(skills_root.iterdir(), key=lambda item: item.name):
-        if group.name in RESERVED_ROOTS:
+    for entry in skills_root.iterdir():
+        if entry.name not in RESERVED_ROOTS | IGNORED | {"areas", "collections"}:
+            raise SyncError(f"Unexpected skill source root entry: {entry}")
+    groups = []
+    for kind in ("areas", "collections"):
+        container = skills_root / kind
+        if not container.exists():
             continue
-        if group.name in IGNORED:
-            continue
-        if group.is_symlink() or not group.is_dir() or not GROUP_RE.fullmatch(group.name):
-            raise SyncError(f"Unexpected skill source root entry: {group}")
-        if category_token(group.name) is None:
-            raise SyncError(f"Unknown Vault skill group: {group}")
+        if container.is_symlink() or not container.is_dir():
+            raise SyncError(f"Skill group container must be a real directory: {container}")
+        for group in sorted(container.iterdir()):
+            if group.name in IGNORED or is_redacted_placeholder(group):
+                continue
+            if group.is_symlink() or not group.is_dir() or not GROUP_RE.fullmatch(group.name):
+                raise SyncError(f"Invalid skill group: {group}")
+            groups.append((kind, group))
+    for kind, group in groups:
         pending = [group]
         skill_files: list[Path] = []
         while pending:
@@ -181,7 +161,7 @@ def scan_vault_sources(skills_root: Path) -> list[Skill]:
                 continue
             pending.extend(
                 child for child in directory.iterdir()
-                if child.is_dir() and not child.is_symlink()
+                if child.is_dir() and not child.is_symlink() and not is_redacted_placeholder(child)
             )
         for skill_file in sorted(skill_files):
             skill = skill_file.parent
@@ -194,8 +174,10 @@ def scan_vault_sources(skills_root: Path) -> list[Skill]:
                 raise SyncError(
                     f"Skill folder/name mismatch: {skill} declares {declared!r}"
                 )
-            mode = validate_vault_skill(skill_file, declared, group.name)
-            found.append(Skill(declared, skill, "vault", mode, skill))
+            mode = validate_vault_skill(skill_file, declared)
+            found.append(Skill(declared, skill, "vault", mode, skill,
+                               area=group.name if kind == "areas" else None,
+                               collection=group.name if kind == "collections" else None))
     return found
 
 
@@ -357,6 +339,7 @@ def discover_skills(
             item.canonical_path,
             item.declared_path,
             item.materialization,
+            collection=item.collection,
         )
         for item in projection_plan.skills
     )

@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "suite": "deterministic-replay",
+  "cases": [
+    {
+      "id": "empty-window",
+      "events": [],
+      "expected": {
+        "groups": 0,
+        "agent_dispatches": 0
+      }
+    },
+    {
+      "id": "single-browser-error",
+      "events": [
+        {
+          "source": "loki",
+          "service": "impression-web",
+          "repository": "impression",
+          "line": "[CLIENT] TypeError: cannot read property",
+          "timestamp_ns": 100
+        }
+      ],
+      "expected": {
+        "groups": 1,
+        "agent_dispatches": 1
+      }
+    },
+    {
+      "id": "single-server-error",
+      "events": [
+        {
+          "source": "loki",
+          "service": "impression-node",
+          "repository": "impression",
+          "line": "error: request conversion failed",
+          "timestamp_ns": 100
+        }
+      ],
+      "expected": {
+        "groups": 1,
+        "agent_dispatches": 1
+      }
+    },
+    {
+      "id": "native-langfuse-error",
+      "events": [
+        {
+          "source": "langfuse",
+          "service": "impression-node",
+          "repository": "impression",
+          "line": "tool conversion failed",
+          "timestamp_ns": 100,
+          "event_id": "observation-1"
+        }
+      ],
+      "expected": {
+        "groups": 1,
+        "agent_dispatches": 1
+      }
+    },
+    {
+      "id": "infrastructure-without-app-mapping",
+      "events": [
+        {
+          "source": "kubernetes",
+          "service": "postgres/cluster",
+          "repository": null,
+          "line": "Pod failure: CrashLoopBackOff",
+          "timestamp_ns": 100,
+          "critical": true,
+          "confirmed_impact": true
+        }
+      ],
+      "expected": {
+        "groups": 1,
+        "agent_dispatches": 1
+      }
+    },
+    {
+      "id": "two-independent-errors",
+      "events": [
+        {
+          "source": "loki",
+          "service": "impression-node",
+          "repository": "impression",
+          "line": "error: invalid conversion",
+          "timestamp_ns": 100
+        },
+        {
+          "source": "loki",
+          "service": "impression-node",
+          "repository": "impression",
+          "line": "error: connection exhausted",
+          "timestamp_ns": 101
+        }
+      ],
+      "expected": {
+        "groups": 2,
+        "agent_dispatches": 1
+      }
+    },
+    {
+      "id": "cross-source-linked-evidence",
+      "events": [
+        {
+          "source": "loki",
+          "service": "impression-node",
+          "repository": "impression",
+          "line": "error: tool failed",
+          "timestamp_ns": 100,
+          "correlation": [
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          ]
+        },
+        {
+          "source": "langfuse",
+          "service": "impression-node",
+          "repository": "impression",
+          "line": "tool conversion failed",
+          "timestamp_ns": 101,
+          "event_id": "observation-1",
+          "correlation": [
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          ]
+        }
+      ],
+      "expected": {
+        "groups": 2,
+        "agent_dispatches": 1,
+        "correlated_groups": 2
+      }
+    },
+    {
+      "id": "repeated-signature",
+      "events": [
+        {
+          "source": "loki",
+          "service": "impression-node",
+          "repository": "impression",
+          "line": "error: failed request 100",
+          "timestamp_ns": 100
+        },
+        {
+          "source": "loki",
+          "service": "impression-node",
+          "repository": "impression",
+          "line": "error: failed request 101",
+          "timestamp_ns": 101
+        }
+      ],
+      "expected": {
+        "groups": 1,
+        "agent_dispatches": 1
+      }
+    }
+  ]
+}

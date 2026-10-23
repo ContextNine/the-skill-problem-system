@@ -1,0 +1,6 @@
+interface:
+  display_name: "4. Blog: Improve FAQs"
+  short_description: "Find unanswered blog questions and draft supported FAQs."
+  default_prompt: "Use $blog-i-04-improve-faqs to research useful unanswered questions and improve this article's FAQ coverage."
+policy:
+  allow_implicit_invocation: true

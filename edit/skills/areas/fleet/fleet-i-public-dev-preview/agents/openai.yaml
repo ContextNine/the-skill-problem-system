@@ -1,0 +1,6 @@
+interface:
+  short_description: "Share a public development preview"
+  default_prompt: "Use $fleet-i-public-dev-preview to share the requested running development server and verify its authenticated public URL."
+
+policy:
+  allow_implicit_invocation: true

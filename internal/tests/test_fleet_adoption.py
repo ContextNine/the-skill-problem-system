@@ -24,6 +24,9 @@ class AdoptionJourney(unittest.TestCase):
         (agents / "edit").mkdir(parents=True)
         (agents / "internal/defaults").mkdir(parents=True)
         dependency = private_dependency()
+        for recipe in dependency["contract"]["recipes"].values():
+            recipe.update(provenance_provider="gitlab", provenance_project="example/fixture")
+            recipe.pop("provenance_workflow")
         manifest = {"schema_version": 2, "dependencies": [dependency]}
         path = agents / "internal/defaults/dependencies.json"
         path.write_text(json.dumps(manifest, indent=2) + "\n")
@@ -50,6 +53,9 @@ class AdoptionJourney(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory, ExitStack() as stack:
             root = Path(directory)
             args, manifest_path, registry, machines = self.fixture(root)
+            args.provenance_provider = "github"
+            args.provenance_project = "example/fixture"
+            args.provenance_workflow = ".github/workflows/publish-machine-release.yml@refs/heads/master"
             versions = {item["id"]: "1.0.0" for item in machines}
             installs = []
             fail_once = True
@@ -62,6 +68,10 @@ class AdoptionJourney(unittest.TestCase):
             def worker(machine, module, payload, **kwargs):
                 nonlocal fail_once
                 machine_id = machine["id"]
+                for recipe in payload["manifest"]["dependencies"][0]["contract"]["recipes"].values():
+                    self.assertEqual(recipe["provenance_provider"], "github")
+                    self.assertEqual(recipe["provenance_project"], args.provenance_project)
+                    self.assertEqual(recipe["provenance_workflow"], args.provenance_workflow)
                 desired = payload["manifest"]["dependencies"][0]["contract"]["verify"]["exact"]
                 expected = payload["expected_releases"].get("fixture")
                 if expected is not None and (expected["source_commit"] != sources[machine_id] or expected["catalog_sha256"] != catalogs[machine_id]):
@@ -136,6 +146,9 @@ class AdoptionJourney(unittest.TestCase):
             self.assertEqual(fleet_adoption.read_state(journal_root / "active.json")["operation"], operation)
             self.assertEqual(fleet_adoption.read_state(journal_root / f"{operation}.json")["stage"], "complete")
             after = manifest_path.read_bytes()
+            accepted_policy = json.loads(after)["dependencies"][0]["contract"]["recipes"]["linux"]
+            self.assertEqual(accepted_policy["provenance_provider"], "github")
+            self.assertEqual(accepted_policy["provenance_workflow"], args.provenance_workflow)
             self.assertEqual(fleet_update.update(args), 0)
             self.assertEqual(manifest_path.read_bytes(), after)
             self.assertEqual(len(installs), 4)

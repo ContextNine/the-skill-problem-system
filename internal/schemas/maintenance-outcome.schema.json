@@ -1,0 +1,35 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["incidents"],
+  "properties": {
+    "incidents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["incident_id", "status", "summary", "next_action", "repositories", "verification"],
+        "properties": {
+          "incident_id": {"type": "string"},
+          "status": {"enum": ["repaired", "unresolved", "not_reproducible", "blocked", "approval_required"]},
+          "summary": {"type": "string"},
+          "next_action": {"type": "string"},
+          "repositories": {"type": "array", "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["workspace", "initial_sha", "commit", "release", "verified"],
+            "properties": {
+              "workspace": {"type": "string"}, "initial_sha": {"type": "string"},
+              "commit": {"type": ["string", "null"]}, "release": {"type": ["string", "null"]},
+              "verified": {"type": "boolean"}
+            }
+          }},
+          "verification": {
+            "type": "array",
+            "description": "Concrete checks and their results. Must be nonempty for repaired or not_reproducible; without verification, return unresolved instead.",
+            "items": {"type": "string", "minLength": 1}
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,7 @@
+interface:
+  short_description: "Ship and verify a proven production hotfix"
+  default_prompt: "Use $k3s-hotfix-deploy to commit, release, and verify the current proven repair."
+
+policy:
+  allow_implicit_invocation: false
+

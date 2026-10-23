@@ -5,6 +5,15 @@ status: enabled
 
 ## Workspace sync commands
 
+Workspace operations resolve the machine registry and workspace catalog from
+`fleet config path`. The editable source supplies implementation and primary-owned
+configuration authoring; a public source template must not replace an installed
+private registry. Explicit `--machine-registry` and `--catalog` overrides remain
+available for reviewed fixtures and diagnostics. From a worker, the registered
+primary is reached through its configured SSH alias even when its own transport
+is `local`. Worker-origin operations do not synchronize primary-owned agent
+configuration or plugins.
+
 Run through Fleet:
 
 ```bash

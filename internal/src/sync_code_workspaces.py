@@ -661,6 +661,15 @@ def load_machines(path: Path) -> dict[str, object]:
     return registry
 
 
+def workspace_config_root() -> Path:
+    """Resolve operational configuration independently of the editable source."""
+    resolved = run(["fleet", "config", "path"])
+    path = Path(output(resolved)).expanduser()
+    if resolved.returncode != 0 or not path.is_absolute() or not path.is_dir():
+        raise RuntimeError("cannot resolve installed Fleet configuration")
+    return path.resolve()
+
+
 def machine_code_root(machine: dict[str, object]) -> Path:
     home = machine.get("home")
     roots = machine.get("roots")
@@ -707,7 +716,11 @@ def resolve_targets(
     if not selected:
         raise RuntimeError("no enabled target machines remain")
     for machine in selected:
-        if machine.get("transport") != "ssh" or not machine.get("ssh_alias"):
+        remote_transport = machine.get("transport") == "ssh" or (
+            machine.get("id") == registry.get("primary_machine_id")
+            and machine.get("transport") == "local"
+        )
+        if not remote_transport or not machine.get("ssh_alias"):
             raise RuntimeError(f"target {machine.get('id')} lacks supported SSH transport")
         if not isinstance(machine.get("home"), str) or not str(machine["home"]).startswith("/"):
             raise RuntimeError(f"target {machine.get('id')} has no absolute home path")
@@ -989,7 +1002,8 @@ def main() -> int:
     try:
         root = agent_configuration.vault_root()
         source_id = agent_configuration.current_machine_id(root)
-        machine_path = args.machine_registry or resolve_agents_root(root) / "edit/settings/fleet/machines.json"
+        config_root = workspace_config_root() if args.machine_registry is None or args.catalog is None else None
+        machine_path = args.machine_registry or config_root / "fleet/machines.json"
         machine_registry = load_machines(machine_path.expanduser().resolve())
         source_matches = [machine for machine in machine_registry["machines"] if isinstance(machine, dict) and machine.get("id") == source_id]
         if len(source_matches) != 1:
@@ -997,7 +1011,7 @@ def main() -> int:
         source_root = (args.source_root or machine_code_root(source_matches[0])).expanduser().resolve()
         if not source_root.is_dir():
             raise RuntimeError(f"source Code root is not a directory: {source_root}")
-        catalog_path = args.catalog or resolve_agents_root(root) / "edit/settings/fleet/workspaces.json"
+        catalog_path = args.catalog or config_root / "fleet/workspaces.json"
         catalog = load_catalog(catalog_path.expanduser().resolve())
         specs, selection = select_specs(catalog, args, source_root)
         repositories, skipped = discover_specs(specs, source_root)

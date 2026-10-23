@@ -183,6 +183,64 @@ class WorkspaceReconciliationTests(unittest.TestCase):
         )
         self.assertEqual(result["status"], "blocked")
 
+
+    def test_discover_uses_installed_configuration_when_editable_source_is_a_public_template(self) -> None:
+        self.clone("repository")
+        settings = self.root / "installed-settings"
+        (settings / "fleet").mkdir(parents=True)
+        (settings / "fleet/machines.json").write_text(json.dumps({
+            "schema_version": 7, "primary_machine_id": "primary",
+            "machines": [{"id": "worker", "home": str(self.root),
+                          "roots": {"code": str(self.code_root)}}],
+        }))
+        (settings / "fleet/workspaces.json").write_text(json.dumps({
+            "schema_version": 3,
+            "entries": {"repository": {"path": "repository", "discovery": "repository",
+                                        "remote": self.remote_url}},
+        }))
+        source = self.root / "public-template"
+        (source / "edit/settings/fleet").mkdir(parents=True)
+        (source / "edit/settings/fleet/machines.json").write_text("{}")
+        args = mock.Mock(command="discover", machine_registry=None, catalog=None,
+                         source_root=None, profile=None, entry=["repository"], path=[], json=True)
+        original_run = controller.run
+        def execute(command, **kwargs):
+            if command == ["fleet", "config", "path"]:
+                return subprocess.CompletedProcess(command, 0, str(settings) + "\n", "")
+            return original_run(command, **kwargs)
+        captured = io.StringIO()
+        with (
+            mock.patch.object(controller, "parse_args", return_value=args),
+            mock.patch.object(controller.agent_configuration, "vault_root", return_value=source),
+            mock.patch.object(controller.agent_configuration, "current_machine_id", return_value="worker"),
+            mock.patch.object(controller, "run", side_effect=execute),
+            mock.patch.object(sys, "stdout", captured),
+        ):
+            self.assertEqual(controller.main(), 0)
+        report = json.loads(captured.getvalue())
+        self.assertEqual(report["source_machine"], "worker")
+        self.assertEqual(report["repositories"][0]["relative_path"], "repository")
+        self.assertEqual((source / "edit/settings/fleet/machines.json").read_text(), "{}")
+        self.assertFalse((self.code_root / ".workspace-sync").exists())
+
+    def test_worker_routes_registered_primary_over_ssh_without_changing_local_transport(self) -> None:
+        primary = {"id": "primary", "enabled": True, "transport": "local",
+                   "ssh_alias": "primary", "home": str(self.root),
+                   "roots": {"code": str(self.code_root)}}
+        registry = {"primary_machine_id": "primary", "machines": [primary]}
+        selected = controller.resolve_targets(registry, "worker", ["primary"])
+        with mock.patch.object(controller, "run", return_value=subprocess.CompletedProcess(
+            [], 0, '{"ok": true, "ready": true}', ""
+        )) as remote:
+            report = controller.invoke_target(selected[0], [], "refresh", False,
+                source_id="worker", run_id=None, allow_dirty_relocation=False)
+        self.assertTrue(report["ready"])
+        self.assertEqual(remote.call_args.args[0][-2], "primary")
+        self.assertEqual(registry["machines"][0]["transport"], "local")
+        del primary["ssh_alias"]
+        with self.assertRaisesRegex(RuntimeError, "SSH transport"):
+            controller.resolve_targets(registry, "worker", ["primary"])
+
     def test_disabled_target_requires_explicit_single_target_flag(self) -> None:
         registry = {
             "machines": [
@@ -518,7 +576,7 @@ class WorkspaceReconciliationTests(unittest.TestCase):
         }
         with (
             mock.patch.object(controller, "parse_args", return_value=args),
-            mock.patch.object(controller, "resolve_agents_root", return_value=self.root),
+            mock.patch.object(controller, "workspace_config_root", return_value=self.root / "edit/settings"),
             mock.patch.object(controller.agent_configuration, "vault_root", return_value=self.root),
             mock.patch.object(controller.agent_configuration, "current_machine_id", return_value="primary"),
             mock.patch.object(controller, "load_catalog", return_value={}),

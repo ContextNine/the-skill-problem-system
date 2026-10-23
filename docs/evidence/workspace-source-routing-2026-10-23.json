@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-23",
+  "state": "source-fix-verified-official-adoption-separate",
+  "problem": "Installed workspace sync resolved machines/catalog from the editable public source instead of the operational installed configuration, excluding the executing worker. A worker also rejected the registered primary's local transport despite its configured SSH alias.",
+  "preservation": {
+    "existing_env_tooling_commit": "bbc5746",
+    "upstream_merge": "af462eaaf20933b54ce61ced1e73850f12f52089",
+    "skill_relocated": "edit/skills/areas/code/code-i-env-tooling",
+    "standalone_and_protected_execution_guidance_retained": true,
+    "upstream_arbitrary_execution_and_package_auth_details_retained": true,
+    "untracked_cosign_file": "untouched at original path"
+  },
+  "implementation": {
+    "config": "Default machine registry and catalog resolve through fleet config path; explicit overrides remain available and invalid config fails closed.",
+    "transport": "A worker can target the registered primary over its explicit safe SSH alias even when the primary's own transport is local. Registry records are not rewritten.",
+    "authority": "Worker-origin preview explicitly skips primary-owned agent configuration/plugins.",
+    "source_and_bundled_helper_updated": true
+  },
+  "tests": {
+    "workspace_integration": {
+      "passed": 22,
+      "new_journeys": [
+        "Actual discovery with incorrect public-source registry and distinct installed configuration",
+        "Worker-to-primary SSH routing without rewriting registry transport"
+      ]
+    },
+    "internal_suite": {
+      "run": 22,
+      "skipped": 1,
+      "result": "passed"
+    },
+    "live_source_discovery": {
+      "machine": "wootbook",
+      "entry": "delivery",
+      "result": "passed without explicit registry/catalog overrides"
+    },
+    "live_source_preview": {
+      "command": "python3 internal/src/sync_code_workspaces.py refresh --entry delivery --target mattbook --skip-personal-configuration --json",
+      "mode": "preview",
+      "target": "mattbook",
+      "ok": true,
+      "ready": true,
+      "workspace_mutation": false,
+      "parent_checkout_touched": false
+    }
+  },
+  "limits": {
+    "installed_runtime_patched": false,
+    "official_release_published": false,
+    "fleet_adoption_accepted": false,
+    "publication_route": "Owning registered primary's normal skills release and Fleet adoption; preserve concurrent private-source changes."
+  }
+}

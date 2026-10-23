@@ -1,7 +1,7 @@
 interface:
   display_name: "Environment Tooling"
-  short_description: "Manage Git-owned environment contracts safely"
+  short_description: "Manage connected and standalone Notenv contracts"
   brand_color: "#FBBF24"
-  default_prompt: "Use $code-i-env-tooling to add this variable to the repository's schema-v4 environment contract and reconcile it safely."
+  default_prompt: "Use $code-i-env-tooling to identify this project's contract authority, update its definition and reconcile its consumer safely."
 policy:
   allow_implicit_invocation: true

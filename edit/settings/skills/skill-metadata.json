@@ -1,11 +1,17 @@
 {
   "schema_version": 1,
   "skills": {
+    "archify": {
+      "rating": 4
+    },
     "code-better-ui": {
       "rating": 4
     },
     "code-emil-design-eng": {
       "rating": 4
+    },
+    "code-reverse-engineer-anything": {
+      "rating": 5
     }
   }
 }

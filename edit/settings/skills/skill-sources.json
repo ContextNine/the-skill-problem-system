@@ -1,1 +1,15 @@
-{"schema_version": 4, "gh_skills": {}, "repos": []}
+{
+  "gh_skills": {
+    "archify": {
+      "area": "code"
+    },
+    "motion-graphics-skills": {
+      "area": "creative"
+    },
+    "rea": {
+      "area": "code"
+    }
+  },
+  "repos": [],
+  "schema_version": 4
+}

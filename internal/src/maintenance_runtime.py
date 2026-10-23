@@ -132,6 +132,8 @@ def normalize(value):
     value = re.sub(r"\b(?:\d{1,3}\.){3}\d{1,3}(?::\d+)?\b|\b[0-9a-f]{8}-[0-9a-f-]{27,}\b|\b[0-9a-f]{8,}\b", "<id>", value)
     value = re.sub(r"-[a-z0-9]{8,10}-[a-z0-9]{5}\b|(?<=-)[0-9]{8,}\b", "<replica>", value)
     value = re.sub(r"(?i)((?:request|trace|span|connection)[_-]?id[= :]+)\S+", r"\1<id>", value)
+    value = re.sub(r"(?<![\w.])\d+(?:\.\d+)?(?:e[+-]?\d+)?(?:ns|us|µs|ms|s|m|h)(?!\w)", "<duration>", value)
+    value = re.sub(r"\b\d+\.\d+(?:e[+-]?\d+)?\b", "<number>", value)
     value = re.sub(r"\b\d+\b", "<number>", value)
     return re.sub(r"\s+", " ", value).strip()[:1024]
 
@@ -171,6 +173,9 @@ class Queue:
             incident_id TEXT NOT NULL, source TEXT NOT NULL, hash TEXT NOT NULL,
             PRIMARY KEY (incident_id, source, hash));
           CREATE INDEX IF NOT EXISTS incident_status ON incidents(status);
+          CREATE INDEX IF NOT EXISTS incident_fingerprint ON incidents(fingerprint);
+          CREATE TABLE IF NOT EXISTS incident_supersession (
+            incident_id TEXT PRIMARY KEY, canonical_id TEXT NOT NULL);
           CREATE TABLE IF NOT EXISTS issue_delivery (
             destination TEXT NOT NULL, incident_id TEXT NOT NULL,
             issue_number INTEGER, url TEXT, published_hash TEXT,
@@ -198,11 +203,13 @@ class Queue:
                 confirmed = event.get("confirmed_impact", False) or proof.get("healthy") is False
                 impact = event.get("impact") or proof.get("proof") or event["line"]
                 change = hashlib.sha256((normalize(event["line"]) + "\0" + str(proof.get("revision", "")) + "\0" + normalize(impact)).encode()).hexdigest()
-                row = self.db.execute("SELECT * FROM incidents WHERE id=?", (incident_id,)).fetchone()
+                row = self.db.execute("SELECT * FROM incidents WHERE fingerprint=? ORDER BY first_ns,id LIMIT 1", (incident_id,)).fetchone()
                 if row is None:
                     self.db.execute("INSERT INTO incidents (id,service,fingerprint,first_ns,last_ns,count,status,evidence) VALUES (?,?,?,?,?,0,'observation',?)",
                                     (incident_id,event["service"],incident_id,event["timestamp_ns"],event["timestamp_ns"],json.dumps(event)))
                     row = self.db.execute("SELECT * FROM incidents WHERE id=?", (incident_id,)).fetchone()
+                incident_id = row["id"]
+                observed.add(incident_id)
                 # Many lines in one run are one window. Manual reruns cannot manufacture persistence.
                 windows = row["windows"] + (1 if end_ns - row["window_ns"] >= 20 * 60 * 10**9 else 0)
                 status = row["status"]
@@ -226,8 +233,17 @@ class Queue:
                 availability = event["source"] == "kubernetes" and event["line"].startswith("Pod failure:")
                 recovered = availability and (proof.get("healthy") is True or proof.get("retired") is True)
                 recovered |= event["source"] in snapshot_sources and row["id"] not in observed
+                namespace_check = next((item for item in coverage or [] if item.get("source") == "kubernetes-namespaces" and item.get("complete")), None)
+                namespace = event.get("namespace") or (row["service"].split("/", 1)[0] if "/" in row["service"] else None)
+                if event["source"] == "kubernetes" and namespace_check and namespace not in {None, "cluster", "unknown"} and namespace not in namespace_check["namespaces"]:
+                    recovered = True
+                    proof = {"proof": f"Namespace {namespace} is absent from a complete live namespace inventory; no environment is recreated"}
                 if recovered:
-                    self.db.execute("UPDATE incidents SET status='closed',completed_ns=?,verified_ns=?,impact=?,windows=0 WHERE id=?", (now,now,proof.get("proof","No failure in a complete live health audit"),row["id"]))
+                    recovery_proof = proof.get("proof", "No failure in a complete live health audit")
+                    outcome = {"incident_id": row["id"], "status": "closed", "summary": recovery_proof,
+                               "next_action": "No action required for this recovered finding.", "verification": [recovery_proof],
+                               "previous_outcome": json.loads(row["outcome"]) if row["outcome"] else None}
+                    self.db.execute("UPDATE incidents SET status='closed',completed_ns=?,verified_ns=?,impact=?,outcome=?,windows=0 WHERE id=?", (now,now,recovery_proof,json.dumps(outcome),row["id"]))
             self.db.execute("INSERT OR REPLACE INTO metadata VALUES ('cursor_ns',?)", (str(end_ns),))
             for source, cursor in (source_cursors or {}).items():
                 self.db.execute("INSERT OR REPLACE INTO metadata VALUES (?,?)", (f"cursor:{source}",str(cursor)))
@@ -237,7 +253,7 @@ class Queue:
     def pending(self, limit=10):
         if not 1 <= limit <= 10:
             raise ValueError("An agent batch must contain between one and ten incidents")
-        incidents = [dict(row) for row in self.db.execute("SELECT * FROM incidents WHERE status='pending' ORDER BY first_ns,id LIMIT ?", (limit,))]
+        incidents = [dict(row) for row in self.db.execute("SELECT * FROM incidents WHERE status='pending' ORDER BY coalesce(json_extract(evidence,'$.critical'),0) DESC, (verified_ns IS NOT NULL) DESC, last_ns DESC, first_ns,id LIMIT ?", (limit,))]
         for incident in incidents:
             incident["correlated_incidents"] = [row[0] for row in self.db.execute(
                 "SELECT DISTINCT b.incident_id FROM correlations a JOIN correlations b ON a.hash=b.hash AND a.source!=b.source WHERE a.incident_id=? AND b.incident_id!=? LIMIT 20", (incident["id"],incident["id"]))]
@@ -265,6 +281,7 @@ class Queue:
             self.db.execute("DELETE FROM incidents WHERE id IN (SELECT id FROM incidents WHERE status IN ('closed','repaired','not_reproducible','filtered','observation') AND id NOT IN (SELECT incident_id FROM issue_delivery WHERE error IS NOT NULL) ORDER BY coalesce(completed_ns,last_ns) DESC LIMIT -1 OFFSET ?)", (RETENTION["closed_per_job"],))
             self.db.execute("DELETE FROM correlations WHERE incident_id NOT IN (SELECT id FROM incidents)")
             self.db.execute("DELETE FROM issue_delivery WHERE incident_id NOT IN (SELECT id FROM incidents) AND error IS NULL")
+            self.db.execute("DELETE FROM incident_supersession WHERE incident_id NOT IN (SELECT id FROM incidents)")
             cursors = [int(row[0]) for row in self.db.execute("SELECT value FROM metadata WHERE key LIKE 'cursor:%'")]
             watermark = min(cursors or [now_ns]) - 60 * 60 * 10**9
             self.db.execute("DELETE FROM seen_events WHERE timestamp_ns < ?", (min(watermark,now_ns - 30 * 86400 * 10**9),))

@@ -339,6 +339,7 @@ def discover_skills(
             item.canonical_path,
             item.declared_path,
             item.materialization,
+            area=item.area,
             collection=item.collection,
         )
         for item in projection_plan.skills

@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "id": "impression-backend-optional-message",
+  "source": "apps/node/src/services/ai-runs/ai-run-prompt.ts",
+  "seed": {
+    "before": "const message = request.input.message?.trim();",
+    "after": "const message = request.input.message!.trim();"
+  },
+  "service": "impression-node",
+  "repository": "impression",
+  "scenario": "backend-prompt",
+  "timeout_seconds": 600,
+  "request": {
+    "mode": "direct_stream",
+    "agentId": "hudsonAgent",
+    "input": {
+      "uiSurface": "chat",
+      "toolResponse": {
+        "toolCallId": "synthetic-tool-call",
+        "toolName": "synthetic_lookup",
+        "payload": {
+          "count": 2
+        }
+      }
+    },
+    "context": {
+      "spaceId": "eval-space",
+      "brandId": "eval-brand",
+      "requestedTargets": [
+        {
+          "target": "chat_only",
+          "applyMode": "none"
+        }
+      ],
+      "allowedMutationScope": "none",
+      "createThreadIfMissing": false,
+      "threadVisibility": "visible"
+    }
+  },
+  "expected_result": "Tool response for synthetic_lookup:\n{\"count\":2}",
+  "additional_probes": [
+    {
+      "input": {
+        "uiSurface": "chat",
+        "message": "  synthetic message  "
+      },
+      "expected": "synthetic message"
+    },
+    {
+      "input": {
+        "uiSurface": "chat"
+      },
+      "expected": ""
+    },
+    {
+      "input": {
+        "uiSurface": "chat",
+        "toolResponse": {
+          "toolCallId": "second-call",
+          "toolName": "synthetic_other",
+          "payload": {
+            "count": 3
+          }
+        }
+      },
+      "expected": "Tool response for synthetic_other:\n{\"count\":3}"
+    }
+  ]
+}

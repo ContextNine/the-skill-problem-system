@@ -10,6 +10,7 @@ from typing import Any
 
 SCHEMA_VERSION = 4
 ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+AREA_RE = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
 GITHUB_URL_RE = re.compile(
     r"^https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/?$"
 )
@@ -78,7 +79,7 @@ def github_policies(data: dict[str, Any]) -> dict[str, dict[str, Any]]:
             raise SkillSourceConfigError(f"invalid GH skill directory: {repo_id!r}")
         if not isinstance(item, dict):
             raise SkillSourceConfigError(f"gh_skills.{repo_id} must be an object")
-        unknown = set(item) - {"prefix", "invocation"}
+        unknown = set(item) - {"prefix", "invocation", "area"}
         if unknown:
             raise SkillSourceConfigError(
                 f"gh_skills.{repo_id} has unsupported fields: {sorted(unknown)}"
@@ -92,6 +93,13 @@ def github_policies(data: dict[str, Any]) -> dict[str, dict[str, Any]]:
             policy["prefix"] = _prefix(
                 item["prefix"], label=f"gh_skills.{repo_id}.prefix"
             )
+        if "area" in item:
+            area = item["area"]
+            if not isinstance(area, str) or not AREA_RE.fullmatch(area):
+                raise SkillSourceConfigError(
+                    f"gh_skills.{repo_id}.area must be a lowercase group ID"
+                )
+            policy["area"] = area
         result[repo_id] = policy
     return result
 

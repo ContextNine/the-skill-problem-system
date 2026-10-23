@@ -53,6 +53,7 @@ class ProjectedSkill:
     declared_path: str | None
     materialization: str
     collection: str = ""
+    area: str | None = None
 
 
 @dataclass(frozen=True)
@@ -262,6 +263,7 @@ def gh_sources(root: Path, data: dict[str, Any]) -> list[dict[str, Any]]:
                 "origin": "gh",
                 "selected": installed,
                 "prefix": policy.get("prefix"),
+                "area": policy.get("area"),
                 "invocation": invocation,
                 "declared_root": None,
             }
@@ -393,6 +395,7 @@ def plan(root: Path, *, home: Path | None = None, require_sources: bool = False)
                     declared_path,
                     materialization,
                     source["id"],
+                    area=source.get("area"),
                 )
             )
 

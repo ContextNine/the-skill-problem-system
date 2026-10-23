@@ -77,7 +77,7 @@ class SkillCatalogIntegrationTests(unittest.TestCase):
             self.cli(home, 'rate', 'other', '4')
             self.cli(home, 'rate', 'imported', '5')
             rows = self.cli(home, 'list', '--json')['skills']
-            self.assertTrue(all((r['area'] is None) != (r['collection'] is None) for r in rows))
+            self.assertTrue(all(r['area'] is not None or r['collection'] is not None for r in rows))
             self.assertEqual([r['name'] for r in rows],
                 ['other', 'alpha', 'beta', 'zero', 'unrated', 'app-skill', 'imported', 'pack-skill'])
             self.assertEqual([r['name'] for r in self.cli(home, 'list', '--area', 'uiux', '--min-rating', '4', '--json')['skills']], ['alpha', 'beta'])
@@ -128,10 +128,48 @@ class SkillCatalogIntegrationTests(unittest.TestCase):
             self.assertEqual(self.cli(worker, 'list', '--area', 'creative', '--rating', '5', '--json')['skills'][0]['name'], 'alpha')
             self.assertIn('source owner', self.cli(worker, 'rate', 'alpha', '4', success=False).stderr)
 
+    def test_imported_pack_area_filters_and_offline_distribution(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source, home = self.fixture(Path(temporary))
+            policy_path = source / working_repo_skills.SELECTION
+            policy = json.loads(policy_path.read_text())
+            original = (source / 'edit/skills/github/example/skills/imported/SKILL.md').read_bytes()
+            policy['gh_skills']['example'] = {'area': 'creative'}
+            policy_path.write_text(json.dumps(policy))
+            self.cli(home, 'rate', 'imported', '4')
+            creative = self.cli(home, 'list', '--area', 'creative', '--json')['skills']
+            imported = next(row for row in creative if row['name'] == 'imported')
+            self.assertEqual(imported, {
+                'name': 'imported', 'area': 'creative', 'collection': 'example',
+                'rating': 4, 'source': 'gh', 'mode': 'manual',
+            })
+            self.assertEqual(self.cli(home, 'list', '--collection', 'example', '--json')['skills'], [imported])
+            _, skills = sync_skills.discover_skills(source, home=home)
+            projected = next(skill for skill in skills if skill.name == 'imported')
+            working_repo_skills.apply(working_repo_skills.plan(source, home=home), source)
+            bundle = skill_snapshots.build_bundle({'imported': projected.path}, catalog={'imported': imported})
+            worker = Path(temporary) / 'worker'
+            worker.mkdir()
+            payload = skill_snapshots.payload_for(worker, bundle, apply=True, verify=False,
+                                                  backup_suffix='test', legacy_catalog=None)
+            with patch.object(Path, 'home', return_value=worker):
+                self.assertTrue(skill_snapshots.reconcile_payload(payload)['ready'])
+            with patch.object(skill_catalog, 'source_root', return_value=None):
+                self.assertEqual(skill_catalog.catalog(worker), {'imported': imported})
+            self.assertEqual((source / 'edit/skills/github/example/skills/imported/SKILL.md').read_bytes(), original)
+            for invalid_area in ('../creative', '', 'Creative', None):
+                policy['gh_skills']['example']['area'] = invalid_area
+                policy_path.write_text(json.dumps(policy))
+                self.cli(home, 'list', '--json', success=False)
+
     def test_public_export_install_groups_and_filtered_ratings(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
             source, home = self.fixture(root)
+            policy_path = source / working_repo_skills.SELECTION
+            policy = json.loads(policy_path.read_text())
+            policy['gh_skills']['example'] = {'area': 'creative'}
+            policy_path.write_text(json.dumps(policy))
             self.cli(home, 'rate', 'alpha', '4')
             self.cli(home, 'rate', 'imported', '5')
             self.cli(home, 'rate', 'pack-skill', '2')
@@ -160,6 +198,7 @@ class SkillCatalogIntegrationTests(unittest.TestCase):
                     discovery_aliases=True, machine_id='primary', initialize_source=True)
             self.assertEqual(self.cli(public_home, 'list', '--area', 'uiux', '--rating', '4', '--json')['skills'][0]['name'], 'alpha')
             self.assertEqual(self.cli(public_home, 'list', '--collection', 'example', '--json')['skills'][0]['name'], 'imported')
+            self.assertEqual(self.cli(public_home, 'list', '--area', 'creative', '--rating', '5', '--json')['skills'][0]['name'], 'imported')
             self.assertTrue(all((public_home / '.agents/internal/src' / name).is_file() for name in WORKSPACE_SYNC_HELPERS))
 
 

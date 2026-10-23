@@ -30,6 +30,8 @@ When invoked with an evidence bundle:
 
 The runner serializes mutations with Cluster Wizard. Interrupted work returns to pending only after the inherited mutation lock can be acquired. New recurrence can reopen a closed problem. Unchanged evidence never retries on a cooldown. Blocked or unresolved work waits for a meaningful signature or deployment revision change, or an explicit `fleet maintenance retry <id>`. Record the prerequisite and action in `next_action`; a repeated occurrence is not a changed prerequisite. Healthy pod checks close pod availability problems, while request and AI errors need repair verification. Missing telemetry leaves health unknown. Unknown ownership does not suppress investigation. Unavailable Vault access produces a blocked outcome for issue delivery.
 
+Fingerprints normalize decimal durations before dispatch. Critical findings and recent evidence take priority over an old pending backlog. For an existing fragmented queue, use the preview-first `fleet maintenance regroup` operation in `./references/operations.md`; never delete queue state or reset cursors. A complete namespace inventory can close historical Kubernetes failures from a deleted namespace. It does not prove application request errors recovered and must never recreate a retired environment.
+
 Collector coverage is recorded in the run evidence. An unavailable source is not a healthy source. Native Langfuse collection has a 180-second process-group timeout and uses bounded observation-time reads, a configurable ingestion delay/overlap, stable event IDs, and an independent cursor. Matching hashed trace/request IDs link incidents for one investigation; they do not prove one cause or resolve every linked incident. Occurrence counts remain source-specific until logical-occurrence matching is implemented. Claim complete telemetry coverage only when the current run reports every configured source complete.
 
 For the offline deterministic eval, run:
@@ -39,3 +41,10 @@ python3 "./scripts/eval.py" --output <absolute-report-path>
 ```
 
 This isolates queue state in temporary directories and uses a stub agent. It checks observation grouping, critical dispatch and replay. The runtime integration suite separately exercises persistence, changed prerequisites, recovery, migration and retention. Its report explicitly excludes real telemetry, repair, deployment and cross-source logical-occurrence grading. Never present a passing replay suite as a passing live repair trial.
+
+
+For explicitly authorized local real-telemetry and repair trials, read
+`./references/local-evals.md` and use `./scripts/live-eval.py`. Keep this separate
+from normal production execution and the offline replay grade. Source changes
+do not authorize fault injection into shared services or installing a candidate
+daily runtime.

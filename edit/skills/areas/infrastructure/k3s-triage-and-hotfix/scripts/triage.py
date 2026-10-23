@@ -12,7 +12,8 @@ import re
 import sqlite3
 import sys
 import time
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
+from urllib.request import urlopen
 
 PACKAGE = next(parent / "internal/src" for parent in Path(__file__).resolve().parents if (parent / "internal/src/maintenance_runtime.py").is_file())
 sys.path.insert(0, str(PACKAGE))
@@ -71,7 +72,16 @@ def loki_events(config, namespace, start, end):
             expression += ' !~ "^level=(info|debug) .* query="'
         params = urlencode({"query": expression, "start": left, "end": right, "limit": limit, "direction": "forward"})
         endpoint = f'/api/v1/namespaces/{settings["namespace"]}/services/http:{settings["service"]}:{settings["port"]}/proxy/loki/api/v1/query_range?{params}'
-        payload = json.loads(command(["kubectl", "get", "--raw", endpoint]))
+        if settings.get("test_url"):
+            # A test transport uses the same query, pagination, normalization and routing.
+            # It can never select a shared or production destination.
+            url = urlsplit(settings["test_url"])
+            if config.get("test_only") is not True or url.scheme != "http" or url.hostname != "127.0.0.1" or not url.port or url.path or url.query or url.fragment or url.username or url.password:
+                raise ValueError("Direct Loki eval transport requires an explicit loopback test target")
+            with urlopen(f'{settings["test_url"]}/loki/api/v1/query_range?{params}', timeout=30) as response:
+                payload = json.load(response)
+        else:
+            payload = json.loads(command(["kubectl", "get", "--raw", endpoint]))
         if payload.get("status") != "success":
             raise RuntimeError(f"Loki query failed for {namespace}")
         streams = payload.get("data", {}).get("result", [])
@@ -98,6 +108,14 @@ def loki_events(config, namespace, start, end):
 def collect(config, start, end, cursors=None):
     cursors = cursors or {}
     events, coverage, health, retired = [], [], {}, {}
+    try:
+        namespace_items = json.loads(command(["kubectl", "get", "namespaces", "-o", "json"]))["items"]
+        namespace_names = sorted(item["metadata"]["name"] for item in namespace_items)
+        if not namespace_names:
+            raise ValueError("Namespace inventory is empty")
+        coverage.append({"source": "kubernetes-namespaces", "complete": True, "namespaces": namespace_names})
+    except Exception as error:
+        coverage.append({"source": "kubernetes-namespaces", "complete": False, "error": redact(str(error))})
     try:
         pods = json.loads(command(["kubectl", "get", "pods", "-A", "-o", "json"]))["items"]
         namespaces = {pod["metadata"]["namespace"] for pod in pods}
@@ -139,7 +157,7 @@ def collect(config, start, end, cursors=None):
             if cursors.get("kubernetes-events", start) <= when <= end:
                 resource = item.get("involvedObject", {})
                 namespace = item["metadata"].get("namespace", "cluster")
-                events.append({"source": "kubernetes", "timestamp_ns": when, "service": f'{namespace}/{resource.get("kind", "unknown")}', "repository": None, "line": redact(f'{item.get("reason", "Warning")}: {item.get("message", "")}'), "resource": resource.get("name")})
+                events.append({"source": "kubernetes", "timestamp_ns": when, "service": f'{namespace}/{resource.get("kind", "unknown")}', "namespace": namespace, "repository": None, "line": redact(f'{item.get("reason", "Warning")}: {item.get("message", "")}'), "resource": resource.get("name")})
         coverage.append({"source": "kubernetes-events", "complete": True})
     except Exception as error:
         coverage.append({"source": "kubernetes-events", "complete": False, "error": redact(str(error))})

@@ -18,7 +18,7 @@ from typing import Any
 PACKAGE = next(parent / "internal/src" for parent in Path(__file__).resolve().parents if (parent / "internal/src/maintenance_runtime.py").is_file())
 sys.path.insert(0, str(PACKAGE))
 from maintenance_runtime import Queue, atomic_json, config_root, investigate, load, lock as mutation_lock, redact, state_root as maintenance_state, prune_runs
-from maintenance_audit import backup_findings, capacity, releases
+from maintenance_audit import backup_findings, capacity, releases, database_checks
 from maintenance_issues import deliver
 
 
@@ -65,7 +65,7 @@ def collect(settings: dict[str, Any], cache_root: Path) -> dict[str, Any]:
         if not condition_ready(node):
             findings.append({"kind": "Node", "namespace": None, "name": node["metadata"]["name"], "reason": "not Ready"})
         for condition in node.get("status", {}).get("conditions", []):
-            if condition.get("type") in {"DiskPressure", "MemoryPressure", "PIDPressure", "NetworkUnavailable"} and condition.get("status") == "True":
+            if condition.get("type") in {"DiskPressure", "MemoryPressure", "PIDPressure", "NetworkUnavailable", "ReadonlyFilesystem"} and condition.get("status") == "True":
                 findings.append({"kind": "Node", "namespace": None, "name": node["metadata"]["name"], "reason": condition["type"]})
 
     workloads = get("get", "deployments,statefulsets,daemonsets", "-A").get("items", [])
@@ -148,15 +148,12 @@ def collect(settings: dict[str, Any], cache_root: Path) -> dict[str, Any]:
 
     backups = get("get", "backups.postgresql.cnpg.io", "-A", optional=True).get("items", [])
     findings.extend(backup_findings(clusters, backups, settings["backup_max_age_hours"]))
-    for check in (capacity(settings), releases(settings, nodes, workloads, clusters, cache_root)):
+    for check in (capacity(settings), releases(settings, nodes, workloads, clusters, cache_root),
+                  database_checks(settings, clusters, maintenance_state() / "restore-evidence")):
         new_findings, new_coverage, new_observations = check
         findings.extend(new_findings)
         coverage.extend(new_coverage)
         observations.extend(new_observations)
-    coverage.extend([
-        {"source": "restore-test-evidence", "complete": False, "error": "Restore-test evidence adapter is not configured"},
-        {"source": "postgres-wal-metrics", "complete": False, "error": "WAL-specific metrics are not configured; PVC forecasts are separate"},
-    ])
     deduped = list({json.dumps(item, sort_keys=True): item for item in findings}.values())
     event_context = list({json.dumps(item, sort_keys=True): item for item in observations}.values())
     return {
@@ -198,7 +195,8 @@ def main() -> int:
             "StatefulSet":"get deployments,statefulsets,daemonsets -A", "DaemonSet":"get deployments,statefulsets,daemonsets -A",
             "Pod":"get pods -A", "Job":"get jobs -A", "Certificate":"get certificates.cert-manager.io -A",
             "CNPGCluster":"get clusters.postgresql.cnpg.io -A", "LonghornVolume":"get volumes.longhorn.io -n longhorn-system",
-            "Backup":"get backups.postgresql.cnpg.io -A"}
+            "Backup":"get backups.postgresql.cnpg.io -A",
+            "PostgresWAL":"postgres-wal-metrics", "RestoreTest":"restore-test-evidence"}
         complete = {item["source"] for item in evidence["coverage"] if item["complete"]}
         snapshots = ["cluster-audit/"+kind for kind,query in kind_queries.items() if query in complete]
         if "get clusters.postgresql.cnpg.io -A" not in complete and "cluster-audit/Backup" in snapshots:
@@ -214,14 +212,14 @@ def main() -> int:
                 source += "/"+item["name"]
                 if "releases/"+item["name"] in complete: snapshots.append(source)
             impact = item["kind"] != "Upgrade"
-            events.append({"source": source, "service": f'{item.get("namespace") or "cluster"}/{item["kind"]}/{item["name"]}/{resource}', "repository": "k3s-infrastructure", "timestamp_ns": now, "line": item["reason"], "detail": redact(item), "confirmed_impact": impact, "critical": impact and item["reason"] not in {"Pending"}, "impact": item["reason"]})
+            events.append({"source": source, "service": f'{item.get("namespace") or "cluster"}/{item["kind"]}/{item["name"]}/{resource}', "repository": "k3s-infrastructure", "timestamp_ns": now, "line": item["reason"], "detail": redact(item), "confirmed_impact": impact, "critical": impact and item["kind"] != "RestoreTest" and item["reason"] not in {"Pending"}, "impact": item["reason"]})
         # Successful metric reads can clear a previous failure even when no finding remains.
         snapshots.extend("cluster-audit/Capacity/"+item["source"] for item in evidence["coverage"] if item["complete"])
         for item in evidence["coverage"]:
             source = "coverage/"+item["source"]
             if item["complete"]:
                 snapshots.append(source)
-            elif "not configured" not in item.get("error", "") and not item["source"].startswith("releases/"):
+            elif item["source"] != "restore-test-evidence" and "not configured" not in item.get("error", "") and not item["source"].startswith("releases/"):
                 events.append({"source":source,"service":"telemetry/"+item["source"],"repository":"k3s-infrastructure","timestamp_ns":now,"line":"Collector unavailable: "+item.get("error","incomplete coverage"),"confirmed_impact":True,"impact":"Maintenance cannot verify this telemetry source"})
         queue.collect(events, now, coverage=evidence["coverage"], snapshot_sources=snapshots)
         if not args.audit_only:

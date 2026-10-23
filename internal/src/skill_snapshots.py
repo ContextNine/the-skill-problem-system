@@ -166,7 +166,7 @@ def validate_catalog(value: object) -> dict[str, dict[str, object]]:
                 or not isinstance(row, dict)
                 or set(row) != {"name", "area", "collection", "rating", "source", "mode"}
                 or row["name"] != name
-                or (row["area"] is None) == (row["collection"] is None)
+                or (row["area"] is None and row["collection"] is None)
                 or any(value is not None and (not isinstance(value, str) or
                        not re.fullmatch(r"[a-z0-9]+(?:[-_][a-z0-9]+)*", value))
                        for value in (row["area"], row["collection"]))

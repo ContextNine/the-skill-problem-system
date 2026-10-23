@@ -23,3 +23,25 @@ Shared settings are `skills/config/k3s-maintenance/config.json` beneath `fleet c
 
 For native Langfuse authentication failures, inspect `notenv readiness` and `notenv broker status` on the worker. Use $fleet-i-onboard-machine for native-store unlock or repair, then `notenv broker unlock`. A `process-exec-reconcile-required` failure requires `notenv reconcile .` from the existing target checkout with its accepted Git contract. Verify recovery through a bounded native read and a successful `--collect-only` run; complete source coverage closes its telemetry incident and updates the existing issue. Native stores can need another manual unlock after reboot or sleep under their owning policy. Do not weaken native protection or add a plaintext fallback for unattended jobs.
 
+## Consolidating fragmented history
+
+With both timers stopped and both services idle, preview one queue:
+
+```bash
+fleet maintenance regroup triage --json
+fleet maintenance regroup triage --apply --expected-plan <preview-plan-sha256> --json
+```
+
+The second command must match the fresh preview. It takes a restricted SQLite
+backup, merges matching fingerprints and occurrence counts, retains original rows,
+outcomes and issue links, and records the surviving incident ID. Existing approvals
+remain approvals. Duplicate issues close as consolidated, not as repaired. Future
+observations reuse the surviving incident and issue. Cursors and source deduplication
+stay unchanged. Repeating the operation is idempotent. `cluster-wizard` is also a
+supported explicit job argument.
+
+Regrouping does not publish issues by itself. Inspect the result, run collection-only
+and audit-only checks, then use `fleet maintenance deliver-issues` and restore the
+timers. Never replace a live queue from its backup without separately checking
+newer collection and issue-delivery state.
+

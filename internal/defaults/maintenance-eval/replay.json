@@ -3,6 +3,23 @@
   "suite": "deterministic-replay",
   "cases": [
     {
+      "id": "decimal-duration-fragmentation",
+      "events": [
+        {"source": "loki", "service": "monitoring/grafana", "line": "error: evaluation failed duration=1.811658ms", "timestamp_ns": 100},
+        {"source": "loki", "service": "monitoring/grafana", "line": "error: evaluation failed duration=8.000004s", "timestamp_ns": 101},
+        {"source": "loki", "service": "monitoring/grafana", "line": "error: evaluation failed duration=0.00003us", "timestamp_ns": 102}
+      ],
+      "expected": {"groups": 1, "agent_dispatches": 1}
+    },
+    {
+      "id": "different-error-types-remain-distinct",
+      "events": [
+        {"source": "loki", "service": "impression-node", "line": "TypeError: conversion failed duration=1.23ms", "timestamp_ns": 100},
+        {"source": "loki", "service": "impression-node", "line": "RangeError: conversion failed duration=1.24ms", "timestamp_ns": 101}
+      ],
+      "expected": {"groups": 2, "agent_dispatches": 1}
+    },
+    {
       "id": "empty-window",
       "events": [],
       "expected": {

@@ -19,6 +19,7 @@ from package_layout import AGENTS_ROOT, EXPORT_ROOT, VAULT_ROOT
 import working_repo_skills
 import fleet_templates
 import skill_catalog
+from skill_source_config import github_policies
 
 
 MANIFEST_NAME = ".ctx9-agent-export-manifest.json"
@@ -775,6 +776,21 @@ def materialize(
     if (not matches_exclusion(metadata_relative, exclusions)
             and not matching_partial_hiding(metadata_relative, privacy.partial_hiding)):
         skill_catalog.atomic_json(metadata_path, skill_catalog.exported_metadata(AGENTS_ROOT, inventory))
+    # Keep area labels for published packs without exporting private source policy.
+    source_policy_path = AGENTS_ROOT / working_repo_skills.SELECTION
+    public_policy_path = stage / working_repo_skills.SELECTION
+    policy_relative = Path("settings/skills/skill-sources.json")
+    if (public_policy_path.is_file() and source_policy_path.is_file()
+            and not matches_exclusion(policy_relative, exclusions)
+            and not matching_partial_hiding(policy_relative, privacy.partial_hiding)):
+        source_policies = github_policies(
+            working_repo_skills.read_json(source_policy_path)
+        )
+        public_policy = working_repo_skills.read_json(public_policy_path)
+        for source_id, policy in source_policies.items():
+            if "area" in policy and (stage / working_repo_skills.GH_ROOT / source_id / "skills").is_dir():
+                public_policy.setdefault("gh_skills", {}).setdefault(source_id, {})["area"] = policy["area"]
+        skill_catalog.atomic_json(public_policy_path, public_policy)
     partial_hiding = materialize_partial_hiding(stage, privacy.partial_hiding)
     validate_retained_skill_exclusions(stage, [*exclusion_log, *partial_log])
     validate_exported_templates(stage)

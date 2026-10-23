@@ -115,13 +115,14 @@ SKILLS_ROOT="$(fleet source path)/edit/skills"
 gh skill install owner/repo --all --dir "$SKILLS_ROOT/github/<repo-name>/skills"
 ```
 
-The GitHub CLI copies selected skills and injects `github-repo`, `github-path`, `github-ref`, and `github-tree-sha` metadata. Each repository directory is a collection with no area. Those installed directories are the local installation record. There is no separate install manifest.
+The GitHub CLI copies selected skills and injects `github-repo`, `github-path`, `github-ref`, and `github-tree-sha` metadata. Each repository directory is a collection. Set an optional `area` in its `gh_skills` policy to group the pack by purpose while preserving its collection and upstream ownership. Those installed directories are the local installation record. There is no separate install manifest.
 
 `skill-sources.json` may add only effective policy:
 
 ```json
 "gh_skills": {
   "repo-name": {
+    "area": "creative",
     "prefix": "publisher",
     "invocation": {"skill-name": true}
   }
@@ -195,7 +196,7 @@ A first-party repository skill that is not globally enrolled may assume its depe
 
 ## Configuration and validation
 
-Use `fleet skills list --area <area>` or `--collection <collection>` to browse folder-derived groups, and `fleet skills rate <name> <0-5>` to record a whole-number rating. Collections have no area. Default browsing puts areas first, collections second, with locally maintained sources and highest ratings first within each group. Use `--group-by none --sort rating --descending` for a ranking across groups. Metadata lives in `./edit/settings/skills/skill-metadata.json` below `fleet source path`, independently of upstream skill files. The source-owner SOP is `./edit/settings/skills/README-skill-ratings.md` below that same resolved source root. Workers without an editable source can use `fleet skills list --help`. Keep the metadata key aligned when renaming an effective skill. Listing never syncs or writes generated materializations.
+Use `fleet skills list --area <area>` or `--collection <collection>` to browse folder-derived groups, and `fleet skills rate <name> <0-5>` to record a whole-number rating. Locally maintained collections have no area. GitHub collections may also have an area through `gh_skills.<source-id>.area`; use a lowercase group ID with hyphens or underscores. Default browsing puts area-assigned skills first, collections without an area second, with locally maintained sources and highest ratings first within each group. Use `--group-by none --sort rating --descending` for a ranking across groups. Metadata lives in `./edit/settings/skills/skill-metadata.json` below `fleet source path`, independently of upstream skill files. The source-owner SOP is `./edit/settings/skills/README-skill-ratings.md` below that same resolved source root. Workers without an editable source can use `fleet skills list --help`. Keep the metadata key aligned when renaming an effective skill. Listing never syncs or writes generated materializations.
 
 `./edit/settings/skills/skill-sources.json` is the only enrollment policy registry. It uses schema version 4 with `gh_skills` and `repos`. Unknown fields, unsafe paths, duplicate names, bad metadata, missing selected sources, and names over 64 characters fail before writes.
 

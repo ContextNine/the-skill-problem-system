@@ -32,7 +32,7 @@ Separate files would make lifecycle changes and cross-class audits harder and cr
 ### Custody rules
 
 - Generate machine identities on their target. Copy only public keys or recipients to providers.
-- Reissue revocable machine tokens from their owning authority. Deliver a new target-specific value once through authenticated SSH directly into Keychain or Secret Service, verify it on the target, then revoke the replaced token.
+- Reissue revocable machine tokens from their owning authority. Deliver a new target-specific value once through authenticated SSH into the owning application's declared native custody, verify it on the target, then revoke the replaced token.
 - Copy portable authority only through its owning guarded enrollment script. The script must identify source and target, avoid content output, preserve a conflicting target before reviewed replacement, enforce permissions, compare safe digests or public derivations, and perform a real acceptance check.
 - Recreate OAuth, passkey, app, and provider sessions through target-local protected interaction.
 - Keep CI, Kubernetes service, database, deployment, and object-storage credentials in provider or service custody. They are not machine onboarding material.
@@ -69,52 +69,90 @@ The broader GitLab management token is protected Delivery operator authority in 
 
 Where private GitLab packages are configured, each eligible machine receives its own revocable group-read credential with the scopes declared by the owning repository. Resolve the group, projects, and credential name from installed configuration. Do not assume a particular organization or grant write or API access merely to read packages.
 
-The primary runs the GitLab automation controller with the Notenv helper source and a state-output path. Preview first even though apply is the controller default:
+The primary runs the GitLab automation controller from its registered Delivery
+checkout. It requires the complete platform bootstrap archive and the archive
+checksum from an independently accepted signed release record. A source helper
+or an unverified checksum downloaded beside an archive is not sufficient. Stop
+if the official signed bootstrap release has not completed acceptance; do not
+substitute a candidate or the old helper-copy procedure.
+
+Run from the Delivery checkout resolved through its logical workspace ID.
+Preview first even though apply is the controller default:
 
 ```bash
-DELIVERY_REPO="$HOME/Code/ctx9/delivery"
-NOTENV_HELPER="$HOME/Code/ctx9/notenv/scripts/private-read.py"
-STATE="$(fleet source path)/internal/generated/state/machine-secrets.lock.json"
-ADMIN_RUNNER="$(mktemp -d)"
-trap 'rm -rf -- "$ADMIN_RUNNER"' EXIT
-cp "$DELIVERY_REPO/.env.base" "$ADMIN_RUNNER/.env.base"
+BOOTSTRAP_ARCHIVE="/reviewed/downloads/<accepted-platform-bootstrap>.tar.gz"
+BOOTSTRAP_SHA256="<digest-from-accepted-signed-release>"
+FLEET_CREDENTIAL_STATE="$(fleet source path)/internal/generated/state/machine-secrets.lock.json"
 
-(cd "$ADMIN_RUNNER" && notenv exec --globals --environment local --contract .env.base -- \
-  "$DELIVERY_REPO/setup-fleet-read-credential.sh" dry-run \
+notenv exec --environment local --contract .env.base -- \
+  ./setup-fleet-read-credential.sh dry-run \
     --machine-id <machine-id> --platform <macos|linux> --host <local|ssh-alias> \
-    --helper "$NOTENV_HELPER" --state-output "$STATE" --json)
+    --bootstrap-archive "$BOOTSTRAP_ARCHIVE" --bootstrap-sha256 "$BOOTSTRAP_SHA256" \
+    --state-output "$FLEET_CREDENTIAL_STATE" --json
 
-(cd "$ADMIN_RUNNER" && notenv exec --globals --environment local --contract .env.base -- \
-  "$DELIVERY_REPO/setup-fleet-read-credential.sh" \
+notenv exec --environment local --contract .env.base -- \
+  ./setup-fleet-read-credential.sh \
     --machine-id <machine-id> --platform <macos|linux> --host <local|ssh-alias> \
-    --helper "$NOTENV_HELPER" --state-output "$STATE" --json)
+    --bootstrap-archive "$BOOTSTRAP_ARCHIVE" --bootstrap-sha256 "$BOOTSTRAP_SHA256" \
+    --state-output "$FLEET_CREDENTIAL_STATE" --json
+
+notenv exec --environment local --contract .env.base -- \
+  ./setup-fleet-read-credential.sh verify \
+    --machine-id <machine-id> --platform <macos|linux> --host <local|ssh-alias> \
+    --bootstrap-archive "$BOOTSTRAP_ARCHIVE" --bootstrap-sha256 "$BOOTSTRAP_SHA256" \
+    --state-output "$FLEET_CREDENTIAL_STATE" --json
 ```
 
-The controller installs only reviewed helper code, creates a target-specific token in memory, sends its enrollment payload over authenticated SSH stdin, and stores the value natively. It verifies real private-package access before replacing target metadata and revokes the old machine-named token only after the replacement passes. No token is returned in output.
+The controller validates the archive and manifest before transfer, rechecks every
+staged target file, and verifies the Mac owner's Apple-rooted Developer ID
+signature and recorded identity before invoking the component-owned installer.
+The complete adjacent helper/native pair is installed into a checksum-versioned
+directory. One locked atomic link activates it while retaining recovery.
+Verification requires that exact bundle to be active, not just a helper file.
 
-On a remote Mac, Keychain enrollment and verification run as a disposable job in the logged-in user's GUI bootstrap domain because the SSH audit session is intentionally denied protected Keychain operations. The payload travels from authenticated SSH stdin through a mode-`0600` FIFO directly into the helper; it never enters a file or process argument. The controller captures only sanitized helper status and removes the FIFO, output files, and job after completion. Workspace-backed installers that consume the credential use the same GUI-domain boundary.
+Enrollment creates a target-specific token in memory, sends it through
+authenticated SSH stdin and stores it in hardware-sealed Mac custody or Linux
+Secret Service. Real package access must pass before replacing metadata or
+revoking the previous machine-named token. Installer and helper processes never
+inherit the operator's management token. No value is returned in output.
 
-Use the credential without a plaintext npmrc, Docker config, Git remote, or shell export:
+The new Mac bootstrap owner uses direct SSH without a login-Keychain reader,
+GUI-domain job or password-entry session. Missing or denied hardware custody
+requires independently authorized provider re-enrollment, never copying an old
+Keychain item, another machine's sealed files or a hosted Notenv value. Installing
+the bundle itself does not read or migrate a credential.
+
+Inspect the independently installed bootstrap through the public launcher:
 
 ```bash
+ctx9 auth status --json
 ctx9 auth verify --json
-ctx9 auth exec -- pnpm install --frozen-lockfile
-ctx9 auth exec -- git ls-remote https://gitlab.com/ctx9/notenv.git
-ctx9 auth exec -- docker pull registry.gitlab.com/ctx9/<project>/<image>:<tag>
 ```
 
-The wrapper injects npm, Git credential-helper, and Docker credential-helper configuration only for the child process. The token remains in native storage and process memory and is not written to the temporary configuration files.
+Private component reads use the launcher's declared installation and verification
+routes. Ordinary package installation uses the accepted installed Notenv pnpm
+adapter described by `$code-i-env-tooling`; the bootstrap helper is not an
+application launcher or package installer. Credentials remain native and
+process-scoped, not plaintext npmrc, Docker configuration, Git URLs or shell exports.
 
-The helper source and deterministic credential-free bootstrap archive are owned by `ctx9/notenv`.
+The helper source and deterministic credential-free bootstrap archive are owned by the registered Notenv repository.
 Onboarding may install the helper before Notenv itself, then enroll the per-machine token as a
 separate operation. Software presence, native enrollment, package verification, and later Notenv
 broker readiness are distinct states.
 
 ### Notenv boundary
 
-Notenv models provider-owned custody: Keychain, Secret Service, SOPS, SSH agent, CI, and service stores remain the authorities, and plaintext fallback is forbidden. Notenv generates and protects its own machine identities and consumes referenced provider values in broker or child-process memory.
+Notenv's new Mac machine and bootstrap custody use separate hardware-sealed
+stores. Linux retains Secret Service. Other providers retain their own declared
+custody, including Keychain where that application owns it; this does not make
+login Keychain a Notenv fallback. Notenv generates its own machine identities and
+consumes referenced values only inside authorized broker or child-process memory.
 
-Notenv intentionally does not manufacture GitHub OAuth, VPN identity, kubeconfig, shared SOPS authority, or other providers' credentials. Those are prerequisites owned by fleet onboarding. The GitLab read credential closes the bootstrap loop for Notenv' private npm packages: onboarding enrolls it first, then the Notenv installer uses `ctx9 auth exec` for its frozen dependency install. Notenv records the service standard but never absorbs the token into its own portable state.
+Notenv does not manufacture GitHub OAuth, VPN identity, kubeconfig, shared SOPS
+authority or other providers' credentials. Those remain fleet onboarding
+prerequisites. Private CTX9 bootstrap custody stays independent of the Notenv
+server and broker; public Notenv installation must not need that private
+credential. Do not absorb bootstrap authority into Notenv's portable state.
 
 The generated Notenv identity registry ID is `notenv-machine-identities`. Native custody
 uses only the `notenv-*` service/provider names above; no retired alias exists. Recovery generates a

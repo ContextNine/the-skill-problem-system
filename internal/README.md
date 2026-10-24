@@ -6,6 +6,7 @@ Users normally edit the sibling `edit/` directory. This directory contains the i
 - `src/skill_catalog.py`: offline skill browsing, ratings, areas/collections, and filtered public metadata. Skill snapshots distribute a derived catalog separately from skill content.
 - `schemas/` and `defaults/`: validation and public-safe starter data.
 - `tests/`: integration and package tests.
+- `repairs/`: reviewed, explicit host-package repairs, including the [GNOME Secret Service missing-client fix](repairs/gnome-keyring-50.0/README.md).
 - `release/`: public repository mappings, installer, README, license, and version metadata.
 - `generated/`: catalog links, overlays, snapshots, locks, and backups. Never edit these as source.
 

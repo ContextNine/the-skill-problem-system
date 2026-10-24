@@ -1,0 +1,128 @@
+Description: Return D-Bus errors when Secret Service client sessions disappear
+Author: Context Nine
+Forwarded: no
+
+--- a/daemon/dbus/gkd-secret-objects.c
++++ b/daemon/dbus/gkd-secret-objects.c
+@@ -430,7 +430,13 @@
+ 
+ 	/* The session we're using to access the object */
+ 	session = gkd_secret_service_get_pkcs11_session (self->service, sender);
+-	g_return_val_if_fail (session, FALSE);
++	if (session == NULL) {
++		g_free (c_ident);
++		g_free (i_ident);
++		g_set_error_literal (error_out, G_DBUS_ERROR, G_DBUS_ERROR_FAILED,
++		                     "The caller has no Secret Service session");
++		return NULL;
++	}
+ 
+ 	if (i_ident) {
+ 		gck_builder_add_ulong (&builder, CKA_CLASS, CKO_SECRET_KEY);
+--- a/daemon/dbus/gkd-secret-session.c
++++ b/daemon/dbus/gkd-secret-session.c
+@@ -183,7 +183,11 @@
+ 	gboolean ret;
+ 
+ 	session = gkd_secret_service_get_pkcs11_session (self->service, self->caller);
+-	g_return_val_if_fail (session, FALSE);
++	if (session == NULL) {
++		g_set_error_literal (error_out, G_DBUS_ERROR, G_DBUS_ERROR_FAILED,
++		                     "The caller has no Secret Service session");
++		return FALSE;
++	}
+ 
+ 	if (!aes_create_dh_keys (session, "ietf-ike-grp-modp-1024", &pub, &priv)) {
+ 		g_set_error_literal (error_out, G_DBUS_ERROR,
+@@ -250,7 +254,11 @@
+ 	GckSession *session;
+ 
+ 	session = gkd_secret_service_get_pkcs11_session (self->service, self->caller);
+-	g_return_val_if_fail (session, FALSE);
++	if (session == NULL) {
++		g_set_error_literal (error_out, G_DBUS_ERROR, G_DBUS_ERROR_FAILED,
++		                     "The caller has no Secret Service session");
++		return FALSE;
++	}
+ 
+ 	gck_builder_add_ulong (&builder, CKA_CLASS, CKO_SECRET_KEY);
+ 	gck_builder_add_ulong (&builder, CKA_KEY_TYPE, CKK_G_NULL);
+--- /dev/null
++++ b/daemon/dbus/test-dbus-missing-client.c
+@@ -0,0 +1,59 @@
++/* SPDX-License-Identifier: LGPL-2.1-or-later
++ * Exercise the real property dispatch when its PKCS#11 client has vanished. */
++#define gkd_secret_service_get_pkcs11_session missing_client_session
++#include "gkd-secret-objects.c"
++#undef gkd_secret_service_get_pkcs11_session
++
++GckSession *
++missing_client_session (GkdSecretService *service, const gchar *caller)
++{
++	return NULL;
++}
++
++static GMainLoop *loop;
++static GError *reply_error;
++
++void gkd_main_quit (void) { g_assert_not_reached (); }
++
++static void
++on_reply (GObject *source, GAsyncResult *result, gpointer unused)
++{
++	GVariant *reply = g_dbus_connection_call_finish (G_DBUS_CONNECTION (source), result, &reply_error);
++	g_assert_null (reply);
++	g_main_loop_quit (loop);
++}
++
++static void
++test_missing_client_properties (void)
++{
++	GError *error = NULL;
++	GDBusConnection *connection = g_bus_get_sync (G_BUS_TYPE_SESSION, NULL, &error);
++	g_assert_no_error (error);
++	GkdSecretObjects objects = { 0 };
++	GkdExportedCollection *collection = gkd_secret_collection_skeleton_new (&objects);
++	const gchar *path = "/org/freedesktop/secrets/collection/session";
++	g_assert_true (g_dbus_interface_skeleton_export (G_DBUS_INTERFACE_SKELETON (collection), connection, path, &error));
++	g_assert_no_error (error);
++	loop = g_main_loop_new (NULL, FALSE);
++	g_dbus_connection_call (connection, g_dbus_connection_get_unique_name (connection), path,
++	                        "org.freedesktop.DBus.Properties", "Get",
++	                        g_variant_new ("(ss)", "org.freedesktop.Secret.Collection", "Locked"),
++	                        G_VARIANT_TYPE ("(v)"), G_DBUS_CALL_FLAGS_NO_AUTO_START, 3000,
++	                        NULL, on_reply, NULL);
++	g_main_loop_run (loop);
++	g_assert_error (reply_error, G_DBUS_ERROR, G_DBUS_ERROR_FAILED);
++	g_clear_error (&reply_error);
++	g_dbus_interface_skeleton_unexport (G_DBUS_INTERFACE_SKELETON (collection));
++	g_object_unref (collection);
++	g_object_unref (connection);
++	g_main_loop_unref (loop);
++}
++
++int
++main (int argc, char **argv)
++{
++	g_test_init (&argc, &argv, NULL);
++	g_log_set_always_fatal (G_LOG_FATAL_MASK);
++	g_test_add_func ("/secret-service/missing-client/property-denial", test_missing_client_properties);
++	return g_test_run ();
++}
+--- a/daemon/meson.build
++++ b/daemon/meson.build
+@@ -55,6 +55,14 @@
+   install: true,
+   install_rpath: gkr_pkglibdir,
+ )
++
++missing_client_test = executable('dbus-missing-client',
++  'dbus/test-dbus-missing-client.c',
++  'gkd-capability.c', 'gkd-pkcs11.c', 'gkd-util.c',
++  dependencies: gkr_daemon_deps + libgkd_dbus_deps,
++  include_directories: [config_h_inc, include_directories('dbus')],
++)
++test('dbus-missing-client', missing_client_test, suite: 'gkr-daemon-dbus')
+ 
+ # Desktop files
+ desktop_input_files = [
